@@ -6,3 +6,5 @@ export const parseJSON = (text?: string) => {
         return
     }
 }
+
+export const isInt = (str?: string): boolean => str ? !isNaN(parseInt(str)) : false
