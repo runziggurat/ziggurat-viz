@@ -14,6 +14,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC } from 'react'
 import Logo from '../public/logo.png'
+import { ThemeSwitch } from './theme-switch'
 
 const useStyles = createStyles(theme => ({
   header: {
@@ -131,16 +132,19 @@ export const Navbar: FC<NavbarProps> = ({ links }) => {
               Explorer
             </Text>
           </Center>
-          <Group spacing={5} className={classes.links}>
-            {items}
-          </Group>
-          <Burger
-            opened={opened}
-            onClick={toggle}
-            className={classes.burger}
-            size="sm"
-            color="#fff"
-          />
+          <Center>
+            <Group spacing={5} className={classes.links}>
+              {items}
+            </Group>
+            <ThemeSwitch />
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              className={classes.burger}
+              size="sm"
+              color="#fff"
+            />
+          </Center>
         </div>
       </Container>
     </Header>
