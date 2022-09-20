@@ -3,6 +3,8 @@ import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { isInt, parseJSON } from '../utils/helpers'
 
+import { Navbar, NavbarProps } from '../components/navbar'
+
 type TestResults = {
   suite_name: string
   tests_count: number
@@ -14,6 +16,17 @@ type Data = { test_results: TestResults }
 const Home: NextPage<{ data: Data }> = ({ data }) => {
   // console.log(data)
   const results = data.test_results
+
+  const links: NavbarProps['links'] = [
+    {
+      link: 'https://github.com/runziggurat/zcash',
+      label: 'GitHub',
+    },
+    {
+      link: 'https://equilibrium.co/projects/ziggurat',
+      label: 'Equilibrium',
+    },
+  ]
   return (
     <div>
       <Head>
@@ -21,6 +34,7 @@ const Home: NextPage<{ data: Data }> = ({ data }) => {
         <meta name="description" content="TODO" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <Navbar links={links} />
       <Container>
         <Center>
           <pre style={{ whiteSpace: 'pre-wrap' }}>
@@ -68,7 +82,6 @@ export const getStaticProps: GetStaticProps = async context => {
       if (isInt(suite.suite_name)) {
         // update suite name
         const sn = name.split('::')[1]
-        console.log({ old: suite.suite_name, nw: sn })
         suite.suite_name = sn
       }
     }
