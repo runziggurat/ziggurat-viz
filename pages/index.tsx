@@ -1,22 +1,31 @@
-import { Center, Container } from '@mantine/core'
+import { Center, Container, Table } from '@mantine/core'
 import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { isInt, parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
+import { ScrollableTable } from '../components/scrollable-table'
+import { useMemo } from 'react'
+import { Column, useTable } from 'react-table'
+import test from 'node:test'
 
 type TestResults = {
   suite_name: string
   tests_count: number
-  tests: { name: string; result: 'pass' | 'fail' | 'error' }[]
+  tests: { full_name: string; result: 'pass' | 'fail' | 'error' }[]
 }[]
 
 type Data = { test_results: TestResults }
 
-const Home: NextPage<{ data: Data }> = ({ data }) => {
-  // console.log(data)
-  const results = data.test_results
+interface TestColumnType {
+  id: string
+  result: 'pass' | 'fail' | 'error'
+  suite_name: string
+}
 
+const Home: NextPage<{ data: Data }> = ({
+  data: { test_results: results },
+}) => {
   const links: NavbarProps['links'] = [
     {
       link: 'https://github.com/runziggurat/zcash',
@@ -27,6 +36,42 @@ const Home: NextPage<{ data: Data }> = ({ data }) => {
       label: 'Equilibrium',
     },
   ]
+
+  // Flatten results for now
+  const data = useMemo(
+    () =>
+      results.reduce<TestColumnType[]>((cumm, curr) => {
+        return cumm.concat(
+          curr.tests.map(test => ({
+            id: test.full_name.split('::').pop() || 'Error',
+            suite_name: test.full_name.split('::')[1],
+            result: test.result,
+          }))
+        )
+      }, []),
+    [results]
+  )
+
+  const columns: Column<TestColumnType>[] = useMemo(
+    () => [
+      {
+        Header: 'Suite',
+        accessor: 'suite_name', // accessor is the "key" in the data
+      },
+      {
+        Header: 'Id',
+        accessor: 'id',
+      },
+      {
+        Header: 'Result',
+        accessor: 'result',
+      },
+    ],
+    []
+  )
+
+  const tableInst = useTable({ columns, data })
+
   return (
     <div>
       <Head>
@@ -36,10 +81,8 @@ const Home: NextPage<{ data: Data }> = ({ data }) => {
       </Head>
       <Navbar links={links} />
       <Container>
-        <Center>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>
-            {JSON.stringify(results, null, 2)}
-          </pre>
+        <Center mt="md">
+          <ScrollableTable height={500} tableInst={tableInst} />
         </Center>
       </Container>
     </div>
@@ -74,7 +117,7 @@ export const getStaticProps: GetStaticProps = async context => {
       const suite = results[results.length - 1]
 
       suite.tests.push({
-        name,
+        full_name: name,
         result: event === 'ok' ? 'pass' : 'fail',
       })
       suite.tests_count += 1

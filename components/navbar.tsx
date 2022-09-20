@@ -78,7 +78,7 @@ export interface NavbarProps {
   links: Link[]
 }
 
-const Navbar: FC<NavbarProps> = ({ links }) => {
+export const Navbar: FC<NavbarProps> = ({ links }) => {
   const [opened, { toggle }] = useDisclosure(false)
   const { classes } = useStyles()
 
@@ -146,5 +146,3 @@ const Navbar: FC<NavbarProps> = ({ links }) => {
     </Header>
   )
 }
-
-export { Navbar }
