@@ -1,7 +1,7 @@
-import { Center, Container, Table } from '@mantine/core'
+import { Center, Code, Container, Space, Text, Title } from '@mantine/core'
 import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
-import { isInt, parseJSON } from '../utils/helpers'
+import { capitalize, isInt, parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
 import { ScrollableTable } from '../components/scrollable-table'
@@ -57,14 +57,26 @@ const Home: NextPage<{ data: Data }> = ({
       {
         Header: 'Suite',
         accessor: 'suite_name', // accessor is the "key" in the data
+        Cell: ({ value }) => <Text weight="bold">{capitalize(value)}</Text>,
       },
       {
         Header: 'Id',
         accessor: 'id',
+        Cell: ({ value }) => <Code>{value}</Code>,
       },
       {
         Header: 'Result',
         accessor: 'result',
+        Cell: ({ value }) => (
+          <Text
+            color={
+              value === 'pass' ? 'green' : value === 'fail' ? 'yellow' : 'red'
+            }
+            weight={800}
+          >
+            {value}
+          </Text>
+        ),
       },
     ],
     []
@@ -81,9 +93,9 @@ const Home: NextPage<{ data: Data }> = ({
       </Head>
       <Navbar links={links} />
       <Container>
-        <Center mt="md">
-          <ScrollableTable height={500} tableInst={tableInst} />
-        </Center>
+        <Space h="md" />
+        <Title size="h2" mt="lg">Test Results</Title>
+        <ScrollableTable height={'calc(100vh - 150px)'} tableInst={tableInst} />
       </Container>
     </div>
   )

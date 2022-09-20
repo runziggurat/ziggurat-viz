@@ -10,11 +10,11 @@ export const ThemeSwitch = () => {
   const theme = useMantineTheme()
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   return (
-    <Group position="center" ml="md">
+    <Group position="center" mx="md">
       <Switch
         size="lg"
         onChange={() => toggleColorScheme()}
-        color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
+        color={colorScheme === 'dark' ? 'gray' : 'dark'}
         onLabel={
           <IconSun size={24} stroke={2.5} color={theme.colors.yellow[4]} />
         }

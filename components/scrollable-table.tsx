@@ -30,11 +30,11 @@ const useStyles = createStyles(theme => ({
 }))
 
 interface Props {
-  height?: number
+  height?: number | string
   tableInst: TableInstance<any>
 }
 
-export const ScrollableTable: FC<Props> = ({ height = 300, tableInst }) => {
+export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
   const { classes, cx } = useStyles()
   const [scrolled, setScrolled] = useState(false)
 
@@ -47,7 +47,7 @@ export const ScrollableTable: FC<Props> = ({ height = 300, tableInst }) => {
       type="auto"
       onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
     >
-      <Table sx={{ minWidth: 700 }} {...getTableProps()}>
+      <Table striped highlightOnHover verticalSpacing="md" sx={{ minWidth: 700 }} {...getTableProps()}>
         <thead className={cx(classes.header, { [classes.scrolled]: scrolled })}>
           {headerGroups.map(headerGroup => {
             const { key, ...headerGroupProps } =
