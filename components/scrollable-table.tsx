@@ -4,6 +4,7 @@ import { TableInstance } from 'react-table'
 
 const useStyles = createStyles(theme => ({
   header: {
+    zIndex: 1000,
     position: 'sticky',
     top: 0,
     backgroundColor:
@@ -47,7 +48,13 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
       type="auto"
       onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
     >
-      <Table striped highlightOnHover verticalSpacing="md" sx={{ minWidth: 700 }} {...getTableProps()}>
+      <Table
+        striped
+        highlightOnHover
+        verticalSpacing="md"
+        sx={{ minWidth: 700 }}
+        {...getTableProps()}
+      >
         <thead className={cx(classes.header, { [classes.scrolled]: scrolled })}>
           {headerGroups.map(headerGroup => {
             const { key, ...headerGroupProps } =

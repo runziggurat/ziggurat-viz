@@ -1,4 +1,13 @@
-import { Center, Code, Container, Space, Text, Title } from '@mantine/core'
+import {
+  ActionIcon,
+  Center,
+  Code,
+  Container,
+  Group,
+  Space,
+  Text,
+  Title,
+} from '@mantine/core'
 import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { capitalize, isInt, parseJSON } from '../utils/helpers'
@@ -7,7 +16,8 @@ import { Navbar, NavbarProps } from '../components/navbar'
 import { ScrollableTable } from '../components/scrollable-table'
 import { useMemo } from 'react'
 import { Column, useTable } from 'react-table'
-import test from 'node:test'
+import { IconQuestionMark } from '@tabler/icons'
+import { HoverCard } from '../components/hover-card'
 
 type TestResults = {
   suite_name: string
@@ -62,7 +72,24 @@ const Home: NextPage<{ data: Data }> = ({
       {
         Header: 'Id',
         accessor: 'id',
-        Cell: ({ value }) => <Code>{value}</Code>,
+        Cell: ({ value }) => (
+          <Group spacing="xs">
+            <Code>{value}</Code>
+            <HoverCard
+              target={
+                <ActionIcon size="xs" variant="filled" color="dark" radius="xl">
+                  <IconQuestionMark size={12} />
+                </ActionIcon>
+              }
+            >
+              <div>TODO</div>
+              <div>
+                <i>Ex: ZG-RESISTANCE-005 (part 2)</i>
+              </div>
+              <div>Some additional notes</div>
+            </HoverCard>
+          </Group>
+        ),
       },
       {
         Header: 'Result',
@@ -94,7 +121,9 @@ const Home: NextPage<{ data: Data }> = ({
       <Navbar links={links} />
       <Container>
         <Space h="md" />
-        <Title size="h2" mt="lg">Test Results</Title>
+        <Title size="h2" mt="lg">
+          Test Results
+        </Title>
         <ScrollableTable height={'calc(100vh - 150px)'} tableInst={tableInst} />
       </Container>
     </div>
