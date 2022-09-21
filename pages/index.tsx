@@ -8,7 +8,7 @@ import {
   Text,
   Title,
 } from '@mantine/core'
-import type { GetStaticProps, NextPage } from 'next'
+import type { GetServerSideProps, GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { capitalize, isInt, parseJSON } from '../utils/helpers'
 
@@ -130,7 +130,7 @@ const Home: NextPage<{ data: Data }> = ({
   )
 }
 
-export const getStaticProps: GetStaticProps = async context => {
+export const getServerSideProps: GetServerSideProps = async context => {
   const res = await fetch(
     'https://raw.githubusercontent.com/zeapoz/ziggurat/json-tests/zcashd-suite.log'
   )

@@ -61,7 +61,7 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   )
 }
 
-App.getInitialProps = ({ ctx }: { ctx: GetServerSidePropsContext }) => ({
+App.getInitialProps = async ({ ctx }: { ctx: GetServerSidePropsContext }) => ({
   // get color scheme from cookie
   colorScheme: getCookie('mantine-color-scheme', ctx) || DEFAULT_COLOR_SCHEME,
 })
