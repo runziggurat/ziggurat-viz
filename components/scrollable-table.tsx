@@ -2,6 +2,8 @@ import { FC, useState, useTransition } from 'react'
 import { createStyles, Table, ScrollArea, TextInput } from '@mantine/core'
 import { TableInstance } from 'react-table'
 import { IconSearch } from '@tabler/icons'
+import { useScrollIntoView } from '@mantine/hooks'
+import { useIsMobile } from '../utils/helpers'
 
 const useStyles = createStyles(theme => ({
   header: {
@@ -48,16 +50,21 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
     prepareRow,
     setGlobalFilter,
   } = tableInst as TableInstance<any> & { setGlobalFilter: any } //!
+  const { scrollIntoView, targetRef } = useScrollIntoView<HTMLTableElement>({
+    offset: 50,
+    isList: true,
+    duration: 3_000,
+  })
+
+  const scrollToTable = () => scrollIntoView({ alignment: 'end' })
 
   const [searchValue, setSearchValue] = useState('')
-
   const [_, startTransition] = useTransition()
+  const isMobile = useIsMobile()
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    console.log('handleSearchChange', value)
     startTransition(() => {
-      console.log('startTransition', value)
       setGlobalFilter(value)
     })
   }
@@ -66,7 +73,11 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
     <ScrollArea
       sx={{ height }}
       type="auto"
-      onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+      onScrollPositionChange={({ y }) => {
+        const scrolled = y !== 0
+        setScrolled(scrolled)
+        scrollToTable()
+      }}
       styles={{
         scrollbar: {
           zIndex: 201,
@@ -79,9 +90,11 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
         placeholder="Search tests"
         icon={<IconSearch size={14} stroke={1.5} />}
         value={searchValue}
+        onFocus={() => !isMobile && scrollToTable()}
         onChange={e => handleSearchChange(e.target.value)}
       />
       <Table
+        ref={targetRef}
         striped
         highlightOnHover
         verticalSpacing="md"

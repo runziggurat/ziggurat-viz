@@ -1,4 +1,13 @@
-import { ActionIcon, Code, Group, Highlight, Space, Text, Title } from '@mantine/core'
+import {
+  ActionIcon,
+  Code,
+  Group,
+  Highlight,
+  Space,
+  Text,
+  Title,
+} from '@mantine/core'
+import { useOs } from '@mantine/hooks'
 import { IconQuestionMark } from '@tabler/icons'
 import { FC, useMemo } from 'react'
 import { Column, useGlobalFilter, useTable } from 'react-table'
