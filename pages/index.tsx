@@ -1,4 +1,4 @@
-import { Container, Space } from '@mantine/core'
+import { Code, Container, ScrollArea, Space } from '@mantine/core'
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import { isInt, parseJSON } from '../utils/helpers'
@@ -7,16 +7,19 @@ import { Navbar, NavbarProps } from '../components/navbar'
 import { useMemo } from 'react'
 import { TestColumnType, TestsTable } from '../components/tests-table'
 
+import crawlerData from '../utils/mock-crawler-data.json'
+import { CrawlerCard } from '../components/crawler-card'
+
 type TestResults = {
   suite_name: string
   tests_count: number
   tests: { full_name: string; result: 'pass' | 'fail' | 'error' }[]
 }[]
 
-type Data = { test_results: TestResults }
+type Data = { test_results: TestResults; crawler_data: any }
 
 const Home: NextPage<{ data: Data }> = ({
-  data: { test_results: results },
+  data: { test_results: results, crawler_data: crawlerData },
 }) => {
   const links: NavbarProps['links'] = [
     {
@@ -52,7 +55,8 @@ const Home: NextPage<{ data: Data }> = ({
       </Head>
       <Navbar links={links} />
       <Container>
-        <Space h="md" />
+        {/* <Space h="md" /> */}
+        <CrawlerCard title="Crawler Results [TODO Card UI]" data={crawlerData} />
         <TestsTable title="Test Results" data={data} />
       </Container>
     </div>
@@ -102,7 +106,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
   return {
     props: {
-      data: { test_results: results },
+      data: { test_results: results, crawler_data: crawlerData },
     },
   }
 }

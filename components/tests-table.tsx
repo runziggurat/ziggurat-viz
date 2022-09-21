@@ -1,4 +1,4 @@
-import { ActionIcon, Code, Group, Highlight, Text, Title } from '@mantine/core'
+import { ActionIcon, Code, Group, Highlight, Space, Text, Title } from '@mantine/core'
 import { IconQuestionMark } from '@tabler/icons'
 import { FC, useMemo } from 'react'
 import { Column, useGlobalFilter, useTable } from 'react-table'
@@ -84,7 +84,8 @@ export const TestsTable: FC<Props> = ({ data, title }) => {
       <Title size="h2" mt="lg">
         {title}
       </Title>
-      <ScrollableTable height={'calc(100vh - 150px)'} tableInst={tableInst} />
+      <ScrollableTable height={'calc(100vh - 60px)'} tableInst={tableInst} />
+      <Space h='md' />
     </>
   )
 }
