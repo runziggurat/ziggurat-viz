@@ -14,6 +14,7 @@ export const ThemeSwitch = () => {
       <Switch
         size="lg"
         onChange={() => toggleColorScheme()}
+        checked={colorScheme === 'light'}
         color={colorScheme === 'dark' ? 'gray' : 'dark'}
         onLabel={
           <IconSun size={24} stroke={2.5} color={theme.colors.yellow[4]} />
