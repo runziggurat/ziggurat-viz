@@ -1,4 +1,4 @@
-import { HoverCard as HoverCardPrim, Button, Text, Group } from '@mantine/core'
+import { HoverCard as HoverCardPrim, Group } from '@mantine/core'
 import { FC } from 'react'
 
 interface Props {

@@ -1,10 +1,11 @@
 import { FC, ReactNode, useState } from 'react'
-import { createStyles, Table, ScrollArea } from '@mantine/core'
+import { createStyles, Table, ScrollArea, TextInput, Highlight } from '@mantine/core'
 import { TableInstance } from 'react-table'
+import { IconSearch } from '@tabler/icons'
 
 const useStyles = createStyles(theme => ({
   header: {
-    zIndex: 1000,
+    zIndex: 200,
     position: 'sticky',
     top: 0,
     backgroundColor:
@@ -39,15 +40,43 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
   const { classes, cx } = useStyles()
   const [scrolled, setScrolled] = useState(false)
 
-  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    tableInst
+  console.log({ tableInst })
+
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+    setGlobalFilter,
+  } = tableInst as TableInstance<any> & { setGlobalFilter: any } //!
+
+  const [searchValue, setSearchValue] = useState('')
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    setGlobalFilter(value)
+  }
 
   return (
     <ScrollArea
       sx={{ height }}
       type="auto"
       onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+      styles={{
+        scrollbar: {
+          zIndex: 201,
+        },
+      }}
     >
+      <TextInput
+        mt="md"
+        variant="filled"
+        placeholder="Search tests"
+        icon={<IconSearch size={14} stroke={1.5} />}
+        value={searchValue}
+        onChange={e => handleSearchChange(e.target.value)}
+      />
       <Table
         striped
         highlightOnHover

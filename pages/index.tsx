@@ -4,18 +4,19 @@ import {
   Code,
   Container,
   Group,
+  Highlight,
   Space,
   Text,
   Title,
 } from '@mantine/core'
-import type { GetServerSideProps, GetStaticProps, NextPage } from 'next'
+import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import { capitalize, isInt, parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
 import { ScrollableTable } from '../components/scrollable-table'
 import { useMemo } from 'react'
-import { Column, useTable } from 'react-table'
+import { Column, useTable, useGlobalFilter } from 'react-table'
 import { IconQuestionMark } from '@tabler/icons'
 import { HoverCard } from '../components/hover-card'
 
@@ -67,14 +68,24 @@ const Home: NextPage<{ data: Data }> = ({
       {
         Header: 'Suite',
         accessor: 'suite_name', // accessor is the "key" in the data
-        Cell: ({ value }) => <Text weight="bold">{capitalize(value)}</Text>,
+        Cell: ({ value, state }) => (
+          <Text weight="bold">
+            <Highlight highlight={(state as any).globalFilter}>
+              {capitalize(value)}
+            </Highlight>
+          </Text>
+        ),
       },
       {
         Header: 'Id',
         accessor: 'id',
-        Cell: ({ value }) => (
+        Cell: ({ value, state }) => (
           <Group spacing="xs">
-            <Code>{value}</Code>
+            <Code>
+              <Highlight highlight={(state as any).globalFilter}>
+                {value}
+              </Highlight>
+            </Code>
             <HoverCard
               target={
                 <ActionIcon size="xs" variant="filled" color="dark" radius="xl">
@@ -94,14 +105,16 @@ const Home: NextPage<{ data: Data }> = ({
       {
         Header: 'Result',
         accessor: 'result',
-        Cell: ({ value }) => (
+        Cell: ({ value, state }) => (
           <Text
             color={
               value === 'pass' ? 'green' : value === 'fail' ? 'yellow' : 'red'
             }
             weight={800}
           >
-            {value}
+            <Highlight highlight={(state as any).globalFilter}>
+              {value}
+            </Highlight>
           </Text>
         ),
       },
@@ -109,7 +122,8 @@ const Home: NextPage<{ data: Data }> = ({
     []
   )
 
-  const tableInst = useTable({ columns, data })
+  const tableInst = useTable({ columns, data }, useGlobalFilter)
+  console.log({ tableInst })
 
   return (
     <div>
