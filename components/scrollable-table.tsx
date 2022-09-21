@@ -1,5 +1,5 @@
-import { FC, ReactNode, useState } from 'react'
-import { createStyles, Table, ScrollArea, TextInput, Highlight } from '@mantine/core'
+import { FC, useState, useTransition } from 'react'
+import { createStyles, Table, ScrollArea, TextInput } from '@mantine/core'
 import { TableInstance } from 'react-table'
 import { IconSearch } from '@tabler/icons'
 
@@ -40,8 +40,6 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
   const { classes, cx } = useStyles()
   const [scrolled, setScrolled] = useState(false)
 
-  console.log({ tableInst })
-
   const {
     getTableProps,
     getTableBodyProps,
@@ -53,9 +51,15 @@ export const ScrollableTable: FC<Props> = ({ height = 500, tableInst }) => {
 
   const [searchValue, setSearchValue] = useState('')
 
+  const [_, startTransition] = useTransition()
+
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setGlobalFilter(value)
+    console.log('handleSearchChange', value)
+    startTransition(() => {
+      console.log('startTransition', value)
+      setGlobalFilter(value)
+    })
   }
 
   return (

@@ -123,7 +123,6 @@ const Home: NextPage<{ data: Data }> = ({
   )
 
   const tableInst = useTable({ columns, data }, useGlobalFilter)
-  console.log({ tableInst })
 
   return (
     <div>
