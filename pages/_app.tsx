@@ -8,10 +8,10 @@ import {
 } from '@mantine/core'
 import { getCookie, setCookie } from 'cookies-next'
 import { GetServerSidePropsContext } from 'next'
-import { useCallback, useEffect, useState } from 'react'
-import { globalStyles } from '../styles/global'
+import { useCallback, useState } from 'react'
 
-const DEFAULT_COLOR_SCHEME: ColorScheme = 'dark'
+import { globalStyles } from '../styles/global'
+import { COLOR_SCHEME_COOKIE, DEFAULT_COLOR_SCHEME } from '../utils/consants'
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props
@@ -23,7 +23,7 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
         value || (colorScheme === 'dark' ? 'light' : 'dark')
       setColorScheme(nextColorScheme)
       // when color scheme is updated save it to cookie
-      setCookie('mantine-color-scheme', nextColorScheme, {
+      setCookie(COLOR_SCHEME_COOKIE, nextColorScheme, {
         maxAge: 60 * 60 * 24 * 30,
       })
     },
@@ -63,5 +63,5 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
 
 App.getInitialProps = async ({ ctx }: { ctx: GetServerSidePropsContext }) => ({
   // get color scheme from cookie
-  colorScheme: getCookie('mantine-color-scheme', ctx) || DEFAULT_COLOR_SCHEME,
+  colorScheme: getCookie(COLOR_SCHEME_COOKIE, ctx) || DEFAULT_COLOR_SCHEME,
 })

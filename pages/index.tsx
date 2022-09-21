@@ -1,24 +1,11 @@
-import {
-  ActionIcon,
-  Center,
-  Code,
-  Container,
-  Group,
-  Highlight,
-  Space,
-  Text,
-  Title,
-} from '@mantine/core'
+import { Container, Space } from '@mantine/core'
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import { capitalize, isInt, parseJSON } from '../utils/helpers'
+import { isInt, parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
-import { ScrollableTable } from '../components/scrollable-table'
 import { useMemo } from 'react'
-import { Column, useTable, useGlobalFilter } from 'react-table'
-import { IconQuestionMark } from '@tabler/icons'
-import { HoverCard } from '../components/hover-card'
+import { TestColumnType, TestsTable } from '../components/tests-table'
 
 type TestResults = {
   suite_name: string
@@ -27,12 +14,6 @@ type TestResults = {
 }[]
 
 type Data = { test_results: TestResults }
-
-interface TestColumnType {
-  id: string
-  result: 'pass' | 'fail' | 'error'
-  suite_name: string
-}
 
 const Home: NextPage<{ data: Data }> = ({
   data: { test_results: results },
@@ -62,68 +43,6 @@ const Home: NextPage<{ data: Data }> = ({
       }, []),
     [results]
   )
-
-  const columns: Column<TestColumnType>[] = useMemo(
-    () => [
-      {
-        Header: 'Suite',
-        accessor: 'suite_name', // accessor is the "key" in the data
-        Cell: ({ value, state }) => (
-          <Text weight="bold">
-            <Highlight highlight={(state as any).globalFilter}>
-              {capitalize(value)}
-            </Highlight>
-          </Text>
-        ),
-      },
-      {
-        Header: 'Id',
-        accessor: 'id',
-        Cell: ({ value, state }) => (
-          <Group spacing="xs">
-            <Code>
-              <Highlight highlight={(state as any).globalFilter}>
-                {value}
-              </Highlight>
-            </Code>
-            <HoverCard
-              target={
-                <ActionIcon size="xs" variant="filled" color="dark" radius="xl">
-                  <IconQuestionMark size={12} />
-                </ActionIcon>
-              }
-            >
-              <div>TODO</div>
-              <div>
-                <i>Ex: ZG-RESISTANCE-005 (part 2)</i>
-              </div>
-              <div>Some additional notes</div>
-            </HoverCard>
-          </Group>
-        ),
-      },
-      {
-        Header: 'Result',
-        accessor: 'result',
-        Cell: ({ value, state }) => (
-          <Text
-            color={
-              value === 'pass' ? 'green' : value === 'fail' ? 'yellow' : 'red'
-            }
-            weight={800}
-          >
-            <Highlight highlight={(state as any).globalFilter}>
-              {value}
-            </Highlight>
-          </Text>
-        ),
-      },
-    ],
-    []
-  )
-
-  const tableInst = useTable({ columns, data }, useGlobalFilter)
-
   return (
     <div>
       <Head>
@@ -134,10 +53,7 @@ const Home: NextPage<{ data: Data }> = ({
       <Navbar links={links} />
       <Container>
         <Space h="md" />
-        <Title size="h2" mt="lg">
-          Test Results
-        </Title>
-        <ScrollableTable height={'calc(100vh - 150px)'} tableInst={tableInst} />
+        <TestsTable title="Test Results" data={data} />
       </Container>
     </div>
   )
