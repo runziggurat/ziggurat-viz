@@ -141,7 +141,7 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                     })),
                     borderColor: blue,
                     backgroundColor: blueT,
-                  } as any,
+                  },
                   {
                     label: 'User agents',
                     xAxisID: 'xtop',
@@ -153,7 +153,7 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                     })),
                     borderColor: orange,
                     backgroundColor: orangeT,
-                  },
+                  } as any,
                 ],
               }}
             />

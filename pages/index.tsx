@@ -55,7 +55,6 @@ const Home: NextPage<{ data: Data }> = ({
       </Head>
       <Navbar links={links} />
       <Container>
-        {/* <Space h="md" /> */}
         <CrawlerCard title="Crawler Results" data={crawlerData} />
         <TestsTable title="Test Results" data={data} />
       </Container>
