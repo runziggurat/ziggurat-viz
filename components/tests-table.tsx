@@ -72,7 +72,7 @@ export const TestsTable: FC<Props> = ({ data, title }) => {
         Cell: ({ value, state }) => (
           <Text
             color={
-              value === 'pass' ? 'green' : value === 'fail' ? 'yellow' : 'red'
+              value === 'pass' ? 'green' : value === 'fail' ? 'red' : 'yellow'
             }
             weight={800}
           >
@@ -94,7 +94,7 @@ export const TestsTable: FC<Props> = ({ data, title }) => {
         {title}
       </Title>
       <ScrollableTable height={'calc(100vh - 60px)'} tableInst={tableInst} />
-      <Space h='md' />
+      <Space h="md" />
     </>
   )
 }
