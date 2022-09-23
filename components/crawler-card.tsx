@@ -5,7 +5,7 @@ import {
   Stack,
   useMantineTheme,
 } from '@mantine/core'
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 import { Bubble } from 'react-chartjs-2'
 import 'chart.js/auto'
 import { NodeStatsCard } from './node-stats-card'
