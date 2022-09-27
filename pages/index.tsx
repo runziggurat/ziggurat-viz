@@ -5,7 +5,10 @@ import { isInt, parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
 import { useMemo } from 'react'
-import { TestColumnType, TestsTable } from '../components/tests-table'
+import {
+  TestsTable,
+  TestsTableProps,
+} from '../components/tests-table'
 
 import crawlerData from '../utils/mock-crawler-data.json'
 import { CrawlerCard } from '../components/crawler-card'
@@ -33,17 +36,16 @@ const Home: NextPage<{ data: Data }> = ({
   ]
 
   // Flatten results for now
-  const data = useMemo(
+  const tables: TestsTableProps['tables'] = useMemo(
     () =>
-      results.reduce<TestColumnType[]>((cumm, curr) => {
-        return cumm.concat(
-          curr.tests.map(test => ({
-            id: test.full_name.split('::').pop() || 'Error',
-            suite_name: test.full_name.split('::')[1],
-            result: test.result,
-          }))
-        )
-      }, []),
+      results.map(({ suite_name, tests }) => ({
+        suite_name: suite_name,
+        data: tests.map(test => ({
+          suite_name,
+          id: test.full_name.split('::').pop() || 'Error',
+          result: test.result,
+        })),
+      })),
     [results]
   )
   return (
@@ -56,7 +58,7 @@ const Home: NextPage<{ data: Data }> = ({
       <Navbar links={links} />
       <Container>
         <CrawlerCard title="Crawler Results" data={crawlerData} />
-        <TestsTable title="Test Results" data={data} />
+        <TestsTable header="Test Results" tables={tables} />
       </Container>
     </div>
   )
