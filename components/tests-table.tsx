@@ -15,7 +15,7 @@ import {
 } from '@mantine/core'
 import { useScrollIntoView } from '@mantine/hooks'
 import { IconQuestionMark, IconSearch } from '@tabler/icons'
-import { FC, useMemo, useState, useTransition } from 'react'
+import { FC, useMemo, useRef, useState, useTransition } from 'react'
 import {
   Column,
   TableInstance,
@@ -167,6 +167,8 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const [scrolled, setScrolled] = useState(false)
   const scrollToTable = () => scrollIntoView({ alignment: 'end' })
 
+  const scrollPos = useRef({ x: 0, y: 0 })
+
   return (
     <Accordion defaultValue="table">
       <Accordion.Item value="table">
@@ -177,10 +179,12 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
           <ScrollArea
             sx={{ height: 'calc(100vh - 75px)' }}
             type="auto"
-            onScrollPositionChange={({ y }) => {
+            onScrollPositionChange={({ y, x }) => {
               const scrolled = y !== 0
               if (!scrolled) setScrolled(scrolled)
-              scrollToTable()
+              
+              if (y - scrollPos.current.y !== 0) scrollToTable()
+              scrollPos.current = { x, y }
             }}
             styles={{
               scrollbar: {
