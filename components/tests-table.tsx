@@ -13,13 +13,18 @@ import {
   Accordion,
 } from '@mantine/core'
 import { useScrollIntoView } from '@mantine/hooks'
-import { IconSearch } from '@tabler/icons'
+import {
+  IconSearch,
+  IconSortAscendingLetters as IconSortAscending,
+  IconSortDescendingLetters as IconSortDescending,
+} from '@tabler/icons'
 import { FC, useMemo, useRef, useState, useTransition } from 'react'
 import {
   Column,
   TableInstance,
   useFilters,
   useGlobalFilter,
+  useSortBy,
   useTable,
 } from 'react-table'
 import { capitalize, useIsMobile } from '../utils/helpers'
@@ -142,7 +147,8 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   } = useTable(
     { columns, data },
     useGlobalFilter,
-    useFilters
+    useFilters,
+    useSortBy
   ) as TableInstance<TestColumnType> & { [index: string]: any }
 
   const [_, startTransition] = useTransition()
@@ -220,11 +226,24 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
                     headerGroup.getHeaderGroupProps()
                   return (
                     <tr key={key} {...headerGroupProps}>
-                      {headerGroup.headers.map(column => {
-                        const { key, ...headerProps } = column.getHeaderProps()
+                      {headerGroup.headers.map((column: any) => {
+                        const { key, ...headerProps } = column.getHeaderProps(
+                          column.getSortByToggleProps()
+                        )
                         return (
                           <th key={key} {...headerProps}>
-                            {column.render('Header')}
+                            <Group spacing="xs">
+                              {column.render('Header')}
+                              {column.isSorted ? (
+                                column.isSortedDesc ? (
+                                  <IconSortDescending size={16} />
+                                ) : (
+                                  <IconSortAscending size={16} />
+                                )
+                              ) : (
+                                <IconSortDescending opacity={0} size={16} /> // To prevent layour shift
+                              )}
+                            </Group>
                           </th>
                         )
                       })}
