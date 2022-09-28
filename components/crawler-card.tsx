@@ -4,6 +4,7 @@ import {
   createStyles,
   Stack,
   useMantineTheme,
+  Accordion,
 } from '@mantine/core'
 import { FC } from 'react'
 import { Bubble } from 'react-chartjs-2'
@@ -71,98 +72,108 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
   }
 
   return (
-    <>
-      <Title my="lg" order={2}>
-        {title}
-      </Title>
-      <div className={classes.container}>
-        <ScrollArea type="auto" style={{ width: '100%' }} scrollHideDelay={500}>
-          <Stack style={{ flexGrow: 1 }}>
-            <Bubble
-              className={classes.canvas}
-              height={135}
-              options={{
-                responsive: true,
-                scales: {
-                  xtop: {
-                    ...gridOptions,
-                    position: 'top',
-                    ticks: {
-                      stepSize: 1,
-                      color: gray,
-                      font: {
-                        size: 10,
+    <Accordion defaultValue="crawler">
+      <Accordion.Item value="crawler">
+        <Accordion.Control py="xs" mt="xs">
+          <Title size="h2">{title}</Title>
+        </Accordion.Control>
+        <Accordion.Panel sx={{ wordBreak: 'normal' }}>
+          <div className={classes.container}>
+            <ScrollArea
+              type="auto"
+              style={{ width: '100%' }}
+              scrollHideDelay={500}
+            >
+              <Stack style={{ flexGrow: 1 }}>
+                <Bubble
+                  className={classes.canvas}
+                  height={135}
+                  options={{
+                    responsive: true,
+                    scales: {
+                      xtop: {
+                        ...gridOptions,
+                        position: 'top',
+                        ticks: {
+                          stepSize: 1,
+                          color: gray,
+                          font: {
+                            size: 10,
+                          },
+                          callback(_, index) {
+                            const { label } = userAgents[index]
+                            return label
+                          },
+                        },
                       },
-                      callback(_, index) {
-                        const { label } = userAgents[index]
-                        return label
+                      xbottom: {
+                        ...gridOptions,
+                        ticks: {
+                          color: gray,
+                          stepSize: 1,
+                          callback(_, index) {
+                            const { label } = protocolsVersions[index]
+                            return 'v' + label
+                          },
+                        },
+                      },
+                      y: {
+                        ...gridOptions,
+                        max: 4,
+                        min: 0,
+                        ticks: { display: false },
                       },
                     },
-                  },
-                  xbottom: {
-                    ...gridOptions,
-                    ticks: {
-                      color: gray,
-                      stepSize: 1,
-                      callback(_, index) {
-                        const { label } = protocolsVersions[index]
-                        return 'v' + label
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: ctx => (ctx.raw as any).label,
+                        },
                       },
                     },
-                  },
-                  y: {
-                    ...gridOptions,
-                    max: 4,
-                    min: 0,
-                    ticks: { display: false },
-                  },
-                },
-                plugins: {
-                  legend: {
-                    position: 'top',
-                  },
-                  tooltip: {
-                    callbacks: {
-                      label: ctx => (ctx.raw as any).label,
-                    },
-                  },
-                },
-              }}
-              data={{
-                datasets: [
-                  {
-                    label: 'Protocol versions',
-                    xAxisID: 'xbottom',
-                    data: protocolsVersions.map(({ value, label }, idx) => ({
-                      x: idx,
-                      y: 1,
-                      r: Math.log(value + 0.5) * 5,
-                      label: `Protocol version ${label} (${value})`,
-                    })),
-                    borderColor: blue,
-                    backgroundColor: blueT,
-                  },
-                  {
-                    label: 'User agents',
-                    xAxisID: 'xtop',
-                    data: userAgents.map(({ value, label }, idx) => ({
-                      x: idx,
-                      y: 3,
-                      r: Math.log(value + 0.5) * 5,
-                      label: `User agent ${label} (${value})`,
-                    })),
-                    borderColor: orange,
-                    backgroundColor: orangeT,
-                  } as any,
-                ],
-              }}
-            />
-          </Stack>
-        </ScrollArea>
-        <div className={classes.stats}>
-          <NodeStatsCard {...data} />
-        </div>
-      </div>
-    </>
+                  }}
+                  data={{
+                    datasets: [
+                      {
+                        label: 'Protocol versions',
+                        xAxisID: 'xbottom',
+                        data: protocolsVersions.map(
+                          ({ value, label }, idx) => ({
+                            x: idx,
+                            y: 1,
+                            r: Math.log(value + 0.5) * 5,
+                            label: `Protocol version ${label} (${value})`,
+                          })
+                        ),
+                        borderColor: blue,
+                        backgroundColor: blueT,
+                      },
+                      {
+                        label: 'User agents',
+                        xAxisID: 'xtop',
+                        data: userAgents.map(({ value, label }, idx) => ({
+                          x: idx,
+                          y: 3,
+                          r: Math.log(value + 0.5) * 5,
+                          label: `User agent ${label} (${value})`,
+                        })),
+                        borderColor: orange,
+                        backgroundColor: orangeT,
+                      } as any,
+                    ],
+                  }}
+                />
+              </Stack>
+            </ScrollArea>
+            <div className={classes.stats}>
+              <NodeStatsCard {...data} />
+            </div>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
   )
 }

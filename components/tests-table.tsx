@@ -11,10 +11,11 @@ import {
   TextInput,
   Title,
   Table,
+  Accordion,
 } from '@mantine/core'
 import { useScrollIntoView } from '@mantine/hooks'
 import { IconQuestionMark, IconSearch } from '@tabler/icons'
-import { FC, useMemo, useState, useTransition } from 'react'
+import { FC, useMemo, useRef, useState, useTransition } from 'react'
 import {
   Column,
   TableInstance,
@@ -162,100 +163,106 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const { scrollIntoView, targetRef } = useScrollIntoView<HTMLTableElement>({
     offset: 50,
     isList: true,
-    duration: 3_000,
   })
   const [scrolled, setScrolled] = useState(false)
   const scrollToTable = () => scrollIntoView({ alignment: 'end' })
 
+  const scrollPos = useRef({ x: 0, y: 0 })
+
   return (
-    <>
-      <Title size="h2" mt="lg">
-        {header}
-      </Title>
-
-      <ScrollArea
-        sx={{ height: 'calc(100vh - 60px)' }}
-        type="auto"
-        onScrollPositionChange={({ y }) => {
-          const scrolled = y !== 0
-          if (!scrolled) setScrolled(scrolled)
-          scrollToTable()
-        }}
-        styles={{
-          scrollbar: {
-            zIndex: 201,
-          },
-        }}
-      >
-        <Tabs py="sm" value={activeTab} onTabChange={setActiveTab}>
-          <Tabs.List grow>
-            {tables.map(({ suite_name }) => (
-              <Tabs.Tab key={suite_name} value={suite_name}>
-                {capitalize(suite_name)}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs>
-
-        <TextInput
-          mt="md"
-          variant="filled"
-          placeholder={`Search ${activeTab} tests`}
-          icon={<IconSearch size={14} stroke={1.5} />}
-          value={searchValue}
-          onFocus={() => !isMobile && scrollToTable()}
-          onChange={e => handleSearchChange(e.target.value)}
-        />
-        <Table
-          ref={targetRef}
-          striped
-          highlightOnHover
-          verticalSpacing="md"
-          sx={{ minWidth: 700 }}
-          {...getTableProps()}
-        >
-          <thead
-            className={cx(classes.header, { [classes.scrolled]: scrolled })}
+    <Accordion defaultValue="table">
+      <Accordion.Item value="table">
+        <Accordion.Control py="xs" mt="xs">
+          <Title size="h2">{header}</Title>
+        </Accordion.Control>
+        <Accordion.Panel>
+          <ScrollArea
+            sx={{ height: 'calc(100vh - 75px)' }}
+            type="auto"
+            onScrollPositionChange={({ y, x }) => {
+              const scrolled = y !== 0
+              if (!scrolled) setScrolled(scrolled)
+              
+              if (y - scrollPos.current.y !== 0) scrollToTable()
+              scrollPos.current = { x, y }
+            }}
+            styles={{
+              scrollbar: {
+                zIndex: 201,
+              },
+            }}
           >
-            {headerGroups.map(headerGroup => {
-              const { key, ...headerGroupProps } =
-                headerGroup.getHeaderGroupProps()
-              return (
-                <tr key={key} {...headerGroupProps}>
-                  {headerGroup.headers.map(column => {
-                    const { key, ...headerProps } = column.getHeaderProps()
-                    return (
-                      <th key={key} {...headerProps}>
-                        {column.render('Header')}
-                      </th>
-                    )
-                  })}
-                </tr>
-              )
-            })}
-          </thead>
+            <Tabs py="sm" value={activeTab} onTabChange={setActiveTab}>
+              <Tabs.List grow>
+                {tables.map(({ suite_name }) => (
+                  <Tabs.Tab key={suite_name} value={suite_name}>
+                    {capitalize(suite_name)}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs>
 
-          <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
-              prepareRow(row)
-              const { key, ...rowProps } = row.getRowProps()
-              return (
-                <tr key={key} {...rowProps}>
-                  {row.cells.map(cell => {
-                    const { key, ...cellProps } = cell.getCellProps()
-                    return (
-                      <td key={key} {...cellProps}>
-                        {cell.render('Cell')}
-                      </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
-          </tbody>
-        </Table>
-        <Space h="md" />
-      </ScrollArea>
-    </>
+            <TextInput
+              mt="md"
+              variant="filled"
+              placeholder={`Search ${activeTab} tests`}
+              icon={<IconSearch size={14} stroke={1.5} />}
+              value={searchValue}
+              onFocus={() => !isMobile && scrollToTable()}
+              onChange={e => handleSearchChange(e.target.value)}
+            />
+            <Table
+              ref={targetRef}
+              striped
+              highlightOnHover
+              verticalSpacing="md"
+              sx={{ minWidth: 700 }}
+              {...getTableProps()}
+            >
+              <thead
+                className={cx(classes.header, { [classes.scrolled]: scrolled })}
+              >
+                {headerGroups.map(headerGroup => {
+                  const { key, ...headerGroupProps } =
+                    headerGroup.getHeaderGroupProps()
+                  return (
+                    <tr key={key} {...headerGroupProps}>
+                      {headerGroup.headers.map(column => {
+                        const { key, ...headerProps } = column.getHeaderProps()
+                        return (
+                          <th key={key} {...headerProps}>
+                            {column.render('Header')}
+                          </th>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
+              </thead>
+
+              <tbody {...getTableBodyProps()}>
+                {rows.map(row => {
+                  prepareRow(row)
+                  const { key, ...rowProps } = row.getRowProps()
+                  return (
+                    <tr key={key} {...rowProps}>
+                      {row.cells.map(cell => {
+                        const { key, ...cellProps } = cell.getCellProps()
+                        return (
+                          <td key={key} {...cellProps}>
+                            {cell.render('Cell')}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </Table>
+            <Space h="md" />
+          </ScrollArea>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
   )
 }
