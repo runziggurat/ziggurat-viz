@@ -241,7 +241,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
                                   <IconSortAscending size={16} />
                                 )
                               ) : (
-                                <IconSortDescending opacity={0} size={16} /> // To prevent layour shift
+                                <IconSortDescending opacity={0} size={16} /> // To prevent layout shift
                               )}
                             </Group>
                           </th>
