@@ -79,10 +79,10 @@ const NetworkButton = forwardRef<
 NetworkButton.displayName = 'NetworkButton'
 
 export const NetworkSelector: FC = () => {
-  const [selectedItem, setSelectedItem] = useState(items.find(i => i.default))
+  const [selectedItem] = useState(items.find(i => i.default))
 
   const item = (item: ItemProps) => (
-    <Group noWrap py="xs">
+    <Group noWrap py="md">
       {item.image && <Avatar src={item.image} radius="xl" />}
 
       <Stack spacing={0}>
@@ -104,6 +104,8 @@ export const NetworkSelector: FC = () => {
           alignItems: 'center',
           justifyContent: 'flex-start',
           paddingLeft: '1.25rem',
+          paddingTop: 0,
+          paddingBottom: 0,
         },
         itemLabel: { flexGrow: 0, whiteSpace: 'nowrap' },
       }}
@@ -119,7 +121,7 @@ export const NetworkSelector: FC = () => {
             <Menu.Item
               key={it.value}
               onClick={() =>
-                alert('You have selected the unbuilt road travellar.')
+                alert('You have selected the unbuilt road traveler.')
               }
             >
               {item(it)}
