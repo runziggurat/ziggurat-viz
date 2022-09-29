@@ -1,5 +1,13 @@
-import { createStyles, Paper, RingProgress, Stack, Text } from '@mantine/core'
+import {
+  createStyles,
+  Group,
+  Paper,
+  RingProgress,
+  Stack,
+  Text,
+} from '@mantine/core'
 import { FC } from 'react'
+import { Tooltip } from './tooltip'
 
 const useStatStyles = createStyles(theme => ({
   container: {
@@ -22,14 +30,6 @@ const useStatStyles = createStyles(theme => ({
     lineHeight: 1,
   },
 
-  inner: {
-    display: 'flex',
-
-    [theme.fn.smallerThan(350)]: {
-      flexDirection: 'column',
-    },
-  },
-
   ring: {
     flex: 1,
     display: 'flex',
@@ -48,18 +48,23 @@ export const NodeStatsCard: FC<any> = props => {
   const good = props.num_good_nodes as number
   const total = props.num_known_nodes as number
   const connections = props.num_known_connections as number
+  const versions = props.num_versions as number
   const stats = [
     { value: total, label: 'Known nodes' },
     {
       value: connections,
       label: 'Known connections',
     },
-  ]
+    {
+      value: versions,
+      label: 'Known versions',
+    },
+  ] as const
   const title = 'Nodes'
 
   const items = stats.map(stat => (
     <div key={stat.label}>
-      <Text size="sm" className={classes.label}>
+      <Text size="xs" className={classes.label}>
         {stat.value}
       </Text>
       <Text size="xs" color="dimmed">
@@ -69,50 +74,65 @@ export const NodeStatsCard: FC<any> = props => {
   ))
 
   return (
-    <Stack spacing={0} className={classes.container}>
+    <Stack justify="space-between" spacing={0} className={classes.container}>
       <Paper withBorder py="md" px="lg" radius="md">
-        <div className={classes.inner}>
-          <div>
-            <Text size="md" className={classes.label}>
-              {title}
-            </Text>
-            <div>
-              <Text size="xl" className={classes.lead} mt="lg">
-                {good}
-              </Text>
-              <Text size="xs" color="dimmed">
-                Good nodes
-              </Text>
-            </div>
-            <Stack mt="md">{items}</Stack>
-          </div>
+        <Stack spacing={0}>
+          <Text size="md" className={classes.label}>
+            {title}
+          </Text>
+          <Group noWrap>
+            <Stack spacing="xs">
+              <div>
+                <Text size="md" className={classes.lead} mt="lg">
+                  {good}
+                </Text>
+                <Group noWrap spacing="xs">
+                  <Text size="xs" color="dimmed" sx={{ whiteSpace: 'nowrap' }}>
+                    Good nodes
+                  </Text>
+                  <Tooltip>
+                    <div>TODO</div>
+                    <div>
+                      <i>Ex: Crawler reachable</i>
+                    </div>
+                    <div>Some additional description</div>
+                  </Tooltip>
+                </Group>
+              </div>
+              {items[0]}
+            </Stack>
 
-          <div className={classes.ring}>
-            <RingProgress
-              roundCaps
-              thickness={10}
-              size={175}
-              sections={[
-                { value: (good / total) * 100, color: theme.primaryColor },
-              ]}
-              label={
-                <div>
-                  <Text
-                    align="center"
-                    size="lg"
-                    className={classes.label}
-                    sx={{ fontSize: 22 }}
-                  >
-                    {((good / total) * 100).toFixed(0)}%
-                  </Text>
-                  <Text align="center" size="xs" color="dimmed">
-                    Good
-                  </Text>
-                </div>
-              }
-            />
-          </div>
-        </div>
+            <div className={classes.ring}>
+              <RingProgress
+                ml="sm"
+                roundCaps
+                thickness={10}
+                size={125}
+                sections={[
+                  { value: (good / total) * 100, color: theme.primaryColor },
+                ]}
+                label={
+                  <div>
+                    <Text
+                      align="center"
+                      size="lg"
+                      className={classes.label}
+                      sx={{ fontSize: 16 }}
+                    >
+                      {((good / total) * 100).toFixed(0)}%
+                    </Text>
+                    <Text align="center" size="xs" color="dimmed">
+                      Good
+                    </Text>
+                  </div>
+                }
+              />
+            </div>
+          </Group>
+          <Group mt="sm" noWrap>
+            {items.slice(1)}
+          </Group>
+        </Stack>
       </Paper>
       <Text size="xs" color="dimmed" align="end" mt={2}>
         Crawler ran for the total of {props.crawler_runtime.secs} seconds.

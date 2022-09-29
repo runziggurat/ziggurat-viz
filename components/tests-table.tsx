@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Code,
   createStyles,
   Group,
@@ -14,17 +13,22 @@ import {
   Accordion,
 } from '@mantine/core'
 import { useScrollIntoView } from '@mantine/hooks'
-import { IconQuestionMark, IconSearch } from '@tabler/icons'
+import {
+  IconSearch,
+  IconSortAscendingLetters as IconSortAscending,
+  IconSortDescendingLetters as IconSortDescending,
+} from '@tabler/icons'
 import { FC, useMemo, useRef, useState, useTransition } from 'react'
 import {
   Column,
   TableInstance,
   useFilters,
   useGlobalFilter,
+  useSortBy,
   useTable,
 } from 'react-table'
 import { capitalize, useIsMobile } from '../utils/helpers'
-import { HoverCard } from './hover-card'
+import { Tooltip } from './tooltip'
 
 export interface TestColumnType {
   id: string
@@ -92,19 +96,13 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
                 {value}
               </Highlight>
             </Code>
-            <HoverCard
-              target={
-                <ActionIcon size="xs" variant="filled" color="dark" radius="xl">
-                  <IconQuestionMark size={12} />
-                </ActionIcon>
-              }
-            >
+            <Tooltip>
               <div>TODO</div>
               <div>
                 <i>Ex: ZG-RESISTANCE-005 (part 2)</i>
               </div>
               <div>Some additional notes</div>
-            </HoverCard>
+            </Tooltip>
           </Group>
         ),
       },
@@ -149,7 +147,8 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   } = useTable(
     { columns, data },
     useGlobalFilter,
-    useFilters
+    useFilters,
+    useSortBy
   ) as TableInstance<TestColumnType> & { [index: string]: any }
 
   const [_, startTransition] = useTransition()
@@ -182,7 +181,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
             onScrollPositionChange={({ y, x }) => {
               const scrolled = y !== 0
               if (!scrolled) setScrolled(scrolled)
-              
+
               if (y - scrollPos.current.y !== 0) scrollToTable()
               scrollPos.current = { x, y }
             }}
@@ -227,11 +226,24 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
                     headerGroup.getHeaderGroupProps()
                   return (
                     <tr key={key} {...headerGroupProps}>
-                      {headerGroup.headers.map(column => {
-                        const { key, ...headerProps } = column.getHeaderProps()
+                      {headerGroup.headers.map((column: any) => {
+                        const { key, ...headerProps } = column.getHeaderProps(
+                          column.getSortByToggleProps()
+                        )
                         return (
                           <th key={key} {...headerProps}>
-                            {column.render('Header')}
+                            <Group spacing="xs">
+                              {column.render('Header')}
+                              {column.isSorted ? (
+                                column.isSortedDesc ? (
+                                  <IconSortDescending size={16} />
+                                ) : (
+                                  <IconSortAscending size={16} />
+                                )
+                              ) : (
+                                <IconSortDescending opacity={0} size={16} /> // To prevent layout shift
+                              )}
+                            </Group>
                           </th>
                         )
                       })}

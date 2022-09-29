@@ -8,7 +8,6 @@ import {
   Container,
   Image,
   Text,
-  Box,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
