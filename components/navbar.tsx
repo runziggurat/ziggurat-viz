@@ -13,6 +13,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC } from 'react'
 import Logo from '../public/logo.png'
+import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
 
 const useStyles = createStyles(theme => ({
@@ -42,6 +43,15 @@ const useStyles = createStyles(theme => ({
     [theme.fn.largerThan('sm')]: {
       display: 'none',
     },
+  },
+
+  version: {
+    background: theme.fn.darken(theme.colors[theme.primaryColor][5], 0.5),
+    borderRadius: theme.spacing.lg,
+    fontSize: 11,
+    padding: '0 6px',
+    fontFamily: theme.fontFamilyMonospace,
+    boxShadow: theme.shadows.lg,
   },
 
   link: {
@@ -124,12 +134,12 @@ export const Navbar: FC<NavbarProps> = ({ links }) => {
     <Header height={56} className={classes.header}>
       <Container>
         <div className={classes.inner}>
-          {/* <MantineLogo size={28} inverted /> */}
           <Center>
             <Image alt="Logo" src={Logo.src} width={22} height={22} />
-            <Text ml="sm" size="lg" transform="capitalize">
-              Explorer
-            </Text>
+            <NetworkSelector />
+            <div className={classes.version}>
+              <Text>v0.0.0</Text>
+            </div>
           </Center>
           <Center>
             <Group spacing={5} className={classes.links}>
