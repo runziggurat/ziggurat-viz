@@ -12,7 +12,7 @@ import { FC, forwardRef, ReactNode, useState } from 'react'
 
 const items: ItemProps[] = [
   {
-    label: 'Zcashd',
+    label: 'zcashd',
     value: 'zcashd',
     default: true,
   },
