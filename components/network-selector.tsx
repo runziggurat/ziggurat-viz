@@ -12,8 +12,8 @@ import { FC, forwardRef, ReactNode, useState } from 'react'
 
 const items: ItemProps[] = [
   {
-    label: 'Zcash',
-    value: 'zcash',
+    label: 'Zcashd',
+    value: 'zcashd',
     default: true,
   },
   {
@@ -50,13 +50,13 @@ const NetworkButton = forwardRef<
         colorScheme,
         primaryColor,
         radius,
-        ...rest
       }) => ({
         display: 'block',
         width: '100%',
         padding: spacing.md,
         color: colors.gray[0],
         borderRadius: radius.sm,
+        userSelect: "none",
 
         '&:hover': {
           backgroundColor:
@@ -93,7 +93,6 @@ export const NetworkSelector: FC = () => {
       </Stack>
     </Group>
   )
-  console.log({ selectedItem })
   return (
     <Menu
       width={225}
