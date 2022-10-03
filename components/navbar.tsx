@@ -8,6 +8,7 @@ import {
   Container,
   Image,
   Text,
+  MediaQuery,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
@@ -145,7 +146,14 @@ export const Navbar: FC<NavbarProps> = ({ links }) => {
             <Group spacing={5} className={classes.links}>
               {items}
             </Group>
-            <ThemeSwitch />
+            <MediaQuery
+              query="(max-width: 395px)"
+              styles={{
+                display: 'none',
+              }}
+            >
+              <ThemeSwitch />
+            </MediaQuery>
             <Burger
               opened={opened}
               onClick={toggle}
