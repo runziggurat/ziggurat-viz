@@ -88,6 +88,14 @@ const useStyles = createStyles(theme => ({
       margin: `2px 0`,
       borderRadius: theme.radius.md,
       fontSize: theme.fontSizes.md,
+      '&:hover': {
+        backgroundColor: theme.fn.lighten(
+          theme.colorScheme === 'dark'
+            ? theme.colors.dark[8]
+            : theme.colors.blue[6],
+          0.1
+        ),
+      },
     },
 
     '&:hover': {
