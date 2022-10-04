@@ -191,7 +191,7 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
                 </div>
               </Center>
               <Center>
-                <Group spacing={5} className={classes.links}>
+                <Group noWrap spacing={5} className={classes.links}>
                   {items}
                 </Group>
                 <MediaQuery
