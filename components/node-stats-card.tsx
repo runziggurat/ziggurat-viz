@@ -11,7 +11,8 @@ import { Tooltip } from './tooltip'
 
 const useStatStyles = createStyles(theme => ({
   container: {
-    maxWidth: 400,
+    maxWidth: 350,
+    width: '100%',
   },
   card: {
     backgroundColor:

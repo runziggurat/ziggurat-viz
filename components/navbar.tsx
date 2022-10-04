@@ -66,7 +66,7 @@ const useStyles = createStyles(theme => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${theme.spacing.sm}px ${theme.spacing.lg}px`,
+    padding: `${theme.spacing.sm}px ${theme.spacing.md}px`,
     fontSize: theme.fontSizes.md,
     fontWeight: 500,
   },
