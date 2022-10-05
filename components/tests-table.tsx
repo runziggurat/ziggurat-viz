@@ -32,14 +32,14 @@ import { Tooltip } from './tooltip'
 
 export interface TestColumnType {
   id: string
+  test_name: string
   result: 'pass' | 'fail' | 'error'
-  suite_name: string
 }
 
 export interface TestsTableProps {
   tables: {
     suite_name: string
-    data: TestColumnType[]
+    tests: TestColumnType[]
   }[]
   header: string
 }
@@ -76,24 +76,24 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const columns: Column<TestColumnType>[] = useMemo(
     () => [
       {
-        Header: 'Suite',
-        accessor: 'suite_name', // accessor is the "key" in the data
+        Header: 'Id',
+        accessor: 'id', // accessor is the "key" in the data
         Cell: ({ value, state }) => (
           <Text weight="bold">
             <Highlight highlight={(state as any).globalFilter}>
-              {capitalize(value)}
+              {value}
             </Highlight>
           </Text>
         ),
       },
       {
-        Header: 'Id',
-        accessor: 'id',
+        Header: 'Name',
+        accessor: 'test_name',
         Cell: ({ value, state }) => (
           <Group spacing="xs">
             <Code>
               <Highlight highlight={(state as any).globalFilter}>
-                {value}
+                {value.toLocaleLowerCase()}
               </Highlight>
             </Code>
             <Tooltip>
@@ -134,7 +134,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   )
 
   const data = useMemo(
-    () => tables.find(table => table.suite_name === activeTab)?.data || [],
+    () => tables.find(table => table.suite_name === activeTab)?.tests || [],
     [activeTab, tables]
   )
   const {
