@@ -67,7 +67,7 @@ const NetworkButton = forwardRef<
       })}
       {...rest}
     >
-      <Group>
+      <Group noWrap>
         {image && <Avatar src={image} size="sm" radius="xl" />}
         <Title order={2}>{label}</Title>
         <IconChevronDown size={16} />

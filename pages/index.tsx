@@ -5,10 +5,7 @@ import { isInt, parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
 import { useMemo } from 'react'
-import {
-  TestsTable,
-  TestsTableProps,
-} from '../components/tests-table'
+import { TestsTable, TestsTableProps } from '../components/tests-table'
 
 import crawlerData from '../utils/mock-crawler-data.json'
 import { CrawlerCard } from '../components/crawler-card'
@@ -55,11 +52,12 @@ const Home: NextPage<{ data: Data }> = ({
         <meta name="description" content="TODO" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Navbar links={links} />
-      <Container>
-        <CrawlerCard title="Crawler Results" data={crawlerData} />
-        <TestsTable header="Test Results" tables={tables} />
-      </Container>
+      <Navbar links={links}>
+        <Container>
+          <CrawlerCard title="Crawler Results" data={crawlerData} />
+          <TestsTable header="Test Results" tables={tables} />
+        </Container>
+      </Navbar>
     </div>
   )
 }

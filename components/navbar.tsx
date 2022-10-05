@@ -8,13 +8,20 @@ import {
   Container,
   Image,
   Text,
+  MediaQuery,
+  AppShell,
+  Navbar as NavbarPrim,
+  ScrollArea,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
+
+const NAV_BREAKPOINT = 'xs' as const
+const THEME_SWITCH_BREAKPOINT = 395 as const
 
 const useStyles = createStyles(theme => ({
   header: {
@@ -24,6 +31,7 @@ const useStyles = createStyles(theme => ({
     }).background,
     borderBottom: 0,
     color: 'white',
+    zIndex: 300,
   },
 
   inner: {
@@ -34,13 +42,13 @@ const useStyles = createStyles(theme => ({
   },
 
   links: {
-    [theme.fn.smallerThan('sm')]: {
+    [theme.fn.smallerThan(NAV_BREAKPOINT)]: {
       display: 'none',
     },
   },
 
   burger: {
-    [theme.fn.largerThan('sm')]: {
+    [theme.fn.largerThan(NAV_BREAKPOINT)]: {
       display: 'none',
     },
   },
@@ -54,8 +62,15 @@ const useStyles = createStyles(theme => ({
     boxShadow: theme.shadows.lg,
   },
 
+  navSwitch: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: `${theme.spacing.sm}px ${theme.spacing.md}px`,
+    fontSize: theme.fontSizes.md,
+    fontWeight: 500,
+  },
   link: {
-    display: 'block',
     lineHeight: 1,
     padding: '8px 12px',
     borderRadius: theme.radius.sm,
@@ -63,11 +78,31 @@ const useStyles = createStyles(theme => ({
     color: theme.white,
     fontSize: theme.fontSizes.sm,
     fontWeight: 500,
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+
+    [theme.fn.smallerThan(NAV_BREAKPOINT)]: {
+      padding: `${theme.spacing.md}px`,
+      margin: `2px 0`,
+      borderRadius: theme.radius.md,
+      fontSize: theme.fontSizes.md,
+      '&:hover': {
+        backgroundColor: theme.fn.lighten(
+          theme.colorScheme === 'dark'
+            ? theme.colors.dark[8]
+            : theme.colors.blue[6],
+          0.1
+        ),
+      },
+    },
 
     '&:hover': {
       backgroundColor: theme.fn.lighten(
-        theme.fn.variant({ variant: 'filled', color: theme.primaryColor })
-          .background!,
+        theme.colorScheme === 'dark'
+          ? theme.colors.dark[8]
+          : theme.colors.blue[6],
         0.1
       ),
     },
@@ -75,6 +110,17 @@ const useStyles = createStyles(theme => ({
 
   linkLabel: {
     marginRight: 5,
+  },
+
+  navbar: {
+    backgroundColor: theme.fn.variant({
+      variant: 'filled',
+      color: theme.colorScheme === 'dark' ? 'dark' : 'blue',
+    }).background,
+    color: theme.white,
+    zIndex: 400,
+    padding: theme.spacing.sm,
+    overscrollBehavior: 'contain',
   },
 }))
 
@@ -86,9 +132,10 @@ type Link = {
 }
 export interface NavbarProps {
   links: Link[]
+  children?: ReactNode
 }
 
-export const Navbar: FC<NavbarProps> = ({ links }) => {
+export const Navbar: FC<NavbarProps> = ({ links, children }) => {
   const [opened, { toggle }] = useDisclosure(false)
   const { classes } = useStyles()
 
@@ -109,10 +156,8 @@ export const Navbar: FC<NavbarProps> = ({ links }) => {
         <Menu key={label} trigger="hover" exitTransitionDuration={0}>
           <Menu.Target>
             <a href={link} className={classes.link} {...extProps}>
-              <Center>
-                <span className={classes.linkLabel}>{label}</span>
-                <IconChevronDown size={12} stroke={1.5} />
-              </Center>
+              <span className={classes.linkLabel}>{label}</span>
+              <IconChevronDown size={12} stroke={1.5} />
             </a>
           </Menu.Target>
           <Menu.Dropdown>{menuItems}</Menu.Dropdown>
@@ -122,40 +167,77 @@ export const Navbar: FC<NavbarProps> = ({ links }) => {
 
     return (
       <a key={label} href={link} className={classes.link} {...extProps}>
-        <Center>
-          <Text mr="xs">{label}</Text>
-          <IconExternalLink size={16} stroke={1.5} />
-        </Center>
+        <Text mr="xs">{label}</Text>
+        <IconExternalLink size={16} stroke={1.5} />
       </a>
     )
   })
 
   return (
-    <Header height={56} className={classes.header}>
-      <Container>
-        <div className={classes.inner}>
-          <Center>
-            <Image alt="Logo" src={Logo.src} width={22} height={22} />
-            <NetworkSelector />
-            <div className={classes.version}>
-              <Text>v0.0.0</Text>
+    <AppShell
+      fixed
+      padding={0}
+      navbarOffsetBreakpoint={NAV_BREAKPOINT}
+      asideOffsetBreakpoint={NAV_BREAKPOINT}
+      header={
+        <Header height={56} className={classes.header}>
+          <Container>
+            <div className={classes.inner}>
+              <Center>
+                <Image alt="Logo" src={Logo.src} width={22} height={22} />
+                <NetworkSelector />
+                <div className={classes.version}>
+                  <Text>v0.0.0</Text>
+                </div>
+              </Center>
+              <Center>
+                <Group noWrap spacing={5} className={classes.links}>
+                  {items}
+                </Group>
+                <MediaQuery
+                  smallerThan={THEME_SWITCH_BREAKPOINT}
+                  styles={{
+                    display: 'none',
+                  }}
+                >
+                  <ThemeSwitch />
+                </MediaQuery>
+                <Burger
+                  opened={opened}
+                  onClick={toggle}
+                  className={classes.burger}
+                  size="sm"
+                  color="#fff"
+                />
+              </Center>
             </div>
-          </Center>
-          <Center>
-            <Group spacing={5} className={classes.links}>
-              {items}
-            </Group>
-            <ThemeSwitch />
-            <Burger
-              opened={opened}
-              onClick={toggle}
-              className={classes.burger}
-              size="sm"
-              color="#fff"
-            />
-          </Center>
-        </div>
-      </Container>
-    </Header>
+          </Container>
+        </Header>
+      }
+      navbar={
+        <MediaQuery largerThan={NAV_BREAKPOINT} styles={{ display: 'none' }}>
+          <NavbarPrim
+            className={classes.navbar}
+            width={{ base: '100%', [NAV_BREAKPOINT]: 0 }}
+            hidden={!opened}
+          >
+            <MediaQuery
+              largerThan={THEME_SWITCH_BREAKPOINT}
+              styles={{
+                display: 'none',
+              }}
+            >
+              <div className={classes.navSwitch}>
+                <Text>Toggle theme</Text>
+                <ThemeSwitch />
+              </div>
+            </MediaQuery>
+            <NavbarPrim.Section>{items}</NavbarPrim.Section>
+          </NavbarPrim>
+        </MediaQuery>
+      }
+    >
+      {children}
+    </AppShell>
   )
 }

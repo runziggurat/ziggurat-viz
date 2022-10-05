@@ -3,14 +3,16 @@ import {
   Group,
   useMantineTheme,
   useMantineColorScheme,
+  GridProps,
 } from '@mantine/core'
 import { IconSun, IconMoonStars } from '@tabler/icons'
+import { FC } from 'react'
 
-export const ThemeSwitch = () => {
+export const ThemeSwitch: FC<Partial<GridProps>> = props => {
   const theme = useMantineTheme()
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   return (
-    <Group position="center" mx="md">
+    <Group position="center" mx="md" {...props}>
       <Switch
         size="lg"
         onChange={() => toggleColorScheme()}
