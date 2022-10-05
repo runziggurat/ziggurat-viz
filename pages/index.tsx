@@ -43,14 +43,14 @@ const Home: NextPage<{ data: Data }> = ({
 
     return Object.entries(suites).map(([suite_name, tests]) => ({
       suite_name,
-      tests: tests.map(test => {
-        let match = test.full_name.match(
+      tests: tests.map(({ full_name, result, exec_time }) => {
+        let match = full_name.match(
           /[r|c|p](?<idx>\d{3})(_t(?<part>\d+))?_(?<name>.+)$/
         )
         let id: string, test_name: string
         if (!match || !match.groups) {
           id = suite_name
-          test_name = test.full_name.split('::').pop() || 'Error'
+          test_name = full_name.split('::').pop() || 'Error'
         } else {
           const { idx, name, part } = match.groups
           test_name = name
@@ -62,7 +62,8 @@ const Home: NextPage<{ data: Data }> = ({
         return {
           id,
           test_name,
-          result: test.result,
+          result,
+          exec_time,
         }
       }),
     }))

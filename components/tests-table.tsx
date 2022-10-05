@@ -11,6 +11,7 @@ import {
   Title,
   Table,
   Accordion,
+  Stack,
 } from '@mantine/core'
 import { useScrollIntoView } from '@mantine/hooks'
 import {
@@ -28,12 +29,14 @@ import {
   useTable,
 } from 'react-table'
 import { capitalize, useIsMobile } from '../utils/helpers'
+import { Link } from './link'
 import { Tooltip } from './tooltip'
 
 export interface TestColumnType {
   id: string
   test_name: string
   result: 'pass' | 'fail' | 'error'
+  exec_time: string
 }
 
 export interface TestsTableProps {
@@ -78,31 +81,46 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
       {
         Header: 'Id',
         accessor: 'id', // accessor is the "key" in the data
-        Cell: ({ value, state }) => (
-          <Text weight="bold">
-            <Highlight highlight={(state as any).globalFilter}>
-              {value}
-            </Highlight>
-          </Text>
+        Cell: ({ value, state, row: { original } }) => (
+          <Group spacing="xs">
+            <Text weight="bold">
+              <Highlight highlight={(state as any).globalFilter}>
+                {value}
+              </Highlight>
+            </Text>
+            <Tooltip>
+              <Stack spacing={3}>
+                <b>{value}</b>
+                <div>
+                  View{' '}
+                  <Link
+                    external
+                    href={`https://github.com/runziggurat/zcash/blob/main/SPEC.md#${original.id
+                      .split(' ')[0]
+                      .toLocaleLowerCase()}`}
+                  >
+                    Spec
+                  </Link>
+                </div>
+                <i>
+                  Test took about {Number(original.exec_time).toFixed(2)}{' '}
+                  seconds.
+                </i>
+              </Stack>
+            </Tooltip>
+          </Group>
         ),
       },
       {
         Header: 'Name',
         accessor: 'test_name',
         Cell: ({ value, state }) => (
-          <Group spacing="xs">
+          <Group noWrap>
             <Code>
               <Highlight highlight={(state as any).globalFilter}>
                 {value.toLocaleLowerCase()}
               </Highlight>
             </Code>
-            <Tooltip>
-              <div>TODO</div>
-              <div>
-                <i>Ex: ZG-RESISTANCE-005 (part 2)</i>
-              </div>
-              <div>Some additional notes</div>
-            </Tooltip>
           </Group>
         ),
       },

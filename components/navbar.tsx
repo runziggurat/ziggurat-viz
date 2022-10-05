@@ -17,6 +17,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
+import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
 
@@ -144,21 +145,14 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
       <Menu.Item key={item.link}>{item.label}</Menu.Item>
     ))
 
-    const extProps = external
-      ? {
-          target: '_blank',
-          rel: 'noopener',
-        }
-      : {}
-
     if (menuItems) {
       return (
         <Menu key={label} trigger="hover" exitTransitionDuration={0}>
           <Menu.Target>
-            <a href={link} className={classes.link} {...extProps}>
+            <Link href={link} className={classes.link} external>
               <span className={classes.linkLabel}>{label}</span>
               <IconChevronDown size={12} stroke={1.5} />
-            </a>
+            </Link>
           </Menu.Target>
           <Menu.Dropdown>{menuItems}</Menu.Dropdown>
         </Menu>
@@ -166,10 +160,10 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
     }
 
     return (
-      <a key={label} href={link} className={classes.link} {...extProps}>
+      <Link key={label} external href={link} className={classes.link}>
         <Text mr="xs">{label}</Text>
         <IconExternalLink size={16} stroke={1.5} />
-      </a>
+      </Link>
     )
   })
 
