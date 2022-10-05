@@ -83,7 +83,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
         accessor: 'id', // accessor is the "key" in the data
         Cell: ({ value, state, row: { original } }) => (
           <Group spacing="xs">
-            <Text weight="bold">
+            <Text weight={500}>
               <Highlight highlight={(state as any).globalFilter}>
                 {value}
               </Highlight>
@@ -117,7 +117,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
         Cell: ({ value, state }) => (
           <Group noWrap>
             <Code>
-              <Highlight highlight={(state as any).globalFilter}>
+              <Highlight weight={500} highlight={(state as any).globalFilter}>
                 {value.toLocaleLowerCase()}
               </Highlight>
             </Code>
