@@ -1,6 +1,6 @@
 {
-  "name": "GUI",
-  "short_name": "GUI",
+  "name": "Ziggurat Explorer",
+  "short_name": "Ziggurat",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

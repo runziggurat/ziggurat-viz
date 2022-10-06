@@ -11,6 +11,7 @@ import {
   Title,
   Table,
   Accordion,
+  Stack,
 } from '@mantine/core'
 import { useScrollIntoView } from '@mantine/hooks'
 import {
@@ -28,18 +29,20 @@ import {
   useTable,
 } from 'react-table'
 import { capitalize, useIsMobile } from '../utils/helpers'
+import { Link } from './link'
 import { Tooltip } from './tooltip'
 
 export interface TestColumnType {
   id: string
+  test_name: string
   result: 'pass' | 'fail' | 'error'
-  suite_name: string
+  exec_time: string
 }
 
 export interface TestsTableProps {
   tables: {
     suite_name: string
-    data: TestColumnType[]
+    tests: TestColumnType[]
   }[]
   header: string
 }
@@ -76,33 +79,48 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const columns: Column<TestColumnType>[] = useMemo(
     () => [
       {
-        Header: 'Suite',
-        accessor: 'suite_name', // accessor is the "key" in the data
-        Cell: ({ value, state }) => (
-          <Text weight="bold">
-            <Highlight highlight={(state as any).globalFilter}>
-              {capitalize(value)}
-            </Highlight>
-          </Text>
-        ),
-      },
-      {
         Header: 'Id',
-        accessor: 'id',
-        Cell: ({ value, state }) => (
+        accessor: 'id', // accessor is the "key" in the data
+        Cell: ({ value, state, row: { original } }) => (
           <Group spacing="xs">
-            <Code>
+            <Text weight={500}>
               <Highlight highlight={(state as any).globalFilter}>
                 {value}
               </Highlight>
-            </Code>
+            </Text>
             <Tooltip>
-              <div>TODO</div>
-              <div>
-                <i>Ex: ZG-RESISTANCE-005 (part 2)</i>
-              </div>
-              <div>Some additional notes</div>
+              <Stack spacing={3}>
+                <b>{value}</b>
+                <div>
+                  View{' '}
+                  <Link
+                    external
+                    href={`https://github.com/runziggurat/zcash/blob/main/SPEC.md#${original.id
+                      .split(' ')[0]
+                      .toLocaleLowerCase()}`}
+                  >
+                    Spec
+                  </Link>
+                </div>
+                <i>
+                  Test took about {Number(original.exec_time).toFixed(2)}{' '}
+                  seconds.
+                </i>
+              </Stack>
             </Tooltip>
+          </Group>
+        ),
+      },
+      {
+        Header: 'Name',
+        accessor: 'test_name',
+        Cell: ({ value, state }) => (
+          <Group noWrap>
+            <Code>
+              <Highlight weight={500} highlight={(state as any).globalFilter}>
+                {value.toLocaleLowerCase()}
+              </Highlight>
+            </Code>
           </Group>
         ),
       },
@@ -134,7 +152,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   )
 
   const data = useMemo(
-    () => tables.find(table => table.suite_name === activeTab)?.data || [],
+    () => tables.find(table => table.suite_name === activeTab)?.tests || [],
     [activeTab, tables]
   )
   const {

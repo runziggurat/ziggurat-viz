@@ -17,6 +17,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
+import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
 
@@ -97,15 +98,6 @@ const useStyles = createStyles(theme => ({
         ),
       },
     },
-
-    '&:hover': {
-      backgroundColor: theme.fn.lighten(
-        theme.colorScheme === 'dark'
-          ? theme.colors.dark[8]
-          : theme.colors.blue[6],
-        0.1
-      ),
-    },
   },
 
   linkLabel: {
@@ -144,21 +136,14 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
       <Menu.Item key={item.link}>{item.label}</Menu.Item>
     ))
 
-    const extProps = external
-      ? {
-          target: '_blank',
-          rel: 'noopener',
-        }
-      : {}
-
     if (menuItems) {
       return (
         <Menu key={label} trigger="hover" exitTransitionDuration={0}>
           <Menu.Target>
-            <a href={link} className={classes.link} {...extProps}>
+            <Link href={link} className={classes.link} external>
               <span className={classes.linkLabel}>{label}</span>
               <IconChevronDown size={12} stroke={1.5} />
-            </a>
+            </Link>
           </Menu.Target>
           <Menu.Dropdown>{menuItems}</Menu.Dropdown>
         </Menu>
@@ -166,10 +151,10 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
     }
 
     return (
-      <a key={label} href={link} className={classes.link} {...extProps}>
+      <Link key={label} external href={link} className={classes.link}>
         <Text mr="xs">{label}</Text>
         <IconExternalLink size={16} stroke={1.5} />
-      </a>
+      </Link>
     )
   })
 
@@ -184,7 +169,13 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
           <Container>
             <div className={classes.inner}>
               <Center>
-                <Image alt="Logo" src={Logo.src} width={22} height={22} />
+                <Image
+                  title="Ziggurat"
+                  alt="Logo"
+                  src={Logo.src}
+                  width={22}
+                  height={22}
+                />
                 <NetworkSelector />
                 <div className={classes.version}>
                   <Text>v0.0.0</Text>

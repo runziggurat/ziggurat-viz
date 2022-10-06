@@ -1,7 +1,7 @@
-import { Code, Container, ScrollArea, Space } from '@mantine/core'
+import { Container } from '@mantine/core'
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import { isInt, parseJSON } from '../utils/helpers'
+import { parseJSON } from '../utils/helpers'
 
 import { Navbar, NavbarProps } from '../components/navbar'
 import { useMemo } from 'react'
@@ -11,9 +11,9 @@ import crawlerData from '../utils/mock-crawler-data.json'
 import { CrawlerCard } from '../components/crawler-card'
 
 type TestResults = {
-  suite_name: string
-  tests_count: number
-  tests: { full_name: string; result: 'pass' | 'fail' | 'error' }[]
+  full_name: string
+  result: 'pass' | 'fail'
+  exec_time: string
 }[]
 
 type Data = { test_results: TestResults; crawler_data: any }
@@ -32,24 +32,51 @@ const Home: NextPage<{ data: Data }> = ({
     },
   ]
 
-  // Flatten results for now
-  const tables: TestsTableProps['tables'] = useMemo(
-    () =>
-      results.map(({ suite_name, tests }) => ({
-        suite_name: suite_name,
-        data: tests.map(test => ({
-          suite_name,
-          id: test.full_name.split('::').pop() || 'Error',
-          result: test.result,
-        })),
-      })),
-    [results]
-  )
+  const tables: TestsTableProps['tables'] = useMemo(() => {
+    const suites: Record<string, TestResults> = {}
+    results.forEach(test => {
+      const suite_name = test.full_name.split('::')[1]
+      if (!suites[suite_name]) {
+        suites[suite_name] = [test]
+      } else suites[suite_name].push(test)
+    })
+
+    return Object.entries(suites).map(([suite_name, tests]) => ({
+      suite_name,
+      tests: tests.map(({ full_name, result, exec_time }) => {
+        let match = full_name.match(
+          /[r|c|p](?<idx>\d{3})(_t(?<part>\d+))?_(?<name>.+)$/
+        )
+        let id: string, test_name: string
+        if (!match || !match.groups) {
+          id = suite_name
+          test_name = full_name.split('::').pop() || 'Error'
+        } else {
+          const { idx, name, part } = match.groups
+          test_name = name
+          id = `zg-${suite_name}-${idx}`.toLocaleUpperCase()
+          if (part) {
+            id += ` (part ${part})`
+          }
+        }
+        return {
+          id,
+          test_name,
+          result,
+          exec_time,
+        }
+      }),
+    }))
+  }, [results])
+
   return (
     <div>
       <Head>
-        <title>GUI</title>
-        <meta name="description" content="TODO" />
+        <title>Ziggurat Explorer</title>
+        <meta
+          name="description"
+          content="The peer-to-peer Network Testing and Stability Framework."
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Navbar links={links}>
@@ -64,44 +91,23 @@ const Home: NextPage<{ data: Data }> = ({
 
 export const getServerSideProps: GetServerSideProps = async context => {
   const res = await fetch(
-    'https://raw.githubusercontent.com/zeapoz/ziggurat/json-tests/zcashd-suite.log'
+    'https://raw.githubusercontent.com/zeapoz/ziggurat/7394c4904c26ebd3b30ab8789d4729790afc56a4/results/2022-06-22T13%3A06%3A26Z.jsonl'
   )
   const raw = await res.text()
-  const results: TestResults = []
-  const entries: any[] = []
-  raw.split('\n').forEach(line => {
-    const parsed = parseJSON(line)
-    // TODO parse additional output?
-    if (parsed) entries.push(parsed)
-  })
 
-  entries.forEach((entry, idx) => {
-    const { type, event, name } = entry
-    if (type === 'suite' && event === 'started') {
-      // Create new suite
-      return results.push({
-        suite_name: `${results.length}`, // default name
-        tests: [],
-        tests_count: 0,
-      })
-    }
-    // Add tests to current suite
-    if (type === 'test' && event !== 'started') {
-      const suite = results[results.length - 1]
-
-      suite.tests.push({
-        full_name: name,
-        result: event === 'ok' ? 'pass' : 'fail',
-      })
-      suite.tests_count += 1
-
-      if (isInt(suite.suite_name)) {
-        // update suite name
-        const sn = name.split('::')[1]
-        suite.suite_name = sn
-      }
-    }
-  })
+  // Parse valid json lines and filter out junk
+  const results: TestResults = raw
+    .split('\n')
+    .map(parseJSON)
+    .filter(Boolean)
+    .filter(
+      entry => entry.type === 'test' && ['ok', 'failed'].includes(entry.event)
+    )
+    .map(({ event, exec_time, name }) => ({
+      full_name: name,
+      result: event === 'ok' ? 'pass' : 'fail',
+      exec_time,
+    }))
 
   return {
     props: {
