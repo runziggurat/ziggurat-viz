@@ -73,7 +73,10 @@ const Home: NextPage<{ data: Data }> = ({
     <div>
       <Head>
         <title>GUI</title>
-        <meta name="description" content="TODO" />
+        <meta
+          name="description"
+          content="The peer-to-peer Network Testing and Stability Framework."
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Navbar links={links}>
