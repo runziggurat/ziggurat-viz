@@ -72,7 +72,7 @@ const Home: NextPage<{ data: Data }> = ({
   return (
     <div>
       <Head>
-        <title>GUI</title>
+        <title>Ziggurat Explorer</title>
         <meta
           name="description"
           content="The peer-to-peer Network Testing and Stability Framework."
