@@ -98,15 +98,6 @@ const useStyles = createStyles(theme => ({
         ),
       },
     },
-
-    '&:hover': {
-      backgroundColor: theme.fn.lighten(
-        theme.colorScheme === 'dark'
-          ? theme.colors.blue[8]
-          : theme.colors.blue[6],
-        0.1
-      ),
-    },
   },
 
   linkLabel: {
