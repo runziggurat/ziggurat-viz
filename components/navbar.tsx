@@ -169,7 +169,13 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
           <Container>
             <div className={classes.inner}>
               <Center>
-                <Image alt="Logo" src={Logo.src} width={22} height={22} />
+                <Image
+                  title="Ziggurat"
+                  alt="Logo"
+                  src={Logo.src}
+                  width={22}
+                  height={22}
+                />
                 <NetworkSelector />
                 <div className={classes.version}>
                   <Text>v0.0.0</Text>
