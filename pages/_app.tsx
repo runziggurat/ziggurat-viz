@@ -12,6 +12,7 @@ import { useCallback, useState } from 'react'
 
 import { globalStyles } from '../styles/global'
 import { COLOR_SCHEME_COOKIE, DEFAULT_COLOR_SCHEME } from '../utils/consants'
+import { ModalsProvider } from '@mantine/modals'
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props
@@ -53,8 +54,10 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
             colorScheme,
           }}
         >
-          <Global styles={globalStyles} />
-          <Component {...pageProps} />
+          <ModalsProvider>
+            <Global styles={globalStyles} />
+            <Component {...pageProps} />
+          </ModalsProvider>
         </MantineProvider>
       </ColorSchemeProvider>
     </>
