@@ -34,6 +34,7 @@ const useStyles = createStyles(theme => ({
     minWidth: 600,
   },
   stats: {
+    alignSelf: 'end',
     [theme.fn.smallerThan(600)]: {
       width: '100%',
       display: 'flex',
