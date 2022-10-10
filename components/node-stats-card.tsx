@@ -135,7 +135,7 @@ export const NodeStatsCard: FC<any> = props => {
           </Group>
         </Stack>
       </Paper>
-      <Text size="xs" color="dimmed" align="end" mt={2}>
+      <Text size="xs" color="dimmed" align="end" mt={5}>
         Crawler ran for the total of {props.crawler_runtime.secs} seconds.
       </Text>
     </Stack>

@@ -9,6 +9,7 @@ import {
 } from '@mantine/core'
 import { IconChevronDown, IconPlus } from '@tabler/icons'
 import { FC, forwardRef, ReactNode, useState } from 'react'
+import { showAlert } from '../utils/alert'
 
 const items: ItemProps[] = [
   {
@@ -43,20 +44,13 @@ const NetworkButton = forwardRef<
       py={2}
       mx="sm"
       ref={ref}
-      sx={({
-        colors,
-        spacing,
-        fn,
-        colorScheme,
-        primaryColor,
-        radius,
-      }) => ({
+      sx={({ colors, spacing, fn, colorScheme, primaryColor, radius }) => ({
         display: 'block',
         width: '100%',
         padding: spacing.md,
         color: colors.gray[0],
         borderRadius: radius.sm,
-        userSelect: "none",
+        userSelect: 'none',
 
         '&:hover': {
           backgroundColor:
@@ -119,9 +113,12 @@ export const NetworkSelector: FC = () => {
           .map(it => (
             <Menu.Item
               key={it.value}
-              onClick={() =>
-                alert('You have selected the unbuilt road traveler.')
-              }
+              onClick={() => {
+                showAlert('Coming soon!', {
+                  body: 'This Network is not available yet, check back later.',
+                  confirmLabel: 'Cool',
+                })
+              }}
             >
               {item(it)}
             </Menu.Item>
