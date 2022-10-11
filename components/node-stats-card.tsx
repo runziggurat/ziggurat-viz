@@ -3,10 +3,12 @@ import {
   Group,
   Paper,
   RingProgress,
+  Space,
   Stack,
   Text,
 } from '@mantine/core'
 import { FC } from 'react'
+import { Link } from './link'
 import { Tooltip } from './tooltip'
 
 const useStatStyles = createStyles(theme => ({
@@ -92,11 +94,18 @@ export const NodeStatsCard: FC<any> = props => {
                     Good nodes
                   </Text>
                   <Tooltip>
-                    <div>TODO</div>
                     <div>
-                      <i>Ex: Crawler reachable</i>
+                      <i>Aka crawler reachable nodes.</i>
                     </div>
-                    <div>Some additional description</div>
+                    <Space h={2} />
+                    <div>
+                      <Link
+                        href="https://github.com/runziggurat/zcash/blob/main/SPEC.md"
+                        external
+                      >
+                        read more.
+                      </Link>
+                    </div>
                   </Tooltip>
                 </Group>
               </div>
