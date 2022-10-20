@@ -11,7 +11,7 @@ import { GetServerSidePropsContext } from 'next'
 import { useCallback, useState } from 'react'
 
 import { globalStyles } from '../styles/global'
-import { COLOR_SCHEME_COOKIE, DEFAULT_COLOR_SCHEME } from '../utils/consants'
+import { COLOR_SCHEME_COOKIE, DEFAULT_COLOR_SCHEME } from '../utils/constants'
 import { ModalsProvider } from '@mantine/modals'
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
