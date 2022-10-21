@@ -17,6 +17,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
+import { NAV_MAX_WIDTH } from '../utils/constants'
 import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
@@ -166,7 +167,7 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
       asideOffsetBreakpoint={NAV_BREAKPOINT}
       header={
         <Header height={56} className={classes.header}>
-          <Container>
+          <Container style={{ maxWidth: NAV_MAX_WIDTH }}>
             <div className={classes.inner}>
               <Center>
                 <Image

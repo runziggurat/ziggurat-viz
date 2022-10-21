@@ -9,6 +9,7 @@ import { TestsTable, TestsTableProps } from '../components/tests-table'
 
 import crawlerData from '../utils/mock-crawler-data.json'
 import { CrawlerCard } from '../components/crawler-card'
+import { CONTENT_MAX_WIDTH } from '../utils/constants'
 
 type TestResults = {
   full_name: string
@@ -80,7 +81,7 @@ const Home: NextPage<{ data: Data }> = ({
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Navbar links={links}>
-        <Container>
+        <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
           <CrawlerCard title="Crawler Results" data={crawlerData} />
           <TestsTable header="Test Results" tables={tables} />
         </Container>

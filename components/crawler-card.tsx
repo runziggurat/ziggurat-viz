@@ -30,7 +30,9 @@ const useStyles = createStyles(theme => ({
       flexDirection: 'column',
     },
   },
-  canvas: {},
+  canvas: {
+    minHeight: 285,
+  },
   stats: {
     alignSelf: 'end',
     [theme.fn.smallerThan(600)]: {

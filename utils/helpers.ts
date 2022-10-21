@@ -1,6 +1,8 @@
 import { useOs } from '@mantine/hooks';
 
-export const parseJSON = (text?: string) => {
+type Maybe<T> = T | undefined | null
+
+export const parseJSON = (text: Maybe<string>) => {
     if (!text) return
     try {
         return JSON.parse(text);
@@ -9,9 +11,9 @@ export const parseJSON = (text?: string) => {
     }
 }
 
-export const isInt = (str?: string): boolean => str ? Number.isInteger(+str) : false
+export const isInt = (str: Maybe<string>): boolean => str ? Number.isInteger(+str) : false
 
-export const capitalize = (str?: string) => {
+export const capitalize = (str: Maybe<string>) => {
     if (!str) return ""
     return str[0].toLocaleUpperCase() + str.slice(1)
 }
