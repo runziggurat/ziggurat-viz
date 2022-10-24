@@ -22,17 +22,6 @@ type Data = { test_results: TestResults; crawler_data: any }
 const Home: NextPage<{ data: Data }> = ({
   data: { test_results: results, crawler_data: crawlerData },
 }) => {
-  const links: NavbarProps['links'] = [
-    {
-      link: 'https://github.com/runziggurat/zcash',
-      label: 'GitHub',
-    },
-    {
-      link: 'https://equilibrium.co/projects/ziggurat',
-      label: 'Equilibrium',
-    },
-  ]
-
   const tables: TestsTableProps['tables'] = useMemo(() => {
     const suites: Record<string, TestResults> = {}
     results.forEach(test => {
@@ -80,7 +69,7 @@ const Home: NextPage<{ data: Data }> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Navbar links={links}>
+      <Navbar>
         <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
           <CrawlerCard title="Crawler Results" data={crawlerData} />
           <TestsTable header="Test Results" tables={tables} />
