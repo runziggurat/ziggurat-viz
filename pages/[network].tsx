@@ -3,13 +3,14 @@ import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import { parseJSON } from '../utils/helpers'
 
-import { Navbar, NavbarProps } from '../components/navbar'
+import { Navbar } from '../components/navbar'
 import { useMemo } from 'react'
 import { TestsTable, TestsTableProps } from '../components/tests-table'
 
-import crawlerData from '../utils/mock-crawler-data.json'
 import { CrawlerCard } from '../components/crawler-card'
 import { CONTENT_MAX_WIDTH } from '../utils/constants'
+import assert from 'assert'
+import { parseNetwork } from '../utils/network'
 
 type TestResults = {
   full_name: string
@@ -22,17 +23,6 @@ type Data = { test_results: TestResults; crawler_data: any }
 const Home: NextPage<{ data: Data }> = ({
   data: { test_results: results, crawler_data: crawlerData },
 }) => {
-  const links: NavbarProps['links'] = [
-    {
-      link: 'https://github.com/runziggurat/zcash',
-      label: 'GitHub',
-    },
-    {
-      link: 'https://equilibrium.co/projects/ziggurat',
-      label: 'Equilibrium',
-    },
-  ]
-
   const tables: TestsTableProps['tables'] = useMemo(() => {
     const suites: Record<string, TestResults> = {}
     results.forEach(test => {
@@ -80,7 +70,7 @@ const Home: NextPage<{ data: Data }> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Navbar links={links}>
+      <Navbar>
         <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
           <CrawlerCard title="Crawler Results" data={crawlerData} />
           <TestsTable header="Test Results" tables={tables} />
@@ -91,13 +81,30 @@ const Home: NextPage<{ data: Data }> = ({
 }
 
 export const getServerSideProps: GetServerSideProps = async context => {
-  const res = await fetch(
-    'https://raw.githubusercontent.com/zeapoz/ziggurat/7394c4904c26ebd3b30ab8789d4729790afc56a4/results/2022-06-22T13%3A06%3A26Z.jsonl'
+  const network = parseNetwork(context.params)
+
+  if (!network) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const tests_res = await fetch(
+    `https://raw.githubusercontent.com/runziggurat/zcash/main/results/${network.value}/latest.jsonl`
   )
-  const raw = await res.text()
+
+  assert(tests_res.ok, 'Fetching tests data failed.')
+
+  const crawler_res = await fetch(
+    'https://raw.githubusercontent.com/runziggurat/zcash/main/results/crawler/latest.json'
+  )
+
+  assert(crawler_res.ok, 'Fetching crawler data failed.')
+  const crawler_data = (await crawler_res.json()).result
 
   // Parse valid json lines and filter out junk
-  const results: TestResults = raw
+  const tests_raw = await tests_res.text()
+  const test_results: TestResults = tests_raw
     .split('\n')
     .map(parseJSON)
     .filter(Boolean)
@@ -112,7 +119,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
   return {
     props: {
-      data: { test_results: results, crawler_data: crawlerData },
+      data: { test_results, crawler_data },
     },
   }
 }

@@ -43,6 +43,13 @@ const useStyles = createStyles(theme => ({
   },
 }))
 
+const normalizeBubbleVal = (val: number, num: number = 10) => {
+  const a = 1.5 // How much are smaller values enlarged
+  const b = 14 // How much are overall values enlarged
+  const c = Math.log(num) // How much does total number affects all values
+  return (Math.log(val + a) * b) / (1 + c)
+}
+
 export const CrawlerCard: FC<Props> = ({ data, title }) => {
   const { colors, colorScheme } = useMantineTheme()
   const { classes } = useStyles()
@@ -145,7 +152,13 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                           ({ value, label }, idx) => ({
                             x: idx,
                             y: 1,
-                            r: Math.log(value + 0.5) * 5,
+                            r: normalizeBubbleVal(
+                              value,
+                              Math.max(
+                                protocolsVersions.length,
+                                userAgents.length
+                              )
+                            ),
                             label: `Protocol version ${label} (${value})`,
                           })
                         ),
@@ -158,7 +171,13 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                         data: userAgents.map(({ value, label }, idx) => ({
                           x: idx,
                           y: 3,
-                          r: Math.log(value + 0.5) * 5,
+                          r: normalizeBubbleVal(
+                            value,
+                            Math.max(
+                              protocolsVersions.length,
+                              userAgents.length
+                            )
+                          ),
                           label: `User agent ${label} (${value})`,
                         })),
                         borderColor: orange,

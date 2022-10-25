@@ -14,6 +14,7 @@ import {
   ScrollArea,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
+import { NextLink } from '@mantine/next'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
@@ -124,11 +125,22 @@ type Link = {
   links?: Link[]
 }
 export interface NavbarProps {
-  links: Link[]
+  links?: Link[]
   children?: ReactNode
 }
 
-export const Navbar: FC<NavbarProps> = ({ links, children }) => {
+const defaultLinks: Link[] = [
+  {
+    link: 'https://github.com/runziggurat/zcash',
+    label: 'GitHub',
+  },
+  {
+    link: 'https://equilibrium.co/projects/ziggurat',
+    label: 'Equilibrium',
+  },
+]
+
+export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
   const [opened, { toggle }] = useDisclosure(false)
   const { classes } = useStyles()
 
@@ -170,13 +182,15 @@ export const Navbar: FC<NavbarProps> = ({ links, children }) => {
           <Container style={{ maxWidth: NAV_MAX_WIDTH }}>
             <div className={classes.inner}>
               <Center>
-                <Image
-                  title="Ziggurat"
-                  alt="Logo"
-                  src={Logo.src}
-                  width={22}
-                  height={22}
-                />
+                <NextLink href="/">
+                  <Image
+                    title="Ziggurat"
+                    alt="Logo"
+                    src={Logo.src}
+                    width={22}
+                    height={22}
+                  />
+                </NextLink>
                 <NetworkSelector />
                 <div className={classes.version}>
                   <Text>v0.0.0</Text>
