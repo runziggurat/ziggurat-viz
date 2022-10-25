@@ -8,35 +8,16 @@ import {
   Title,
 } from '@mantine/core'
 import { IconChevronDown, IconPlus } from '@tabler/icons'
-import { FC, forwardRef, ReactNode, useState } from 'react'
-import { showAlert } from '../utils/alert'
-
-const items: ItemProps[] = [
-  {
-    label: 'zcashd',
-    value: 'zcashd',
-    default: true,
-  },
-  {
-    label: 'Zebra',
-    value: 'zebra',
-  },
-]
-
-interface ItemProps {
-  label: ReactNode
-  value: string
-  description?: string
-  image?: string
-  default?: boolean
-}
+import { useRouter } from 'next/router'
+import { FC, forwardRef, useState } from 'react'
+import { networks, parseNetwork, ZiggNetwork } from '../utils/network'
 
 const NetworkButton = forwardRef<
   HTMLButtonElement,
-  { selectedItem?: ItemProps }
->(({ selectedItem, ...rest }: { selectedItem?: ItemProps }, ref) => {
+  { selectedItem?: ZiggNetwork }
+>(({ selectedItem, ...rest }: { selectedItem?: ZiggNetwork }, ref) => {
   const image = selectedItem?.image
-  const label = selectedItem?.label || 'Select network'
+  const label = selectedItem?.label || 'Select Network'
   return (
     <UnstyledButton
       px="md"
@@ -73,16 +54,17 @@ const NetworkButton = forwardRef<
 NetworkButton.displayName = 'NetworkButton'
 
 export const NetworkSelector: FC = () => {
-  const [selectedItem] = useState(items.find(i => i.default))
+  const router = useRouter()
+  const [selectedNetwork] = useState(parseNetwork(router.query))
 
-  const item = (item: ItemProps) => (
+  const item = (network: ZiggNetwork) => (
     <Group noWrap py="md">
-      {item.image && <Avatar src={item.image} radius="xl" />}
+      {network.image && <Avatar src={network.image} radius="xl" />}
 
       <Stack spacing={0}>
-        <Text size="md">{item.label}</Text>
+        <Text size="md">{network.label}</Text>
         <Text size="xs" color="dimmed">
-          {item.description}
+          {network.description}
         </Text>
       </Stack>
     </Group>
@@ -104,20 +86,17 @@ export const NetworkSelector: FC = () => {
       }}
     >
       <Menu.Target>
-        <NetworkButton selectedItem={selectedItem} />
+        <NetworkButton selectedItem={selectedNetwork} />
       </Menu.Target>
 
       <Menu.Dropdown mt="xs">
-        {items
-          .filter(it => it.value !== selectedItem?.value)
+        {networks
+          .filter(it => it.value !== selectedNetwork?.value)
           .map(it => (
             <Menu.Item
               key={it.value}
               onClick={() => {
-                showAlert('Coming soon!', {
-                  body: 'This Network is not available yet, check back later.',
-                  confirmLabel: 'Cool',
-                })
+                window.location.pathname = `/${it.value}`
               }}
             >
               {item(it)}

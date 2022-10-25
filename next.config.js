@@ -6,6 +6,15 @@ const nextConfig = {
    * This does not change any behavior, but makes minifying faster, hence faster builds.
    */
   swcMinify: false,
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: `/zcashd`,
+        permanent: false,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

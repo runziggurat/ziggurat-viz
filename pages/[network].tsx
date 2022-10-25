@@ -3,13 +3,14 @@ import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import { parseJSON } from '../utils/helpers'
 
-import { Navbar, NavbarProps } from '../components/navbar'
+import { Navbar } from '../components/navbar'
 import { useMemo } from 'react'
 import { TestsTable, TestsTableProps } from '../components/tests-table'
 
 import { CrawlerCard } from '../components/crawler-card'
 import { CONTENT_MAX_WIDTH } from '../utils/constants'
-import { assert } from 'console'
+import assert from 'assert'
+import { parseNetwork } from '../utils/network'
 
 type TestResults = {
   full_name: string
@@ -80,9 +81,18 @@ const Home: NextPage<{ data: Data }> = ({
 }
 
 export const getServerSideProps: GetServerSideProps = async context => {
+  const network = parseNetwork(context.params)
+
+  if (!network) {
+    return {
+      notFound: true,
+    }
+  }
+
   const tests_res = await fetch(
-    'https://raw.githubusercontent.com/runziggurat/zcash/main/results/zcashd/latest.jsonl'
+    `https://raw.githubusercontent.com/runziggurat/zcash/main/results/${network.value}/latest.jsonl`
   )
+
   assert(tests_res.ok, 'Fetching tests data failed.')
 
   const crawler_res = await fetch(
