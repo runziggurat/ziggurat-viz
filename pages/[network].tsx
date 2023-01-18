@@ -1,5 +1,5 @@
 import { Container } from '@mantine/core'
-import type { GetServerSideProps, NextPage } from 'next'
+import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { parseJSON } from '../utils/helpers'
 
@@ -80,7 +80,14 @@ const Home: NextPage<{ data: Data }> = ({
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async context => {
+export async function getStaticPaths() {
+  return {
+    paths: [{ params: { network: 'zcashd' } }, { params: { network: 'zebra' } }],
+    fallback: false,
+  }
+}
+
+export const getStaticProps: GetStaticProps = async context => {
   const network = parseNetwork(context.params)
 
   if (!network) {
