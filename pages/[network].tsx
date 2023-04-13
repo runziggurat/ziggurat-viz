@@ -82,7 +82,10 @@ const Home: NextPage<{ data: Data }> = ({
 
 export async function getStaticPaths() {
   return {
-    paths: [{ params: { network: 'zcashd' } }, { params: { network: 'zebra' } }],
+    paths: [
+      { params: { network: 'zcashd' } },
+      { params: { network: 'zebra' } },
+    ],
     fallback: false,
   }
 }
@@ -96,22 +99,24 @@ export const getStaticProps: GetStaticProps = async context => {
     }
   }
 
-  const tests_res = await fetch(
-    `https://raw.githubusercontent.com/runziggurat/zcash/main/results/${network.value}/latest.jsonl`
+  const tests = await fetch(
+    `https://raw.githubusercontent.com/runziggurat/${network.paths.tests}`
   )
+  assert(tests.ok, 'Fetching tests data failed.')
 
-  assert(tests_res.ok, 'Fetching tests data failed.')
-
-  const crawler_res = await fetch(
-    'https://raw.githubusercontent.com/runziggurat/zcash/main/results/crawler/latest.json'
+  const crawler = await fetch(
+    `https://raw.githubusercontent.com/runziggurat/${network.paths.crawler}`
   )
-
-  assert(crawler_res.ok, 'Fetching crawler data failed.')
-  const crawler_data = (await crawler_res.json()).result
+  assert(crawler.ok, 'Fetching crawler data failed.')
+  
+  const crawler_data = (await crawler.json()).result
+  // Delete unused data to reduce bundle size
+  delete crawler_data.node_addrs
+  delete crawler_data.node_network_types
+  delete crawler_data.nodes_indices
 
   // Parse valid json lines and filter out junk
-  const tests_raw = await tests_res.text()
-  const test_results: TestResults = tests_raw
+  const test_results: TestResults = (await tests.text())
     .split('\n')
     .map(parseJSON)
     .filter(Boolean)
@@ -128,6 +133,8 @@ export const getStaticProps: GetStaticProps = async context => {
     props: {
       data: { test_results, crawler_data },
     },
+    // Refresh every day
+    revalidate: 24 * 60 * 60,
   }
 }
 

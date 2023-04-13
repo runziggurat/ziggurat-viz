@@ -5,17 +5,30 @@ export const networks: ZiggNetwork[] = [
     {
         label: 'zcashd',
         value: 'zcashd',
+        paths: {
+            crawler: 'zcash/main/results/crawler/latest.json',
+            tests: 'zcash/main/results/zcashd/latest.jsonl',
+        },
         default: true,
     },
     {
         label: 'Zebra',
+        paths: {
+            crawler: 'zcash/main/results/crawler/latest.json',
+            tests: 'zcash/main/results/zebra/latest.jsonl'
+        },
         value: 'zebra',
     },
+    // TODO xrpl
 ]
 
 export interface ZiggNetwork {
     label: ReactNode
     value: string
+    paths: {
+        crawler: string
+        tests: string
+    }
     description?: string
     image?: string
     default?: boolean
