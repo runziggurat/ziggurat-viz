@@ -10,7 +10,7 @@ import { TestsTable, TestsTableProps } from '../components/tests-table'
 import { CrawlerCard } from '../components/crawler-card'
 import { CONTENT_MAX_WIDTH } from '../utils/constants'
 import assert from 'assert'
-import { parseNetwork } from '../utils/network'
+import { networks, parseNetwork } from '../utils/network'
 
 type TestResults = {
   full_name: string
@@ -82,10 +82,7 @@ const Home: NextPage<{ data: Data }> = ({
 
 export async function getStaticPaths() {
   return {
-    paths: [
-      { params: { network: 'zcashd' } },
-      { params: { network: 'zebra' } },
-    ],
+    paths: networks.map(({ value: network }) => ({ params: { network } })),
     fallback: false,
   }
 }
@@ -108,7 +105,7 @@ export const getStaticProps: GetStaticProps = async context => {
     `https://raw.githubusercontent.com/runziggurat/${network.paths.crawler}`
   )
   assert(crawler.ok, 'Fetching crawler data failed.')
-  
+
   const crawler_data = (await crawler.json()).result
   // Delete unused data to reduce bundle size
   delete crawler_data.node_addrs
