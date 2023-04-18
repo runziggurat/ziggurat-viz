@@ -9,8 +9,9 @@ import { TestsTable, TestsTableProps } from '../components/tests-table'
 
 import { CrawlerCard } from '../components/crawler-card'
 import { CONTENT_MAX_WIDTH } from '../utils/constants'
-import assert from 'assert'
-import { parseNetwork } from '../utils/network'
+import { networks, parseNetwork } from '../utils/network'
+
+import * as gcloud from '@google-cloud/storage'
 
 type TestResults = {
   full_name: string
@@ -82,7 +83,7 @@ const Home: NextPage<{ data: Data }> = ({
 
 export async function getStaticPaths() {
   return {
-    paths: [{ params: { network: 'zcashd' } }, { params: { network: 'zebra' } }],
+    paths: networks.map(({ value: network }) => ({ params: { network } })),
     fallback: false,
   }
 }
@@ -96,22 +97,22 @@ export const getStaticProps: GetStaticProps = async context => {
     }
   }
 
-  const tests_res = await fetch(
-    `https://raw.githubusercontent.com/runziggurat/zcash/main/results/${network.value}/latest.jsonl`
-  )
+  const storage = new gcloud.Storage({
+    projectId: process.env.GCLOUD_PROJECT_ID,
+    credentials: {
+      client_email: process.env.GCLOUD_CLIENT_EMAIL,
+      private_key: process.env.GCLOUD_PRIVATE_KEY,
+    },
+  })
 
-  assert(tests_res.ok, 'Fetching tests data failed.')
+  const bucket = storage.bucket('egq-runziggurat-zcash-bucket')
+  const testsPath = `results/${network.value}/latest.jsonl`
+  const crawlerPath = 'results/crawler/latest.json'
 
-  const crawler_res = await fetch(
-    'https://raw.githubusercontent.com/runziggurat/zcash/main/results/crawler/latest.json'
-  )
-
-  assert(crawler_res.ok, 'Fetching crawler data failed.')
-  const crawler_data = (await crawler_res.json()).result
-
+  const [tests] = await bucket.file(testsPath).download()
   // Parse valid json lines and filter out junk
-  const tests_raw = await tests_res.text()
-  const test_results: TestResults = tests_raw
+  const test_results: TestResults = tests
+    .toString()
     .split('\n')
     .map(parseJSON)
     .filter(Boolean)
@@ -124,10 +125,19 @@ export const getStaticProps: GetStaticProps = async context => {
       exec_time,
     }))
 
+  const [crawler] = await bucket.file(crawlerPath).download()
+  const crawler_data = JSON.parse(crawler.toString()).result
+  // Delete unused fields
+  delete crawler_data.node_addrs
+  delete crawler_data.node_network_types
+  delete crawler_data.nodes_indices
+
   return {
     props: {
       data: { test_results, crawler_data },
     },
+    // Refresh every day
+    revalidate: 24 * 60 * 60,
   }
 }
 
