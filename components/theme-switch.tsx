@@ -12,7 +12,7 @@ export const ThemeSwitch: FC<Partial<GridProps>> = props => {
   const theme = useMantineTheme()
   const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   return (
-    <Group position="center" mx="md" {...props}>
+    <Group position="center" ml="md" {...props}>
       <Switch
         size="lg"
         onChange={() => toggleColorScheme()}
