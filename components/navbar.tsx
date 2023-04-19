@@ -209,6 +209,7 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
                   <ThemeSwitch />
                 </MediaQuery>
                 <Burger
+                  ml="sm"
                   opened={opened}
                   onClick={toggle}
                   className={classes.burger}

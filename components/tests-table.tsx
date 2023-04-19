@@ -148,7 +148,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const isMobile = useIsMobile()
   const [searchValue, setSearchValue] = useState('')
   const [activeTab, setActiveTab] = useState<string | null>(
-    tables[0].suite_name
+    tables.length ? tables[0].suite_name : null
   )
 
   const data = useMemo(
