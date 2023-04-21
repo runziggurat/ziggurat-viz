@@ -109,7 +109,7 @@ export const NetworkSelector: FC = () => {
           component="a"
           target="_blank"
           rel="noopener noreferrer"
-          href={'https://github.com/runziggurat'}
+          href={'https://equilibrium.co/contact'}
         >
           Add your own network
         </Menu.Item>

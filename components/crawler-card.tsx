@@ -82,7 +82,10 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
   return (
     <Accordion
       defaultValue="crawler"
-      styles={{ content: { paddingRight: 0, paddingLeft: 0 } }}
+      styles={{
+        content: { paddingRight: 0, paddingLeft: 0 },
+        label: { padding: 0 },
+      }}
     >
       <Accordion.Item value="crawler">
         <Accordion.Control py="xs" mt="xs">
@@ -112,6 +115,9 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                             size: 10,
                           },
                           callback(_, index) {
+                            if (!userAgents[index]) {
+                              return ''
+                            }
                             const { label } = userAgents[index]
                             return label
                           },
@@ -123,7 +129,10 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                           color: gray,
                           stepSize: 1,
                           callback(_, index) {
-                            const { label } = protocolsVersions[index]
+                            if (!protocolsVersions[index]) {
+                              return ''
+                            }
+                            const { label } = protocolsVersions[index] || {}
                             return 'v' + label
                           },
                         },
@@ -148,13 +157,13 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                   }}
                   data={{
                     datasets: [
-                      {
+                      protocolsVersions.length && {
                         label: 'Protocol versions',
                         xAxisID: 'xbottom',
                         data: protocolsVersions.map(
                           ({ value, label }, idx) => ({
                             x: idx,
-                            y: 1,
+                            y: userAgents.length ? 1 : 2,
                             r: normalizeBubbleVal(
                               value,
                               Math.max(
@@ -168,25 +177,26 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
                         borderColor: blue,
                         backgroundColor: blueT,
                       },
-                      {
-                        label: 'User agents',
-                        xAxisID: 'xtop',
-                        data: userAgents.map(({ value, label }, idx) => ({
-                          x: idx,
-                          y: 3,
-                          r: normalizeBubbleVal(
-                            value,
-                            Math.max(
-                              protocolsVersions.length,
-                              userAgents.length
-                            )
-                          ),
-                          label: `User agent ${label} (${value})`,
-                        })),
-                        borderColor: orange,
-                        backgroundColor: orangeT,
-                      } as any,
-                    ],
+                      userAgents.length &&
+                        ({
+                          label: 'User agents',
+                          xAxisID: 'xtop',
+                          data: userAgents.map(({ value, label }, idx) => ({
+                            x: idx,
+                            y: protocolsVersions.length ? 3 : 2,
+                            r: normalizeBubbleVal(
+                              value,
+                              Math.max(
+                                protocolsVersions.length,
+                                userAgents.length
+                              )
+                            ),
+                            label: `User agent ${label} (${value})`,
+                          })),
+                          borderColor: orange,
+                          backgroundColor: orangeT,
+                        } as any),
+                    ].filter(Boolean),
                   }}
                 />
               </Stack>

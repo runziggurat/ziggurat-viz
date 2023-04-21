@@ -1,21 +1,42 @@
 import type { NextRouter } from 'next/router'
 import type { ReactNode } from 'react'
 
-export const networks: ZiggNetwork[] = [
+const crawler = "results/crawler"
+export const networks = [
     {
         label: 'zcashd',
         value: 'zcashd',
+        paths: {
+            crawler,
+            tests: "results/zcashd"
+        },
         default: true,
     },
     {
         label: 'Zebra',
+        paths: {
+            crawler,
+            tests: "results/zebra"
+        },
         value: 'zebra',
     },
-]
+    {
+        label: 'Xrpl',
+        paths: {
+            crawler,
+            tests: "results/rippled"
+        },
+        value: 'xrpl',
+    }
+] as const satisfies ReadonlyArray<ZiggNetwork>
 
 export interface ZiggNetwork {
     label: ReactNode
     value: string
+    paths: {
+        tests: string
+        crawler: string
+    }
     description?: string
     image?: string
     default?: boolean

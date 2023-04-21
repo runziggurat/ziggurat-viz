@@ -7,9 +7,11 @@ import {
   Stack,
   Text,
 } from '@mantine/core'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { Link } from './link'
 import { Tooltip } from './tooltip'
+import { useRouter } from 'next/router'
+import { parseNetwork } from '../utils/network'
 
 const useStatStyles = createStyles(theme => ({
   container: {
@@ -47,6 +49,11 @@ const useStatStyles = createStyles(theme => ({
 
 export const NodeStatsCard: FC<any> = props => {
   const { classes, theme } = useStatStyles()
+  const router = useRouter()
+  const repo = useMemo(
+    () => (parseNetwork(router.query)?.value == 'xrpl' ? 'xrpl' : 'zcash'),
+    [router.query]
+  )
 
   const good = props.num_good_nodes as number
   const total = props.num_known_nodes as number
@@ -100,7 +107,7 @@ export const NodeStatsCard: FC<any> = props => {
                     <Space h={2} />
                     <div>
                       <Link
-                        href="https://github.com/runziggurat/zcash/blob/main/SPEC.md"
+                        href={`https://github.com/runziggurat/${repo}/blob/main/SPEC.md`}
                         external
                       >
                         read more.
@@ -139,9 +146,7 @@ export const NodeStatsCard: FC<any> = props => {
               />
             </div>
           </Group>
-          <Group noWrap>
-            {items.slice(1)}
-          </Group>
+          <Group noWrap>{items.slice(1)}</Group>
           <Group noWrap spacing="xs" mt={3}>
             <Text size="xs" color="dimmed">
               Crawler runtime:

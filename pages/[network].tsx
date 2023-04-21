@@ -124,14 +124,21 @@ export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
     },
   })
 
-  const bucket = storage.bucket('egq-runziggurat-zcash-bucket')
-  const testsPath = `results/${network.value}/latest.jsonl`
-  const crawlerPath = 'results/crawler/latest.json'
+  if (!process.env.GCLOUD_XRPL_BUCKET || !process.env.GCLOUD_ZCASH_BUCKET) {
+    throw new Error('Missing gcloud bucket env vars!')
+  }
+  const bucket = storage.bucket(
+    network.value === 'xrpl'
+      ? process.env.GCLOUD_XRPL_BUCKET
+      : process.env.GCLOUD_ZCASH_BUCKET
+  )
+  const testsPath = `${network.paths.tests}/latest.jsonl`
+  const crawlerPath = `${network.paths.crawler}/latest.json`
 
   const [files] = await bucket.getFiles({
-    prefix: 'results/crawler',
+    prefix: network.paths.crawler,
   })
-  
+
   // Figure out the latest date.
   const date = files
     .map(file => file.name)
