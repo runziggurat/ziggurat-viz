@@ -43,10 +43,11 @@ const useStyles = createStyles(theme => ({
   },
 }))
 
-const normalizeBubbleVal = (val: number, num: number = 10) => {
+const normalizeBubbleVal = (val: number, num: number = 1) => {
+  if (val == 0) return 0
   const a = 1.5 // How much are smaller values enlarged
   const b = 14 // How much are overall values enlarged
-  const c = Math.log(num) // How much does total number affects all values
+  const c = num > 10 ? Math.log(num) : -0.9 / num // How much does total number affects all values
   return (Math.log(val + a) * b) / (1 + c)
 }
 
