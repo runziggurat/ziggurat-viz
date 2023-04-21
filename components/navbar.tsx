@@ -11,10 +11,9 @@ import {
   MediaQuery,
   AppShell,
   Navbar as NavbarPrim,
-  ScrollArea,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { NextLink } from '@mantine/next'
+import NextLink from 'next/link'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
@@ -131,7 +130,7 @@ export interface NavbarProps {
 
 const defaultLinks: Link[] = [
   {
-    link: 'https://github.com/runziggurat/zcash',
+    link: 'https://github.com/runziggurat',
     label: 'GitHub',
   },
   {
@@ -182,7 +181,7 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
           <Container style={{ maxWidth: NAV_MAX_WIDTH }}>
             <div className={classes.inner}>
               <Center>
-                <NextLink href="/">
+                <NextLink href="/" legacyBehavior>
                   <Image
                     title="Ziggurat"
                     alt="Logo"
