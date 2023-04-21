@@ -145,7 +145,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
         ),
       },
     ],
-    []
+    [repo]
   )
 
   const { classes, cx } = useStyles()

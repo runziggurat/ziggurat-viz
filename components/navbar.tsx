@@ -150,7 +150,7 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
 
     if (menuItems) {
       return (
-        <Menu key={label} trigger="hover" exitTransitionDuration={0}>
+        <Menu key={label} trigger="hover" transitionProps={{ exitDuration: 0 }}>
           <Menu.Target>
             <Link href={link} className={classes.link} external>
               <span className={classes.linkLabel}>{label}</span>
