@@ -12,6 +12,7 @@ import { Link } from './link'
 import { Tooltip } from './tooltip'
 import { useRouter } from 'next/router'
 import { parseNetwork } from '../utils/network'
+import { duration } from '../utils/helpers'
 
 const useStatStyles = createStyles(theme => ({
   container: {
@@ -151,7 +152,7 @@ export const NodeStatsCard: FC<any> = props => {
             <Text size="xs" color="dimmed">
               Crawler runtime:
             </Text>
-            <Text size="xs">{props.crawler_runtime.secs}s</Text>
+            <Text size="xs">{duration(props.crawler_runtime.secs)}</Text>
           </Group>
         </Stack>
       </Paper>
