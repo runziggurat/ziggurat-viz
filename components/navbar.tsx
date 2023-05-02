@@ -16,31 +16,34 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { NextLink } from '@mantine/next'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
-import { FC, ReactNode, useMemo } from 'react'
+import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
-import { CONTENT_MAX_WIDTH, NAV_MAX_WIDTH } from '../utils/constants'
+import {
+  CONTENT_MAX_WIDTH,
+  NAVBAR_HEIGHT,
+  NAV_BREAKPOINT,
+  NAV_MAX_WIDTH,
+  THEME_SWITCH_BREAKPOINT,
+} from '../utils/constants'
 import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
 
-const NAV_BREAKPOINT = 'xs' as const
-const THEME_SWITCH_BREAKPOINT = 395 as const
-
 const useStyles = createStyles(theme => ({
   header: {
-    backgroundColor: theme.fn.variant({
-      variant: 'filled',
-      color: theme.primaryColor,
-    }).background,
     borderBottom: 0,
     color: 'white',
     zIndex: 300,
   },
 
-  inner: {
+  topbar: {
+    backgroundColor: theme.fn.variant({
+      variant: 'filled',
+      color: theme.primaryColor,
+    }).background,
     height: 56,
     display: 'flex',
-    justifyContent: 'space-between',
+    flexDirection: 'row',
     alignItems: 'center',
   },
 
@@ -129,7 +132,7 @@ const useStyles = createStyles(theme => ({
   },
 
   tab: {
-    fontWeight: "bolder",
+    fontWeight: 'bolder',
     height: 35,
   },
 }))
@@ -256,46 +259,51 @@ export const Navbar: FC<NavbarProps> = ({
       navbarOffsetBreakpoint={NAV_BREAKPOINT}
       asideOffsetBreakpoint={NAV_BREAKPOINT}
       header={
-        <Header height={56} className={classes.header}>
-          <Container style={{ maxWidth: NAV_MAX_WIDTH }}>
-            <div className={classes.inner}>
-              <Center>
-                <NextLink href="/" legacyBehavior>
-                  <Image
-                    title="Ziggurat"
-                    alt="Logo"
-                    src={Logo.src}
-                    width={22}
-                    height={22}
+        <Header height={NAVBAR_HEIGHT} className={classes.header}>
+          <div className={classes.topbar}>
+            <Container style={{ maxWidth: NAV_MAX_WIDTH, width: "100%" }}>
+              <Group position="apart">
+                <Center>
+                  <NextLink href="/" legacyBehavior>
+                    <Image
+                      title="Ziggurat"
+                      alt="Logo"
+                      src={Logo.src}
+                      width={22}
+                      height={22}
+                    />
+                  </NextLink>
+                  <NetworkSelector />
+                  <div className={classes.version}>
+                    <Text>v0.0.0</Text>
+                  </div>
+                </Center>
+                <Center>
+                  <Group noWrap spacing={5} className={classes.links}>
+                    {items}
+                  </Group>
+                  <MediaQuery
+                    smallerThan={THEME_SWITCH_BREAKPOINT}
+                    styles={{
+                      display: 'none',
+                    }}
+                  >
+                    <ThemeSwitch />
+                  </MediaQuery>
+                  <Burger
+                    ml="sm"
+                    opened={opened}
+                    onClick={toggle}
+                    className={classes.burger}
+                    size="sm"
+                    color="#fff"
                   />
-                </NextLink>
-                <NetworkSelector />
-                <div className={classes.version}>
-                  <Text>v0.0.0</Text>
-                </div>
-              </Center>
-              <Center>
-                <Group noWrap spacing={5} className={classes.links}>
-                  {items}
-                </Group>
-                <MediaQuery
-                  smallerThan={THEME_SWITCH_BREAKPOINT}
-                  styles={{
-                    display: 'none',
-                  }}
-                >
-                  <ThemeSwitch />
-                </MediaQuery>
-                <Burger
-                  ml="sm"
-                  opened={opened}
-                  onClick={toggle}
-                  className={classes.burger}
-                  size="sm"
-                  color="#fff"
-                />
-              </Center>
-            </div>
+                </Center>
+              </Group>
+            </Container>
+          </div>
+          <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
+            <Navigation metaData={metaData} />
           </Container>
         </Header>
       }
@@ -322,9 +330,6 @@ export const Navbar: FC<NavbarProps> = ({
         </MediaQuery>
       }
     >
-      <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
-        <Navigation metaData={metaData} />
-      </Container>
       {children}
     </AppShell>
   )
