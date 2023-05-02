@@ -1,4 +1,4 @@
-import { Container, Group, Text } from '@mantine/core'
+import { Container } from '@mantine/core'
 import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { parseJSON } from '../utils/helpers'
@@ -61,10 +61,6 @@ const Home: NextPage<{ data: Data }> = ({
     }))
   }, [results])
 
-  const updated = meta.updated_at
-    ? new Date(meta.updated_at).toDateString()
-    : 'N/A'
-
   return (
     <div>
       <Head>
@@ -75,23 +71,8 @@ const Home: NextPage<{ data: Data }> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Navbar>
+      <Navbar metaData={meta}>
         <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
-          <Group
-            spacing={3}
-            align="center"
-            noWrap
-            position="right"
-            mt="xs"
-            mb={-3}
-          >
-            <Text color="dimmed" size={11}>
-              Updated
-            </Text>
-            <Text italic size={11}>
-              {updated}
-            </Text>
-          </Group>
           <CrawlerCard title="Crawler Results" data={crawlerData} />
           <TestsTable header="Test Results" tables={tables} />
         </Container>
@@ -131,7 +112,7 @@ export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
   const [files] = await bucket.getFiles({
     prefix: 'results/crawler',
   })
-  
+
   // Figure out the latest date.
   const date = files
     .map(file => file.name)

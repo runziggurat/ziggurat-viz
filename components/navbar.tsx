@@ -11,14 +11,14 @@ import {
   MediaQuery,
   AppShell,
   Navbar as NavbarPrim,
-  ScrollArea,
+  Tabs,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { NextLink } from '@mantine/next'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
-import { FC, ReactNode } from 'react'
+import { FC, ReactNode, useMemo } from 'react'
 import Logo from '../public/logo.png'
-import { NAV_MAX_WIDTH } from '../utils/constants'
+import { CONTENT_MAX_WIDTH, NAV_MAX_WIDTH } from '../utils/constants'
 import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
@@ -116,6 +116,22 @@ const useStyles = createStyles(theme => ({
     padding: theme.spacing.sm,
     overscrollBehavior: 'contain',
   },
+  tabs: {},
+
+  tabLabel: {
+    ':hover': {
+      textDecoration: 'underline',
+    },
+  },
+
+  tabsList: {
+    borderBottom: '0 !important',
+  },
+
+  tab: {
+    fontWeight: "bolder",
+    height: 35,
+  },
 }))
 
 type Link = {
@@ -127,6 +143,7 @@ type Link = {
 export interface NavbarProps {
   links?: Link[]
   children?: ReactNode
+  metaData?: any
 }
 
 const defaultLinks: Link[] = [
@@ -140,7 +157,68 @@ const defaultLinks: Link[] = [
   },
 ]
 
-export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
+const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
+  const { classes } = useStyles()
+  if (!meta) {
+    return null
+  }
+  const updated = meta.updated_at
+    ? new Date(meta.updated_at).toDateString()
+    : 'N/A'
+  const UpdatedAt = () => {
+    return (
+      <Group spacing={3} align="center" noWrap position="right">
+        <Text color="dimmed" size={11}>
+          Updated
+        </Text>
+        <Text italic size={11}>
+          {updated}
+        </Text>
+      </Group>
+    )
+  }
+
+  const Links = () => {
+    return (
+      <Group spacing="xs" align="center">
+        <Tabs
+          radius={0}
+          classNames={{
+            root: classes.tabs,
+            tab: classes.tab,
+            tabsList: classes.tabsList,
+          }}
+          value={'home'}
+          // onTabChange={value => router.push(`/${repo}/${value}`)}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="home">
+              <Text className={classes.tabLabel}>home</Text>
+            </Tabs.Tab>
+            <Tabs.Tab value="other">
+              <Text className={classes.tabLabel}>force</Text>
+            </Tabs.Tab>
+            <Tabs.Tab value="other">
+              <Text className={classes.tabLabel}>geo</Text>
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
+      </Group>
+    )
+  }
+  return (
+    <Group position="apart" spacing="xs" mt={3} mb={-4}>
+      <Links />
+      <UpdatedAt />
+    </Group>
+  )
+}
+
+export const Navbar: FC<NavbarProps> = ({
+  links = defaultLinks,
+  children,
+  metaData,
+}) => {
   const [opened, { toggle }] = useDisclosure(false)
   const { classes } = useStyles()
 
@@ -182,7 +260,7 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
           <Container style={{ maxWidth: NAV_MAX_WIDTH }}>
             <div className={classes.inner}>
               <Center>
-                <NextLink href="/">
+                <NextLink href="/" legacyBehavior>
                   <Image
                     title="Ziggurat"
                     alt="Logo"
@@ -244,6 +322,9 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
         </MediaQuery>
       }
     >
+      <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
+        <Navigation metaData={metaData} />
+      </Container>
       {children}
     </AppShell>
   )
