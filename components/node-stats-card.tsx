@@ -10,6 +10,7 @@ import {
 import { FC } from 'react'
 import { Link } from './link'
 import { Tooltip } from './tooltip'
+import { bg } from '../utils/theme'
 
 const useStatStyles = createStyles(theme => ({
   container: {
@@ -17,8 +18,7 @@ const useStatStyles = createStyles(theme => ({
     width: '100%',
   },
   card: {
-    backgroundColor:
-      theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
+    backgroundColor: bg(theme),
   },
 
   label: {
@@ -139,9 +139,7 @@ export const NodeStatsCard: FC<any> = props => {
               />
             </div>
           </Group>
-          <Group noWrap>
-            {items.slice(1)}
-          </Group>
+          <Group noWrap>{items.slice(1)}</Group>
           <Group noWrap spacing="xs" mt={3}>
             <Text size="xs" color="dimmed">
               Crawler runtime:

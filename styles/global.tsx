@@ -11,8 +11,4 @@ export const globalStyles: Styles = (theme: MantineTheme) => ({
     position: 'relative',
     height: '100%',
   },
-
-  '.your-class': {
-    backgroundColor: 'red',
-  },
 })
