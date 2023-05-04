@@ -1,15 +1,15 @@
 import { Container } from '@mantine/core'
 import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
-import { parseJSON } from '../utils/helpers'
+import { parseJSON } from '../../utils/helpers'
 
-import { Navbar } from '../components/navbar'
+import { Navbar } from '../../components/navbar'
 import { useMemo } from 'react'
-import { TestsTable, TestsTableProps } from '../components/tests-table'
+import { TestsTable, TestsTableProps } from '../../components/tests-table'
 
-import { CrawlerCard } from '../components/crawler-card'
-import { CONTENT_MAX_WIDTH } from '../utils/constants'
-import { networks, parseNetwork } from '../utils/network'
+import { CrawlerCard } from '../../components/crawler-card'
+import { CONTENT_MAX_WIDTH } from '../../utils/constants'
+import { networks, parseNetwork } from '../../utils/network'
 
 import * as gcloud from '@google-cloud/storage'
 

@@ -30,6 +30,8 @@ import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
 import { bg, hover, secondary, text } from '../utils/theme'
+import { parseNetwork } from '../utils/network'
+import { useRouter } from 'next/router'
 
 const useStyles = createStyles(theme => ({
   header: {
@@ -156,10 +158,12 @@ const defaultLinks: Link[] = [
 
 const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
   const { classes } = useStyles()
-  if (!meta) {
+  const router = useRouter()
+  const network = parseNetwork(router.query)?.value
+  if (!network) {
     return null
   }
-  const updated = meta.updated_at
+  const updated = meta?.updated_at
     ? new Date(meta.updated_at).toDateString()
     : 'N/A'
   const UpdatedAt = () => {
@@ -191,12 +195,16 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
             tab: classes.tab,
             tabsList: classes.tabsList,
           }}
-          value={'home'}
-          // onTabChange={value => router.push(`/${repo}/${value}`)}
+          value={router.pathname.split('/')[2] || 'home'}
+          onTabChange={page => {
+            router.push(`/${network}/${page}`)
+          }}
         >
           <Tabs.List>
             <Tabs.Tab value="home">
-              <Text className={classes.tabLabel}>home</Text>
+              <Text className={classes.tabLabel}>
+                home
+              </Text>
             </Tabs.Tab>
             <Tabs.Tab value="force" title="May the force be with you!">
               <Text className={classes.tabLabel}>force</Text>

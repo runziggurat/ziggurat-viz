@@ -8,7 +8,7 @@ import {
 } from '@mantine/core'
 import { getCookie, setCookie } from 'cookies-next'
 import { GetServerSidePropsContext } from 'next'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { globalStyles } from '../styles/global'
 import { COLOR_SCHEME_COOKIE, DEFAULT_COLOR_SCHEME } from '../utils/constants'
@@ -17,6 +17,14 @@ import { ModalsProvider } from '@mantine/modals'
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props
   const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme)
+
+  useEffect(() => {
+    window.document.documentElement.setAttribute(
+      'data-color-scheme',
+      colorScheme
+    )
+    window.dispatchEvent(new Event('color-scheme-change'))
+  }, [colorScheme])
 
   const toggleColorScheme = useCallback(
     (value?: ColorScheme) => {
