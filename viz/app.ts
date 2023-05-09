@@ -21,7 +21,7 @@ export class CApp {
     public camera: PCamera;
     private world: CWorld;
 
-    public actions: IKeyAction [];
+    public actions: IKeyAction[];
     private velPanX: number;
     private velPanY: number;
     private velZoom: number;
@@ -44,28 +44,28 @@ export class CApp {
 
         let self = this
         if (handle) {
-            handle.getFile().then( async (file: File) => {
+            handle.getFile().then(async (file: File) => {
                 const contents = await file.text();
-                    let istate = <IState>JSON.parse(contents)
-                        await self.init(istate)
-                });
+                let istate = <IState>JSON.parse(contents)
+                await self.init(istate)
+            });
         } else {
             if (isFiltered) {
                 console.log('load demo filtered state.json')
-                self.readTextFile('/data/filtered.json', async function(atext: string) {
+                self.readTextFile('/data/filtered.json', async function (atext: string) {
                     let istate = <IState>JSON.parse(atext)
-                        await self.init(istate)
+                    await self.init(istate)
                 });
             } else {
                 console.log('load demo unfiltered state.json')
-                self.readTextFile('/data/state.json', async function(atext: string) {
+                self.readTextFile('/data/state.json', async function (atext: string) {
                     let istate = <IState>JSON.parse(atext)
-                        await self.init(istate)
+                    await self.init(istate)
                 });
             }
         }
 
-        this.startTime = Date.now()/1000
+        this.startTime = Date.now() / 1000
         this.lastTime = 0
         this.iter = 0
         this.lastUpdateTime = Date.now();
@@ -88,16 +88,16 @@ export class CApp {
     }
 
     async initializeWebGl(gl: WebGL2RenderingContext) {
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            gl.clearDepth(1.0);
-            gl.clearStencil(0.0);
-            gl.enable(gl.DEPTH_TEST);
-            gl.frontFace(gl.CW);
-            gl.cullFace(gl.BACK);
-            gl.enable(gl.CULL_FACE);
-            gl.lineWidth(4.0);
-            initShadersGl(gl);
-        }
+        gl.clearColor(1, 1, 1, 1.0);
+        gl.clearDepth(1.0);
+        gl.clearStencil(0.0);
+        gl.enable(gl.DEPTH_TEST);
+        gl.frontFace(gl.CW);
+        gl.cullFace(gl.BACK);
+        gl.enable(gl.CULL_FACE);
+        gl.lineWidth(4.0);
+        initShadersGl(gl);
+    }
 
     private updateFps() {
         this.iter++
@@ -105,15 +105,31 @@ export class CApp {
             let now = Date.now();
             let delta = now - this.lastTime;
             this.lastTime = now;
-            let fps = 1000*15/delta;
+            let fps = 1000 * 15 / delta;
             this.world.fpsNode.nodeValue = fps.toFixed(6);
         }
     }
 
+    private maybeSetColor() {
+        const bgDark = [26 / 255, 27 / 255, 30 / 255, 1] as const;
+        const bgLight = [1, 1, 1, 1] as const;
+
+        const isLight = window.document.documentElement.getAttribute('data-color-scheme') === 'light'
+        const bgColor = isLight ? bgLight : bgDark;
+        const currentColor = this.gl.getParameter(this.gl.COLOR_CLEAR_VALUE);
+        // only change the bg color if it's different
+        if (currentColor[0].toFixed(2) === bgColor[0].toFixed(2) && currentColor[1].toFixed(2) === bgColor[1].toFixed(2) && currentColor[2].toFixed(2) === bgColor[2].toFixed(2)) {
+            return;
+        }
+        console.log('changing bg color');
+        this.gl.clearColor(...bgColor);
+    }
+
     public renderGl() {
         this.updateFps();
+        this.maybeSetColor();
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.world.timeNode.nodeValue = (Date.now()/1000 - this.startTime).toFixed(2);
+        this.world.timeNode.nodeValue = (Date.now() / 1000 - this.startTime).toFixed(2);
         if (this.world) {
             this.update();
             this.world.renderGl();
@@ -133,7 +149,7 @@ export class CApp {
         var rawFile = new XMLHttpRequest();
         rawFile.overrideMimeType("application/json");
         rawFile.open("GET", file, true);
-        rawFile.onreadystatechange = function() {
+        rawFile.onreadystatechange = function () {
             if (rawFile.readyState == 4 && rawFile.status == 200) {
                 callback(rawFile.responseText);
             }
@@ -175,14 +191,14 @@ export class CApp {
             };
             this.actions.push(action);
         } else {
-            this.actions = this.actions.filter(function(action, index, arr){ 
+            this.actions = this.actions.filter(function (action, index, arr) {
                 return action.id != id;
             });
         }
     }
 
     public handleClickRelease(x: number, y: number) {
-        this.world.handleClickRelease(x-0.5, y-0.5)
+        this.world.handleClickRelease(x - 0.5, y - 0.5)
     }
 
     public handleMouseMove(dx: number, dy: number) {
@@ -190,7 +206,7 @@ export class CApp {
     }
 
     public handleClick(x: number, y: number) {
-        this.world.handleClick(x-0.5, y-0.5)
+        this.world.handleClick(x - 0.5, y - 0.5 + 100)
     }
 
     private updateActions(delta: number) {
@@ -265,12 +281,12 @@ export class CApp {
                 this.velPanX -= accelX;
                 if (this.velPanX < 0) {
                     this.velPanX = 0;
-                } 
+                }
             } else {
                 this.velPanX += accelX;
                 if (this.velPanX > 0) {
                     this.velPanX = 0;
-                } 
+                }
             }
         }
 
@@ -280,14 +296,14 @@ export class CApp {
                 this.velPanY -= accelY;
                 if (this.velPanY < 0) {
                     this.velPanY = 0;
-                } 
+                }
             } else {
                 this.velPanY += accelY;
                 if (this.velPanY > 0) {
                     this.velPanY = 0;
-                } 
+                }
             }
-        } 
+        }
 
         if (accelZ == 0 && this.velZoom != 0) {
             accelZ = ACC * 2 * delta / 1000;
@@ -295,18 +311,18 @@ export class CApp {
                 this.velZoom -= accelZ;
                 if (this.velZoom < 0) {
                     this.velZoom = 0;
-                } 
+                }
             } else {
                 this.velZoom += accelZ;
                 if (this.velZoom > 0) {
                     this.velZoom = 0;
-                } 
+                }
             }
         }
 
         // apply pan velocity
         if (this.velPanX || this.velPanY) {
-            let dimen : number = (this.camera.worldWidth > this.camera.worldHeight) ? this.camera.worldWidth : this.camera.worldHeight;
+            let dimen: number = (this.camera.worldWidth > this.camera.worldHeight) ? this.camera.worldWidth : this.camera.worldHeight;
             let dx = this.velPanX * delta / 1000 * dimen;
             let dy = this.velPanY * delta / 1000 * dimen;
             this.camera.x += dx;
@@ -352,4 +368,3 @@ export class CApp {
     }
 
 }
-

@@ -17,6 +17,11 @@ export const hover = (color: string, { colorScheme, fn }: MantineTheme) => {
     return colorScheme === 'dark' ? fn.lighten(color, .05) : fn.darken(color, .05)
 }
 
+export const overlay = (color: string, theme: MantineTheme) => {
+    const base = hover(color, theme);
+    return theme.fn.rgba(base, .7)
+}
+
 export const secondary = (color: string, { colorScheme, fn }: MantineTheme) => {
     return colorScheme === 'dark' ? fn.lighten(color, .1) : fn.darken(color, .1)
 }

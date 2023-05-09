@@ -29,11 +29,11 @@ const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0);
 
 export class CWorld {
     public istate: IState;
-    public nodes: CNode [];
-    public singleNodes: CNode [];
+    public nodes: CNode[];
+    public singleNodes: CNode[];
     public superMap: Map<string, CNode>;
-    public superNodes: CNode [];
-    public  gl: WebGL2RenderingContext;
+    public superNodes: CNode[];
+    public gl: WebGL2RenderingContext;
     private noiseTexture: WebGLTexture;
     private worldMapTexture: WebGLTexture;
     private gradientTexture: WebGLTexture;
@@ -251,11 +251,11 @@ export class CWorld {
         this.updateNodeColors();
     }
 
-    public getNode(id: number) : CNode {
+    public getNode(id: number): CNode {
         if (id < this.istate.nodes.length) {
             return this.nodes[id];
         } else {
-            return this.superNodes[id-this.istate.nodes.length];
+            return this.superNodes[id - this.istate.nodes.length];
         }
     }
 
@@ -270,7 +270,7 @@ export class CWorld {
             node.updateMatrix();
         }
         for (let node of this.superNodes) {
-            node.incRotationY(2 * Math.PI / 180 * (0.36 + node.inode.num_subnodes/2400));
+            node.incRotationY(2 * Math.PI / 180 * (0.36 + node.inode.num_subnodes / 2400));
             node.updateMatrix();
         }
         this.updateSingleNodeData();
@@ -281,7 +281,8 @@ export class CWorld {
 
     private updateSuperStatus(id) {
         // first, restore supernode to default state if opened
-        if (id == -1) {
+        let node = this.getNode(id);
+        if (!node) {
             if (this.selectedSuperNode && this.selectedSuperNode.id != id) {
                 if (this.selectedSuperNode.isOpenedSuper) {
                     this.selectedSuperNode.isOpenedSuper = false;
@@ -292,7 +293,6 @@ export class CWorld {
             return;
         }
 
-        let node = this.getNode(id);
         if (node.nodeType != ENodeType.Super) {
             return;
         }
@@ -305,7 +305,7 @@ export class CWorld {
                 }
                 this.selectedSuperNode = null;
             }
-            if (node == this.selectedSuperNode)  {
+            if (node == this.selectedSuperNode) {
                 if (!node.isOpenedSuper) {
                     // open up the super node
                     node.isOpenedSuper = true;
@@ -314,9 +314,9 @@ export class CWorld {
                     let n = 0;
                     for (let subnode of node.subNodes) {
                         this.mainSubGroup.transformData.set(subnode.getCurrentColor(this.colorMode), n);
-                        this.mainSubGroup.transformData.set(subnode.metadata, n+4);
-                        this.mainSubGroup.transformData.set(subnode.idColor, n+8);
-                        this.mainSubGroup.transformData.set(subnode.matWorld, n+12);
+                        this.mainSubGroup.transformData.set(subnode.metadata, n + 4);
+                        this.mainSubGroup.transformData.set(subnode.idColor, n + 8);
+                        this.mainSubGroup.transformData.set(subnode.matWorld, n + 12);
                         n += NODE_TRANSFORM_SIZE
                     }
                     console.log('new subnodes has length ', node.subNodes.length);
@@ -332,13 +332,16 @@ export class CWorld {
 
     public handleClick(x: number, y: number) {
         this.inDrag = true;
-        let screenCoords : vec2 = vec2.fromValues(x/this.canvas.width, 1 - y/this.canvas.height )
+        let screenCoords: vec2 = vec2.fromValues(x / this.canvas.width, 1 - y / this.canvas.height)
         this.picker.preRender(screenCoords[0], screenCoords[1])
         this.renderPicker();
         let id = this.picker.postRender();
         console.log(`  got id ${id}`)
-        if (id >= 0) {
-            let node = this.getNode(id);
+        let node = this.getNode(id);
+        // Changed cuz node was undefined, instead of id == -1, on click outside of nodes
+        // Using same node variable below due to boring reasons!
+        // TODO Revisit. 
+        if (node) {
             this.ipNode.nodeValue = node.nodeType != ENodeType.Super ? 'IP: ' + node.inode.addr : `Super Node: ${node.subNodes.length} nodes`;
             this.networkTypeNode.nodeValue = node.inode.network_type;
             this.betweennessNode.nodeValue = node.nodeType != ENodeType.Super ? node.inode.betweenness.toFixed(6) : '--';
@@ -356,26 +359,26 @@ export class CWorld {
         }
         this.updateSuperStatus(id);
         if (id == this.selectedId) return;
-        if (this.selectedId != -1) {
+        node = this.getNode(this.selectedId);
+        if (node) {
             // restore color
-            let node = this.getNode(this.selectedId);
             if (node.nodeType == ENodeType.Single) {
-                this.mainSingleGroup.transformData.set(this.singleNodes[node.index].getCurrentColor(this.colorMode), node.index*NODE_TRANSFORM_SIZE);
+                this.mainSingleGroup.transformData.set(this.singleNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
             } else if (node.nodeType == ENodeType.Super) {
-                this.mainSuperGroup.transformData.set(this.superNodes[node.index].getCurrentColor(this.colorMode), node.index*NODE_TRANSFORM_SIZE);
+                this.mainSuperGroup.transformData.set(this.superNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
             } else if (node.nodeType == ENodeType.Sub && node.superNode == this.selectedSuperNode) {
-                this.mainSubGroup.transformData.set(this.selectedSuperNode.subNodes[node.index].getCurrentColor(this.colorMode), node.index*NODE_TRANSFORM_SIZE);
+                this.mainSubGroup.transformData.set(this.selectedSuperNode.subNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
             }
         }
-        if (id != -1) {
-            let node = this.getNode(id);
+        node = this.getNode(id);
+        if (node) {
             if (node.nodeType == ENodeType.Single) {
-                this.mainSingleGroup.transformData.set(this.white, node.index*NODE_TRANSFORM_SIZE);
+                this.mainSingleGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
             } else if (node.nodeType == ENodeType.Super) {
-                this.mainSuperGroup.transformData.set(this.white, node.index*NODE_TRANSFORM_SIZE);
+                this.mainSuperGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
             } else {
                 console.log('subnode offset: ', node.subnodeOffset);
-                this.mainSubGroup.transformData.set(this.white, node.index*NODE_TRANSFORM_SIZE);
+                this.mainSubGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
             }
             if (!this.isTiny) {
                 this.numConnectionsToDraw = this.setConnectionData(node);
@@ -410,9 +413,9 @@ export class CWorld {
         let n: number = 0;
         for (let node of this.singleNodes) {
             this.mainSingleGroup.transformData.set(node.getCurrentColor(EColorMode.Degree), n);
-            this.mainSingleGroup.transformData.set(node.metadata, n+4);
-            this.mainSingleGroup.transformData.set(node.idColor, n+8);
-            this.mainSingleGroup.transformData.set(node.matWorld, n+12);
+            this.mainSingleGroup.transformData.set(node.metadata, n + 4);
+            this.mainSingleGroup.transformData.set(node.idColor, n + 8);
+            this.mainSingleGroup.transformData.set(node.matWorld, n + 12);
             n += NODE_TRANSFORM_SIZE
         }
         this.mainSingleGroup.transformBuffer = gl.createBuffer();
@@ -423,13 +426,13 @@ export class CWorld {
         gl.bufferData(gl.ARRAY_BUFFER, this.mainSingleGroup.transformData, gl.STATIC_DRAW);
 
         this.mainSuperGroup.transformData = new Float32Array(this.superNodes.length * NODE_TRANSFORM_SIZE);
-        console.log('superNodes size ',this.superNodes.length);
+        console.log('superNodes size ', this.superNodes.length);
         n = 0;
         for (let node of this.superNodes) {
             this.mainSuperGroup.transformData.set(node.degreeColor, n);
-            this.mainSuperGroup.transformData.set(node.metadata, n+4);
-            this.mainSuperGroup.transformData.set(node.idColor, n+8);
-            this.mainSuperGroup.transformData.set(node.matWorld, n+12);
+            this.mainSuperGroup.transformData.set(node.metadata, n + 4);
+            this.mainSuperGroup.transformData.set(node.idColor, n + 8);
+            this.mainSuperGroup.transformData.set(node.matWorld, n + 12);
             n += NODE_TRANSFORM_SIZE;
         }
 
@@ -458,7 +461,7 @@ export class CWorld {
         gl.bufferData(gl.ARRAY_BUFFER, this.connectionData, gl.STATIC_DRAW);
     }
 
-    private setConnectionData(node: CNode) : number {
+    private setConnectionData(node: CNode): number {
         if (node.nodeType == ENodeType.Super) {
             return 0;
         }
@@ -468,11 +471,11 @@ export class CWorld {
             let connection: CNode = this.nodes[index];
             if (connection.inode.ignore) continue;
             this.connectionData.set(connection.getCurrentColor(this.colorMode), n);
-            this.connectionData.set(node.position, n+4);
+            this.connectionData.set(node.position, n + 4);
             let delta: vec3 = vec3.create();
             let connPosition: vec3 = connection.getConnectionPosition();
             vec3.sub(delta, connPosition, node.position);
-            this.connectionData.set(delta, n+8);
+            this.connectionData.set(delta, n + 8);
             n += 12;
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer);
@@ -488,11 +491,11 @@ export class CWorld {
                 let connection: CNode = this.nodes[index];
                 if (connection.inode.ignore) continue;
                 this.connectionData.set(this.isTiny ? COLOR_BLACK : connection.getCurrentColor(this.colorMode), n);
-                this.connectionData.set(node.position, n+4);
+                this.connectionData.set(node.position, n + 4);
                 let delta: vec3 = vec3.create();
                 let connPosition: vec3 = connection.getConnectionPosition();
                 vec3.sub(delta, connPosition, node.position);
-                this.connectionData.set(delta, n+8);
+                this.connectionData.set(delta, n + 8);
                 n += 12;
             }
         }
@@ -560,24 +563,24 @@ export class CWorld {
         gl.bindVertexArray(group.vao);
         gl.bindBuffer(gl.ARRAY_BUFFER, group.transformBuffer);
         gl.enableVertexAttribArray(colorLoc);
-        gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 0);
+        gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 0);
         gl.enableVertexAttribArray(metadataLoc);
-        gl.vertexAttribPointer(metadataLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 16);
+        gl.vertexAttribPointer(metadataLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 16);
         gl.enableVertexAttribArray(modelLoc);
-        gl.vertexAttribPointer(modelLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 48);
-        gl.enableVertexAttribArray(modelLoc+1);
-        gl.vertexAttribPointer(modelLoc+1, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 64);
-        gl.enableVertexAttribArray(modelLoc+2);
-        gl.vertexAttribPointer(modelLoc+2, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 80);
-        gl.enableVertexAttribArray(modelLoc+3);
-        gl.vertexAttribPointer(modelLoc+3, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 96);
+        gl.vertexAttribPointer(modelLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 48);
+        gl.enableVertexAttribArray(modelLoc + 1);
+        gl.vertexAttribPointer(modelLoc + 1, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 64);
+        gl.enableVertexAttribArray(modelLoc + 2);
+        gl.vertexAttribPointer(modelLoc + 2, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 80);
+        gl.enableVertexAttribArray(modelLoc + 3);
+        gl.vertexAttribPointer(modelLoc + 3, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 96);
 
-        gl.vertexAttribDivisor(modelLoc,1);
-        gl.vertexAttribDivisor(modelLoc+1,1);
-        gl.vertexAttribDivisor(modelLoc+2,1);
-        gl.vertexAttribDivisor(modelLoc+3,1);
-        gl.vertexAttribDivisor(colorLoc,1);
-        gl.vertexAttribDivisor(metadataLoc,1);
+        gl.vertexAttribDivisor(modelLoc, 1);
+        gl.vertexAttribDivisor(modelLoc + 1, 1);
+        gl.vertexAttribDivisor(modelLoc + 2, 1);
+        gl.vertexAttribDivisor(modelLoc + 3, 1);
+        gl.vertexAttribDivisor(colorLoc, 1);
+        gl.vertexAttribDivisor(metadataLoc, 1);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, geometry);
         gl.enableVertexAttribArray(positionLoc);
@@ -613,24 +616,24 @@ export class CWorld {
         gl.bindVertexArray(group.vao);
         gl.bindBuffer(gl.ARRAY_BUFFER, group.transformBuffer);
         gl.enableVertexAttribArray(metadataLoc);
-        gl.vertexAttribPointer(metadataLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 16);
+        gl.vertexAttribPointer(metadataLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 16);
         gl.enableVertexAttribArray(pickerColorLoc);
-        gl.vertexAttribPointer(pickerColorLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 32);
+        gl.vertexAttribPointer(pickerColorLoc, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 32);
         gl.enableVertexAttribArray(modelLoc);
-        gl.vertexAttribPointer(modelLoc+0, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 48);
-        gl.enableVertexAttribArray(modelLoc+1);
-        gl.vertexAttribPointer(modelLoc+1, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 64);
-        gl.enableVertexAttribArray(modelLoc+2);
-        gl.vertexAttribPointer(modelLoc+2, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 80);
-        gl.enableVertexAttribArray(modelLoc+3);
-        gl.vertexAttribPointer(modelLoc+3, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE*4, 96);
+        gl.vertexAttribPointer(modelLoc + 0, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 48);
+        gl.enableVertexAttribArray(modelLoc + 1);
+        gl.vertexAttribPointer(modelLoc + 1, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 64);
+        gl.enableVertexAttribArray(modelLoc + 2);
+        gl.vertexAttribPointer(modelLoc + 2, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 80);
+        gl.enableVertexAttribArray(modelLoc + 3);
+        gl.vertexAttribPointer(modelLoc + 3, 4, gl.FLOAT, false, NODE_TRANSFORM_SIZE * 4, 96);
 
-        gl.vertexAttribDivisor(modelLoc+0,1);
-        gl.vertexAttribDivisor(modelLoc+1,1);
-        gl.vertexAttribDivisor(modelLoc+2,1);
-        gl.vertexAttribDivisor(modelLoc+3,1);
-        gl.vertexAttribDivisor(pickerColorLoc,1);
-        gl.vertexAttribDivisor(metadataLoc,1);
+        gl.vertexAttribDivisor(modelLoc + 0, 1);
+        gl.vertexAttribDivisor(modelLoc + 1, 1);
+        gl.vertexAttribDivisor(modelLoc + 2, 1);
+        gl.vertexAttribDivisor(modelLoc + 3, 1);
+        gl.vertexAttribDivisor(pickerColorLoc, 1);
+        gl.vertexAttribDivisor(metadataLoc, 1);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, geometry);
         gl.enableVertexAttribArray(positionLoc);
@@ -703,18 +706,18 @@ export class CWorld {
         this.connectionVao = gl.createVertexArray();
         gl.bindVertexArray(this.connectionVao);
 
-        this.initConnectionData(this.isTiny ? this.numConnections: this.maxConnections);
+        this.initConnectionData(this.isTiny ? this.numConnections : this.maxConnections);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer);
         gl.enableVertexAttribArray(colorLoc);
-        gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE*4, 0);
+        gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE * 4, 0);
         gl.enableVertexAttribArray(vertex1Loc);
-        gl.vertexAttribPointer(vertex1Loc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE*4, 16);
+        gl.vertexAttribPointer(vertex1Loc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE * 4, 16);
         gl.enableVertexAttribArray(vertex2Loc);
-        gl.vertexAttribPointer(vertex2Loc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE*4, 32);
+        gl.vertexAttribPointer(vertex2Loc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE * 4, 32);
 
-        gl.vertexAttribDivisor(colorLoc,1);
-        gl.vertexAttribDivisor(vertex1Loc,1);
-        gl.vertexAttribDivisor(vertex2Loc,1);
+        gl.vertexAttribDivisor(colorLoc, 1);
+        gl.vertexAttribDivisor(vertex1Loc, 1);
+        gl.vertexAttribDivisor(vertex2Loc, 1);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.lineGeometry);
         gl.enableVertexAttribArray(positionLoc);
@@ -729,7 +732,7 @@ export class CWorld {
         this.noiseTexture = createRandomTexture(gl, 1024, 1);
         let width = gl.getParameter(gl.MAX_TEXTURE_SIZE);
         console.log('max width is ', width);
-        let precision = gl.getParameter(gl.DEPTH_BITS) ;
+        let precision = gl.getParameter(gl.DEPTH_BITS);
         console.log('precision is ', precision);
         if (width >= 8192) {
             this.worldMapTexture = await loadTexture(gl, "/data/world-mono-8k.png");
@@ -769,23 +772,23 @@ export class CWorld {
         }
     }
 
-    private colorFromNormalizedValue(v: number) : vec4 {
+    private colorFromNormalizedValue(v: number): vec4 {
         if (v < 0.25) {
             // blue -> cyan
             v = v * 4;
             return vec4.fromValues(0, v, 1, 1);
         } else if (v < 0.5) {
             // cyan -> green
-            v = (v-0.25) * 4;
-            return vec4.fromValues(0, 1, 1-v, 1);
+            v = (v - 0.25) * 4;
+            return vec4.fromValues(0, 1, 1 - v, 1);
         } else if (v < 0.75) {
             // green -> yellow
-            v = (v-0.50) * 4;
+            v = (v - 0.50) * 4;
             return vec4.fromValues(v, 1, 0, 1);
         } else {
             // yellow -> red
-            v = (v-0.75) * 4;
-            return vec4.fromValues(1, 1-v, 0, 1);
+            v = (v - 0.75) * 4;
+            return vec4.fromValues(1, 1 - v, 0, 1);
         }
     }
 
@@ -794,32 +797,32 @@ export class CWorld {
             let b = (node.inode.betweenness - this.minBetweenness) / (this.maxBetweenness - this.minBetweenness);
             node.betweenColor = this.colorFromNormalizedValue(b);
 
-            let c =  (node.inode.closeness - this.minCloseness) / (this.maxCloseness - this.minCloseness);
+            let c = (node.inode.closeness - this.minCloseness) / (this.maxCloseness - this.minCloseness);
             node.closeColor = this.colorFromNormalizedValue(c);
 
-            let d =  (node.numConnections - this.minConnections) / (this.maxConnections - this.minConnections);
+            let d = (node.numConnections - this.minConnections) / (this.maxConnections - this.minConnections);
             node.degreeColor = this.colorFromNormalizedValue(d);
         }
     }
 
     private setDescriptions() {
         this.betweennessDescription = 'MIN: ' + this.minBetweenness.toFixed(6) + ' ---- BETWEENNESS ---- MAX: ' + this.maxBetweenness.toFixed(6);
-        this.closenessDescription = 'MIN: ' + this.minCloseness.toFixed(4) +     ' ----- CLOSENESS ----- MAX: ' + this.maxCloseness.toFixed(4);
-        this.degreeDescription = 'MIN: ' + this.minConnections +                    ' ------- DEGREE ------ MAX: ' + this.maxConnections;
+        this.closenessDescription = 'MIN: ' + this.minCloseness.toFixed(4) + ' ----- CLOSENESS ----- MAX: ' + this.maxCloseness.toFixed(4);
+        this.degreeDescription = 'MIN: ' + this.minConnections + ' ------- DEGREE ------ MAX: ' + this.maxConnections;
         console.log(this.betweennessDescription);
         console.log(this.closenessDescription);
         console.log(this.degreeDescription);
     }
 
-    private createGeoString(geolocation: IGeolocation) : string {
+    private createGeoString(geolocation: IGeolocation): string {
         const DEGREE_RESOLUTION: number = 1.0 / 0.2;
         let result: string = Math.floor(geolocation.coordinates.latitude * DEGREE_RESOLUTION).toString() + ':' + Math.floor(geolocation.coordinates.longitude * DEGREE_RESOLUTION).toString();
         return result;
     }
 
-    private assignSubNodes(nodes: INode []) {
+    private assignSubNodes(nodes: INode[]) {
         let nogeo: number = 0;
-        let nodeMap: Map<string, INode []> = new Map();
+        let nodeMap: Map<string, INode[]> = new Map();
 
         for (let inode of nodes) {
             // remove port number from addr string.
@@ -858,7 +861,7 @@ export class CWorld {
         }
         console.log('nodeMap length ', nodeMap.size);
     }
- 
+
     public async initialize() {
         console.log('world::initialize, num nodes: ' + this.istate.nodes.length);
         let gl = this.gl;
@@ -878,16 +881,16 @@ export class CWorld {
             if (inode.subnode_index == 0 || this.isTiny) {
                 if (inode.num_subnodes > 1 && !this.isTiny) {
                     // new super node
-                    let superNode = new CNode(inode, this.istate.nodes.length+this.superNodes.length, this.superNodes.length, this.camera, ENodeType.Super, null, 0);
+                    let superNode = new CNode(inode, this.istate.nodes.length + this.superNodes.length, this.superNodes.length, this.camera, ENodeType.Super, null, 0);
                     // make super nodes magenta
                     superNode.degreeColor = COLOR_MAGENTA;
 
-                    this.superMap.set(inode.geostr,superNode);
+                    this.superMap.set(inode.geostr, superNode);
                     this.superNodes.push(superNode);
                     let node = new CNode(inode, id, superNode.subNodes.length, this.camera, ENodeType.Sub, superNode, abstand);
                     this.nodes.push(node);
                     superNode.subNodes.push(node);
-                 } else {
+                } else {
                     // new single node
                     let node = new CNode(inode, id, this.singleNodes.length, this.camera, ENodeType.Single, null, abstand);
                     this.nodes.push(node);
@@ -917,7 +920,7 @@ export class CWorld {
         let maxSuperNodeSize = Math.sqrt(this.maxSubnodes);
         for (let superNode of this.superNodes) {
             let size = Math.sqrt(superNode.subNodes.length);
-            superNode.scale = (size-minSuperNodeSize)/maxSuperNodeSize * (MAX_SUPERNODE_SCALE-MIN_SUPERNODE_SCALE) + MIN_SUPERNODE_SCALE;
+            superNode.scale = (size - minSuperNodeSize) / maxSuperNodeSize * (MAX_SUPERNODE_SCALE - MIN_SUPERNODE_SCALE) + MIN_SUPERNODE_SCALE;
         }
 
         this.setDescriptions();

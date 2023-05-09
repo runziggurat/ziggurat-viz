@@ -58,7 +58,6 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
           withGlobalStyles
           withNormalizeCSS
           theme={{
-            /** Put your mantine theme override here */
             colorScheme,
           }}
         >

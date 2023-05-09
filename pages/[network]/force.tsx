@@ -1,8 +1,8 @@
 import { NextPage } from 'next'
 import { Navbar } from '../../components/navbar'
-import { useEffect, useLayoutEffect } from 'react'
-import { Center, createStyles, Text, Transition } from '@mantine/core'
-import { bg, secondary, text } from '../../utils/theme'
+import { useEffect } from 'react'
+import { Center, createStyles, Text } from '@mantine/core'
+import { text } from '../../utils/theme'
 import { useSetState } from '@mantine/hooks'
 
 const useStyles = createStyles(theme => ({
@@ -18,11 +18,6 @@ const useStyles = createStyles(theme => ({
     userSelect: 'none',
   },
 }))
-
-const init = async () => {
-  const { loadFilteredDemo } = await import('../../viz/force')
-  await loadFilteredDemo()
-}
 
 const Force: NextPage<{}> = () => {
   const { classes } = useStyles()
@@ -49,14 +44,6 @@ const Force: NextPage<{}> = () => {
   }, [])
   return (
     <Navbar>
-      <style jsx>
-        {`
-          #graph {
-            position: absolute;
-            bottom: 0;
-          }
-        `}
-      </style>
       {!status.done && (
         <Center className={classes.status}>
           <Text
@@ -67,7 +54,7 @@ const Force: NextPage<{}> = () => {
           </Text>
         </Center>
       )}
-      <div id="graph" />
+      <div id="graph" style={{ position: 'absolute', bottom: 0 }} />
     </Navbar>
   )
 }
