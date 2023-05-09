@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { EKeyId } from './core'
 import { CApp } from './app'
 
@@ -7,49 +5,51 @@ export class CMousekeyCtlr {
     app: CApp;
 
     constructor(app: CApp) {
-        let self = this;
         this.app = app;
-        window.addEventListener('keydown', (evt) => {
-            this.onKeydownEvent(evt);
-        });
-        window.addEventListener('keyup', (evt) => {
-            this.onKeyupEvent(evt);
-        });
-        window.addEventListener('mousedown', function(evt) {
-            self.onMouseEvent(evt);
-            evt.preventDefault();
-        }, false);
-        window.addEventListener('mouseup', function(evt) {
-            self.onMouseEvent(evt);
-        });
-        window.addEventListener('mousemove', (evt) => {
-            self.onMouseEvent(evt);
-        });
-        window.addEventListener('wheel', (evt) => {
-            self.onMouseEvent(evt);
-        });
+        window.addEventListener('keydown', this.onKeydownEvent);
+        window.addEventListener('keyup', this.onKeyupEvent);
+        window.addEventListener('mousedown', this.onMouseDownNoDefault, false);
+        window.addEventListener('mouseup', this.onMouseEvent);
+        window.addEventListener('mousemove', this.onMouseEvent);
+        window.addEventListener('wheel', this.onMouseEvent);
     }
 
-    public onMouseLeftDown(x: number, y: number) {
+    public destroy = () => {
+        window.removeEventListener('keydown', this.onKeydownEvent);
+        window.removeEventListener('keyup', this.onKeyupEvent);
+        window.removeEventListener('mousedown', this.onMouseDownNoDefault, false);
+        window.removeEventListener('mouseup', this.onMouseEvent);
+        window.removeEventListener('mousemove', this.onMouseEvent);
+        window.removeEventListener('wheel', this.onMouseEvent);
+
+        this.app = null!; // TODO Check if it actually helps GC.
+    }
+
+    onMouseDownNoDefault = (evt: MouseEvent) => {
+        this.onMouseEvent(evt);
+        evt.preventDefault();
+    }
+
+    onMouseLeftDown = (x: number, y: number) => {
         this.app.handleClick(x, y);
     }
 
-    public onMouseRightDown(x: number, y: number, evt: MouseEvent) {
+    onMouseRightDown = (x: number, y: number, evt: MouseEvent) => {
     }
 
-    public onMouseMiddleDown(x: number, y: number) {
+    onMouseMiddleDown = (x: number, y: number) => {
         console.log('onMouseMiddleDown');
     }
 
-    public onMouseMove(x: number, y: number) {
+    onMouseMove = (x: number, y: number) => {
         this.app.handleMouseMove(x, y);
     }
 
-    public onMouseLeftUp(x: number, y: number) {
+    onMouseLeftUp = (x: number, y: number) => {
         this.app.handleClickRelease(x, y);
     }
 
-    public onMouseEvent(evt: any) {
+    onMouseEvent = (evt: any) => {
         if (!this.app) {
             return;
         }
@@ -57,27 +57,27 @@ export class CMousekeyCtlr {
         let x = evt.offsetX;
         let y = evt.offsetY;
         if (evt.type == 'mousedown') {
-            if(evt.button == 0) {
+            if (evt.button == 0) {
                 this.onMouseLeftDown(x, y);
-            } else if(evt.button == 1) {
+            } else if (evt.button == 1) {
                 this.onMouseMiddleDown(x, y);
-            } else if(evt.button == 2) {
+            } else if (evt.button == 2) {
                 this.onMouseRightDown(x, y, evt);
             }
         } else if (evt.type == 'mousemove') {
             this.onMouseMove(evt.movementX, evt.movementY);
         } else if (evt.type == 'mouseup') {
-            if(evt.button == 0) {
+            if (evt.button == 0) {
                 this.onMouseLeftUp(x, y);
             }
         } else if (evt.type == 'wheel') {
             if (evt.deltaY > 0) {
-                this.app.zoomOutTicks += evt.deltaY/16;
+                this.app.zoomOutTicks += evt.deltaY / 16;
                 if (this.app.zoomOutTicks > 10) {
                     this.app.zoomOutTicks = 10;
                 }
             } else {
-                this.app.zoomInTicks += -evt.deltaY/16;
+                this.app.zoomInTicks += -evt.deltaY / 16;
                 if (this.app.zoomInTicks > 10) {
                     this.app.zoomInTicks = 10;
                 }
@@ -85,7 +85,7 @@ export class CMousekeyCtlr {
         }
     }
 
-    public onKeydownEvent(evt: KeyboardEvent) {
+    onKeydownEvent = (evt: KeyboardEvent) => {
         if (evt.code == 'ArrowUp') {
             this.app.onAction(true, EKeyId.ArrowUp);
         } else if (evt.code == 'ArrowDown') {
@@ -113,7 +113,7 @@ export class CMousekeyCtlr {
         }
     }
 
-    public onKeyupEvent(evt: KeyboardEvent) {
+    onKeyupEvent = (evt: KeyboardEvent) => {
         if (evt.code == 'ArrowUp') {
             this.app.onAction(false, EKeyId.ArrowUp)
         } else if (evt.code == 'ArrowDown') {

@@ -87,6 +87,10 @@ export class CApp {
         this.mousekey = new CMousekeyCtlr(this);
     }
 
+    destroy() {
+        this.mousekey.destroy();
+    }
+
     async initializeWebGl(gl: WebGL2RenderingContext) {
         gl.clearColor(1, 1, 1, 1.0);
         gl.clearDepth(1.0);

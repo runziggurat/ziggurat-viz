@@ -112,6 +112,11 @@ const Geo: NextPage<{}> = () => {
           msg: 'error loading geo location graph, try again later!',
         })
       })
+    return () => {
+      if (appRef.current) {
+        appRef.current.destroy()
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useAnimationFrame(() => {
@@ -149,31 +154,31 @@ const Geo: NextPage<{}> = () => {
         </div>
         <div className={classes.overlayTopRight} id="overlayRight">
           <div>
-            <span id="ip"></span>
+            <span id="ip" />
           </div>
           <div>
-            network type: <span id="networktype"></span>
+            network type: <span id="networktype" />
           </div>
           <div>
-            betweenness: <span id="betweenness"></span>
+            betweenness: <span id="betweenness" />
           </div>
           <div>
-            closeness: <span id="closeness"></span>
+            closeness: <span id="closeness" />
           </div>
           <div>
-            connections: <span id="connections"></span>
+            connections: <span id="connections" />
           </div>
           <div>
-            latitude: <span id="latitude"></span>
+            latitude: <span id="latitude" />
           </div>
           <div>
-            longitude: <span id="longitude"></span>
+            longitude: <span id="longitude" />
           </div>
           <div>
-            subnode index: <span id="subnode"></span>
+            subnode index: <span id="subnode" />
           </div>
           <div>
-            number of subnodes: <span id="numsubnodes"></span>
+            number of subnodes: <span id="numsubnodes" />
           </div>
           <div>
             city: <span id="city"></span>
@@ -196,9 +201,7 @@ const Geo: NextPage<{}> = () => {
             <div>x: toggle command overlay</div>
           </Stack>
         </div>
-        <div className={classes.overlayBottomCenter} id="gradient">
-          <div>0 DEGREE 433</div>
-        </div>
+        <div className={classes.overlayBottomCenter} id="gradient" />
       </Center>
     </Navbar>
   )
