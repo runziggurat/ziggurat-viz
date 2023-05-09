@@ -86,17 +86,14 @@ function cycleColorMode() {
     }
 }
 
-function onKeydownEvent(evt: KeyboardEvent) {
-    // console.log('onKeyDownEvent: ', evt.code);
+const onKeydownEvent = (evt: KeyboardEvent) => {
     if (evt.code == 'KeyC') {
         cycleColorMode()
     }
 }
 
 export async function loadForceState() {
-    window.addEventListener('keydown', (evt) => {
-        onKeydownEvent(evt);
-    });
+    window.addEventListener('keydown', onKeydownEvent);
     let fileHandle: FileSystemFileHandle;
     try {
         if (window.showOpenFilePicker) {
@@ -118,10 +115,7 @@ export async function loadForceState() {
 }
 
 export async function loadUnfilteredState() {
-    window.addEventListener('keydown', (evt) => {
-        onKeydownEvent(evt);
-    });
-
+    window.addEventListener('keydown', onKeydownEvent);
 
     var rawFile = new XMLHttpRequest();
     rawFile.overrideMimeType("application/json");
@@ -135,9 +129,7 @@ export async function loadUnfilteredState() {
 }
 
 async function loadDemo(filepath: string) {
-    window.addEventListener('keydown', (evt) => {
-        onKeydownEvent(evt);
-    });
+    window.addEventListener('keydown', onKeydownEvent);
 
 
     var rawFile = new XMLHttpRequest();
@@ -234,4 +226,11 @@ function setColors() {
 function updateSize() {
     Graph.height(window.innerHeight - NAVBAR_HEIGHT)
         .width(window.innerWidth)
+}
+
+export function destroy() {
+    Graph = null
+    window.removeEventListener("resize", updateSize)
+    window.removeEventListener("color-scheme-change", setColors)
+    window.removeEventListener('keydown', onKeydownEvent);
 }

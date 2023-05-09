@@ -19,6 +19,8 @@ const useStyles = createStyles(theme => ({
   },
 }))
 
+let destroy: any
+
 const Force: NextPage<{}> = () => {
   const { classes } = useStyles()
   const [status, setStatus] = useSetState({
@@ -28,7 +30,8 @@ const Force: NextPage<{}> = () => {
   })
   useEffect(() => {
     import('../../viz/force')
-      .then(({ loadFilteredDemo }) => {
+      .then(({ loadFilteredDemo, destroy: _destroy }) => {
+        destroy = _destroy
         setStatus({
           done: true,
         })
@@ -40,6 +43,9 @@ const Force: NextPage<{}> = () => {
           msg: 'error loading force graph, try again later!',
         })
       })
+    return () => {
+      destroy?.()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return (
