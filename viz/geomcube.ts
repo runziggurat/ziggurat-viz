@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 const CUBE_SCALE: number = 1.4;
 const CUBE_POLYS: number = 12;
@@ -63,7 +62,7 @@ const indices = [
     5, 7, 3
 ]
 
-export function cubeGeometry(gl: WebGL2RenderingContext) : WebGLBuffer {
+export function cubeGeometry(gl: WebGL2RenderingContext) : WebGLBuffer | null {
     // 6 sides, 2 polys per side = 12 polys
     const VERTEX_SIZE = 6;
     let size = 3 * CUBE_POLYS * VERTEX_SIZE;
@@ -84,7 +83,7 @@ export function cubeGeometry(gl: WebGL2RenderingContext) : WebGLBuffer {
         }
     }
 
-    let cubeBuffer : WebGLBuffer = gl.createBuffer()
+    let cubeBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, cubeData, gl.STATIC_DRAW);
     return cubeBuffer;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 /// <reference path="../node_modules/@webgpu/types/dist/index.d.ts" />
 
@@ -28,120 +27,103 @@ const TINY_GRAPH_NODES: number = 400;
 const COLOR_MAGENTA: vec4 = vec4.fromValues(0.9, 0.0, 0.9, 1.0);
 const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0);
 
+
 export class CWorld {
     public istate: IState;
-    public nodes: CNode[];
-    public singleNodes: CNode[];
-    public superMap: Map<string, CNode>;
-    public superNodes: CNode[];
+    public nodes: CNode[] = new Array();
+    public singleNodes: CNode[] = new Array();
+    public superMap: Map<string, CNode> = new Map();
+    public superNodes: CNode[] = new Array();
     public gl: WebGL2RenderingContext;
-    private noiseTexture: WebGLTexture;
-    private worldMapTexture: WebGLTexture;
-    private gradientTexture: WebGLTexture;
-    private histogramBTexture: WebGLTexture;
-    private histogramCTexture: WebGLTexture;
-    private histogramDTexture: WebGLTexture;
-    private currentHistogramTexture: WebGLTexture;
+    private noiseTexture: WebGLTexture | null = null;
+    private worldMapTexture: WebGLTexture | null = null;
+    private gradientTexture: WebGLTexture | null = null;
+    private histogramBTexture: WebGLTexture | null = null;
+    private histogramCTexture: WebGLTexture | null = null;
+    private histogramDTexture: WebGLTexture | null = null;
+    private currentHistogramTexture: WebGLTexture | null = null;
     private picker: CPicker;
 
-    public topTexture: WebGLTexture;
-    public inDrag: boolean;
-    public inTap: boolean;
-    public inSwipe: boolean;
-    private icosaGeometry: WebGLBuffer;
-    private cubeGeometry: WebGLBuffer;
-    private gradientGeometry: WebGLBuffer;
-    private histogramGeometry: WebGLBuffer;
-    private worldMapGeometry: WebGLBuffer;
-    private lineGeometry: WebGLBuffer;
+    public inDrag: boolean = false;
+    public inTap: boolean = false;
+    public inSwipe: boolean = false;
+    private icosaGeometry: WebGLBuffer | null = null;
+    private cubeGeometry: WebGLBuffer | null = null;
+    private gradientGeometry: WebGLBuffer | null = null;
+    private histogramGeometry: WebGLBuffer | null = null;
+    private worldMapGeometry: WebGLBuffer | null = null;
+    private lineGeometry: WebGLBuffer | null = null;
 
-    private mainSingleGroup: CGroup;
-    private mainSuperGroup: CGroup;
-    private mainSubGroup: CGroup;
+    private mainSingleGroup: CGroup = new CGroup();
+    private mainSuperGroup: CGroup = new CGroup();
+    private mainSubGroup: CGroup = new CGroup();
 
-    private pickerSingleGroup: CGroup;
-    private pickerSuperGroup: CGroup;
-    private pickerSubGroup: CGroup;
+    private pickerSingleGroup: CGroup = new CGroup();
+    private pickerSuperGroup: CGroup = new CGroup();
+    private pickerSubGroup: CGroup = new CGroup();
 
-    private connectionBuffer: WebGLBuffer;
-    private selectedSuperNode: CNode;
-    private connectionData: Float32Array;
-    private worldMapVao: WebGLVertexArrayObject;
-    private gradientVao: WebGLVertexArrayObject;
-    private histogramVao: WebGLVertexArrayObject;
-    private connectionVao: WebGLVertexArrayObject;
-    public icosaVPLoc: WebGLUniformLocation;
-    public worldMapVPLoc: WebGLUniformLocation;
-    public connectionVPLoc: WebGLUniformLocation;
-    public paramsLoc: WebGLUniformLocation;
-    public noiseTextureLoc: WebGLUniformLocation;
-    public worldMapTextureLoc: WebGLUniformLocation;
-    public gradientTextureLoc: WebGLUniformLocation;
-    public pickerVPLoc: WebGLUniformLocation;
-    public pickerParamsLoc: WebGLUniformLocation;
-    public pickerNoiseTextureLoc: WebGLUniformLocation;
-    private startTime: number;
-    private params: vec4;
-    private selectedId: number;
-    private white: vec4;;
-    private maxConnections: number;
-    private numConnections: number;
-    private minConnections: number;
-    private maxSubnodes: number;
-    private drawConnections: boolean;
-    private numConnectionsToDraw: number;
-    public connectionMode: boolean;
-    public displayCommand: boolean;
-    public displayFps: boolean;
-    public displayGradient: boolean;
-    public displayHistogram: boolean;
-    private minBetweenness: number;
-    private maxBetweenness: number;
-    private minCloseness: number;
-    private maxCloseness: number;
-    public colorMode: EColorMode;
+    private connectionBuffer: WebGLBuffer | null = null;
+    private selectedSuperNode: CNode | null = null;
+    private connectionData: Float32Array = new Float32Array(4);
+    private worldMapVao: WebGLVertexArrayObject | null = null;
+    private gradientVao: WebGLVertexArrayObject | null = null;
+    private histogramVao: WebGLVertexArrayObject | null = null;
+    private connectionVao: WebGLVertexArrayObject | null = null;
+    public icosaVPLoc: WebGLUniformLocation | null = null;
+    public worldMapVPLoc: WebGLUniformLocation | null = null;
+    public connectionVPLoc: WebGLUniformLocation | null = null;
+    public paramsLoc: WebGLUniformLocation | null = null;
+    public noiseTextureLoc: WebGLUniformLocation | null = null;
+    public worldMapTextureLoc: WebGLUniformLocation | null = null;
+    public gradientTextureLoc: WebGLUniformLocation | null = null;
+    public pickerVPLoc: WebGLUniformLocation | null = null;
+    public pickerParamsLoc: WebGLUniformLocation | null = null;
+    public pickerNoiseTextureLoc: WebGLUniformLocation | null = null;
+    private startTime: number = Date.now();
+    private params: vec4 = vec4.create();
+    private selectedId: number = -1;
+    private white: vec4 = vec4.fromValues(1, 1, 1, 1);
+    private maxConnections: number = 0;
+    private numConnections: number = 0;
+    private minConnections: number = 10000;
+    private maxSubnodes: number = 0;
+    private drawConnections: boolean = false;
+    private numConnectionsToDraw: number = 0;
+    public connectionMode: boolean = false;
+    public displayCommand: boolean = true;
+    public displayFps: boolean = true;
+    public displayGradient: boolean = true;
+    public displayHistogram: boolean = false;
+    private minBetweenness: number = 100;
+    private maxBetweenness: number = 0;
+    private minCloseness: number = 100;
+    private maxCloseness: number = 0;
+    public colorMode: EColorMode = EColorMode.Degree;
     private canvas: HTMLCanvasElement;
     private camera: PCamera;
-    private betweennessDescription: string;
-    private closenessDescription: string;
-    private degreeDescription: string;
+    private betweennessDescription: string = '';
+    private closenessDescription: string = '';
+    private degreeDescription: string = '';
 
-    public timeNode: Text;
-    public fpsNode: Text;
-    public ipNode: Text;
-    public networkTypeNode: Text;
-    public betweennessNode: Text;
-    public closenessNode: Text;
-    public connectionsNode: Text;
-    public latitudeNode: Text;
-    public longitudeNode: Text;
-    public cityNode: Text;
-    public countryNode: Text;
-    public subnodeIndexNode: Text;
-    public numSubnodesNode: Text;
-    public colorModeNode: Text;
-    public gradientNode: Text;
-    public initialized: boolean;
-    public isTiny: boolean;
+    public timeNode: Text = document.createTextNode("");
+    public fpsNode: Text = document.createTextNode("");
+    public ipNode: Text = document.createTextNode("");
+    public networkTypeNode: Text = document.createTextNode("");
+    public betweennessNode: Text = document.createTextNode("");
+    public closenessNode: Text = document.createTextNode("");
+    public connectionsNode: Text = document.createTextNode("");
+    public latitudeNode: Text = document.createTextNode("");
+    public longitudeNode: Text = document.createTextNode("");
+    public cityNode: Text = document.createTextNode("");
+    public countryNode: Text = document.createTextNode("");
+    public subnodeIndexNode: Text = document.createTextNode("");
+    public numSubnodesNode: Text = document.createTextNode("");
+    public colorModeNode: Text = document.createTextNode("");
+    public gradientNode: Text = document.createTextNode("");
+    public initialized: boolean = false;
+    public isTiny: boolean = false;
 
     private initTextNodes() {
-        // Create text nodes to save some time for the browser.
-        this.timeNode = document.createTextNode("");
-        this.fpsNode = document.createTextNode("");
-        this.ipNode = document.createTextNode("");
-        this.networkTypeNode = document.createTextNode("");
-        this.betweennessNode = document.createTextNode("");
-        this.closenessNode = document.createTextNode("");
-        this.connectionsNode = document.createTextNode("");
-        this.latitudeNode = document.createTextNode("");
-        this.longitudeNode = document.createTextNode("");
-        this.subnodeIndexNode = document.createTextNode("");
-        this.numSubnodesNode = document.createTextNode("");
-        this.cityNode = document.createTextNode("");
-        this.countryNode = document.createTextNode("");
-        this.colorModeNode = document.createTextNode("");
-        this.gradientNode = document.createTextNode("");
-
         this.updateColorDisplay();
         this.updateNodeColors();
 
@@ -172,54 +154,25 @@ export class CWorld {
         this.canvas = canvas;
         this.camera = camera;
         this.gl = gl;
-        this.inDrag = false;
-        this.nodes = new Array();
-        this.singleNodes = new Array();
-        this.superNodes = new Array();
-        this.superMap = new Map();
-        this.startTime = Date.now();
-        this.params = vec4.create();
         this.picker = new CPicker(gl);
-        this.selectedId = -1;
-        this.white = vec4.fromValues(1, 1, 1, 1);
-        this.maxConnections = 0;
-        this.numConnections = 0;
-        this.minConnections = 10000;
-        this.drawConnections = false;
-        this.numConnectionsToDraw = 0;
-        this.connectionMode = false;
-        this.displayCommand = true;
-        this.displayFps = true;
-        this.displayGradient = true;
-        this.displayHistogram = false;
-        this.minBetweenness = 100;
-        this.maxBetweenness = 0;
-        this.minCloseness = 100;
-        this.maxCloseness = 0;
-        this.colorMode = EColorMode.Degree
         this.initTextNodes();
-        this.initialized = false;
-        this.mainSingleGroup = new CGroup();
-        this.pickerSingleGroup = new CGroup();
-        this.mainSuperGroup = new CGroup();
-        this.pickerSuperGroup = new CGroup();
-        this.mainSubGroup = new CGroup();
-        this.pickerSubGroup = new CGroup();
-        this.selectedSuperNode = null;
-        this.maxSubnodes = 0;
     };
 
     private updateNodeColors() {
         let n: number = 0;
         for (let node of this.singleNodes) {
-            this.mainSingleGroup.transformData.set(node.getCurrentColor(this.colorMode), n);
+            if (this.mainSingleGroup.transformData) {
+                this.mainSingleGroup.transformData.set(node.getCurrentColor(this.colorMode), n);
+            }
             n += NODE_TRANSFORM_SIZE;
         }
         n = 0;
         if (this.selectedSuperNode && this.selectedSuperNode.isOpenedSuper) {
             for (let node of this.selectedSuperNode.subNodes) {
-                this.mainSubGroup.transformData.set(node.getCurrentColor(this.colorMode), n);
-                n += NODE_TRANSFORM_SIZE;
+                if (this.mainSingleGroup.transformData) {
+                    this.mainSingleGroup.transformData.set(node.getCurrentColor(this.colorMode), n);
+                }
+                    n += NODE_TRANSFORM_SIZE;
             }
         }
     }
@@ -287,7 +240,7 @@ export class CWorld {
         this.updatePickerData();
     }
 
-    private updateSuperStatus(id) {
+    private updateSuperStatus(id: number) {
         // first, restore supernode to default state if opened
         let node = this.getNode(id);
         if (!node) {
@@ -321,10 +274,12 @@ export class CWorld {
                     this.updateNodeColors();
                     let n = 0;
                     for (let subnode of node.subNodes) {
-                        this.mainSubGroup.transformData.set(subnode.getCurrentColor(this.colorMode), n);
-                        this.mainSubGroup.transformData.set(subnode.metadata, n + 4);
-                        this.mainSubGroup.transformData.set(subnode.idColor, n + 8);
-                        this.mainSubGroup.transformData.set(subnode.matWorld, n + 12);
+                        if (this.mainSubGroup.transformData) {
+                            this.mainSubGroup.transformData.set(subnode.getCurrentColor(this.colorMode), n);
+                            this.mainSubGroup.transformData.set(subnode.metadata, n + 4);
+                            this.mainSubGroup.transformData.set(subnode.idColor, n + 8);
+                            this.mainSubGroup.transformData.set(subnode.matWorld, n + 12);
+                        }
                         n += NODE_TRANSFORM_SIZE
                     }
                     console.log('new subnodes has length ', node.subNodes.length);
@@ -376,21 +331,21 @@ export class CWorld {
         node = this.getNode(this.selectedId);
         if (node) {
             // restore color
-            if (node.nodeType == ENodeType.Single) {
+            if (node.nodeType == ENodeType.Single && this.mainSingleGroup.transformData) {
                 this.mainSingleGroup.transformData.set(this.singleNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
-            } else if (node.nodeType == ENodeType.Super) {
+            } else if (node.nodeType == ENodeType.Super && this.mainSuperGroup.transformData) {
                 this.mainSuperGroup.transformData.set(this.superNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
-            } else if (node.nodeType == ENodeType.Sub && node.superNode == this.selectedSuperNode) {
+            } else if (node.nodeType == ENodeType.Sub && this.selectedSuperNode && node.superNode == this.selectedSuperNode && this.mainSubGroup.transformData) {
                 this.mainSubGroup.transformData.set(this.selectedSuperNode.subNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
             }
         }
         node = this.getNode(id);
         if (node) {
-            if (node.nodeType == ENodeType.Single) {
+            if (node.nodeType == ENodeType.Single && this.mainSingleGroup.transformData) {
                 this.mainSingleGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
-            } else if (node.nodeType == ENodeType.Super) {
+            } else if (node.nodeType == ENodeType.Super && this.mainSuperGroup.transformData) {
                 this.mainSuperGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
-            } else {
+            } else if (this.mainSubGroup.transformData) {
                 console.log('subnode offset: ', node.subnodeOffset);
                 this.mainSubGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
             }
@@ -507,7 +462,7 @@ export class CWorld {
                 this.connectionData.set(this.isTiny ? COLOR_BLACK : connection.getCurrentColor(this.colorMode), n);
                 this.connectionData.set(node.position, n + 4);
                 let delta: vec3 = vec3.create();
-                let connPosition: vec3 = connection.getConnectionPosition();
+                let connPosition = connection.getConnectionPosition();
                 vec3.sub(delta, connPosition, node.position);
                 this.connectionData.set(delta, n + 8);
                 n += 12;
@@ -522,7 +477,9 @@ export class CWorld {
         let gl = this.gl
         let n: number = 12;
         for (let node of this.singleNodes) {
-            this.mainSingleGroup.transformData.set(node.matWorld, n);
+            if (this.mainSingleGroup.transformData) {
+                this.mainSingleGroup.transformData.set(node.matWorld, n);
+            }
             n += 28
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mainSingleGroup.transformBuffer);
@@ -533,7 +490,9 @@ export class CWorld {
         let gl = this.gl
         let n: number = 12;
         for (let node of this.superNodes) {
-            this.mainSuperGroup.transformData.set(node.matWorld, n);
+            if (this.mainSuperGroup.transformData) {
+                this.mainSuperGroup.transformData.set(node.matWorld, n);
+            }
             n += 28
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mainSuperGroup.transformBuffer);
@@ -546,7 +505,9 @@ export class CWorld {
 
         let n: number = 12;
         for (let node of this.selectedSuperNode.subNodes) {
-            this.mainSubGroup.transformData.set(node.matWorld, n);
+            if (this.mainSubGroup.transformData) {
+                this.mainSubGroup.transformData.set(node.matWorld, n);
+            }
             n += 28
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mainSubGroup.transformBuffer);
@@ -567,6 +528,7 @@ export class CWorld {
     }
 
     private initMainVao(group: CGroup, geometry: WebGLBuffer) {
+        if (!glShaders[EShader.Icosa]) return;
         let gl = this.gl
         let positionLoc = gl.getAttribLocation(glShaders[EShader.Icosa], 'a_position');
         let colorLoc = gl.getAttribLocation(glShaders[EShader.Icosa], 'a_color');
@@ -605,6 +567,7 @@ export class CWorld {
 
 
     private initNodesGl() {
+        if (!glShaders[EShader.Icosa]) return;
         let gl = this.gl;
         this.icosaVPLoc = gl.getUniformLocation(glShaders[EShader.Icosa], 'u_viewProjection');
         this.paramsLoc = gl.getUniformLocation(glShaders[EShader.Icosa], 'u_params');
@@ -614,12 +577,14 @@ export class CWorld {
         this.cubeGeometry = cubeGeometry(gl);
 
         this.initTransformData();
+        if (!this.icosaGeometry || !this.cubeGeometry || !this.icosaGeometry) return;
         this.initMainVao(this.mainSingleGroup, this.icosaGeometry);
         this.initMainVao(this.mainSuperGroup, this.cubeGeometry);
         this.initMainVao(this.mainSubGroup, this.icosaGeometry);
     }
 
     private initPickerVao(group: CGroup, geometry: WebGLBuffer) {
+        if (!glShaders[EShader.Picker]) return;
         let gl = this.gl
         let positionLoc = gl.getAttribLocation(glShaders[EShader.Picker], 'a_position');
         let pickerColorLoc = gl.getAttribLocation(glShaders[EShader.Picker], 'a_pickerColor');
@@ -656,16 +621,19 @@ export class CWorld {
 
     private initPickerGl() {
         let gl = this.gl;
+        if (!glShaders[EShader.Picker]) return;
         this.pickerVPLoc = gl.getUniformLocation(glShaders[EShader.Picker], 'u_viewProjection');
         this.pickerParamsLoc = gl.getUniformLocation(glShaders[EShader.Picker], 'u_params');
         this.pickerNoiseTextureLoc = gl.getUniformLocation(glShaders[EShader.Picker], 'u_noiseTexture');
 
+        if (!this.icosaGeometry || !this.cubeGeometry || !this.icosaGeometry) return;
         this.initPickerVao(this.pickerSingleGroup, this.icosaGeometry);
         this.initPickerVao(this.pickerSuperGroup, this.cubeGeometry);
         this.initPickerVao(this.pickerSubGroup, this.icosaGeometry);
     }
 
     private initWorldMapGl() {
+        if (!glShaders[EShader.WorldMap]) return;
         let gl = this.gl;
         this.worldMapVPLoc = gl.getUniformLocation(glShaders[EShader.WorldMap], 'u_viewProjection');
         this.worldMapTextureLoc = gl.getUniformLocation(glShaders[EShader.WorldMap], 'u_worldMapTexture');
@@ -682,6 +650,7 @@ export class CWorld {
     }
 
     private initGradientGl() {
+        if (!glShaders[EShader.Gradient]) return;
         let gl = this.gl;
         this.gradientTextureLoc = gl.getUniformLocation(glShaders[EShader.Gradient], 'u_gradientTexture');
         this.gradientGeometry = gradientGeometry(gl)
@@ -695,6 +664,7 @@ export class CWorld {
         gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
     }
     private initHistogramGl() {
+        if (!glShaders[EShader.Gradient]) return;
         let gl = this.gl;
         this.gradientTextureLoc = gl.getUniformLocation(glShaders[EShader.Gradient], 'u_gradientTexture');
         this.histogramGeometry = histogramGeometry(gl)
@@ -709,6 +679,7 @@ export class CWorld {
     }
 
     initConnectionsGl() {
+        if (!glShaders[EShader.Connection]) return;
         let gl = this.gl;
         let positionLoc = gl.getAttribLocation(glShaders[EShader.Connection], 'a_position');
         let colorLoc = gl.getAttribLocation(glShaders[EShader.Connection], 'a_color');
@@ -915,12 +886,13 @@ export class CWorld {
                 if (!superNode) {
                     console.log('  could not find supernode for geostr ', inode.geostr);
                     console.log('  could not find supernode for inode ', inode);
-                }
-                let node = new CNode(inode, id, superNode.subNodes.length, this.camera, ENodeType.Sub, superNode, abstand);
-                this.nodes.push(node);
-                superNode.subNodes.push(node);
-                if (superNode.subNodes.length > this.maxSubnodes) {
-                    this.maxSubnodes = superNode.subNodes.length;
+                } else {
+                    let node = new CNode(inode, id, superNode.subNodes.length, this.camera, ENodeType.Sub, superNode, abstand);
+                    this.nodes.push(node);
+                    superNode.subNodes.push(node);
+                    if (superNode.subNodes.length > this.maxSubnodes) {
+                        this.maxSubnodes = superNode.subNodes.length;
+                    }
                 }
             }
             id++;

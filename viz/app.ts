@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import { initShadersGl } from './shaders'
 import { IState, INITIAL_CAMERA_Z } from './core'
@@ -8,25 +7,26 @@ import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
 import { zoomLogToScale } from './util'
 import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
+import { BubbleControllerDatasetOptions } from 'chart.js'
 
 const APP_VERSION = '0.1.9';
 
 export class CApp {
-    private mousekey: CMousekeyCtlr
-    private initialized: boolean;
+    private mousekey: CMousekeyCtlr | null = null;
+    private initialized: boolean = false;
     private startTime: number;
     private lastTime: number;
     private iter: number;
     public gl: WebGL2RenderingContext;
     private canvas: HTMLCanvasElement
     public camera: PCamera;
-    private world: CWorld;
+    private world: CWorld | null = null;
 
     public actions: IKeyAction[];
     private velPanX: number;
     private velPanY: number;
     private velZoom: number;
-    private zoomLogarithm: number;
+    private zoomLogarithm: number = 1;
     private lastUpdateTime: number;
     public zoomInTicks: number;
     public zoomOutTicks: number;
@@ -35,12 +35,15 @@ export class CApp {
         this.canvas = canvas
         this.canvas.width = window.innerWidth
         this.canvas.height = window.innerHeight
+        this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas);
+
         console.log('p2p-viz version: ', APP_VERSION);
         console.log('Use WebGL')
-        this.gl = canvas.getContext("webgl2");
-        if (!this.gl) {
+        let gl = canvas.getContext("webgl2");
+        if (!gl) {
             throw new Error("WebGL2 not supported");
         }
+        this.gl = gl;
 
         let self = this
         if (handle) {
@@ -78,7 +81,6 @@ export class CApp {
     }
 
     async init(state: IState) {
-        this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas);
         this.initialize();
         this.initializeWebGl(this.gl);
         this.world = new CWorld(state, this.gl, this.canvas, this.camera);
@@ -88,7 +90,7 @@ export class CApp {
     }
 
     private isReady = false;
-    private setReady: () => void;
+    private setReady?: (_: void) => void;
     public async ready() {
         const promise = new Promise(resolve => {
             this.setReady = resolve;
@@ -120,7 +122,7 @@ export class CApp {
             let delta = now - this.lastTime;
             this.lastTime = now;
             let fps = 1000 * 15 / delta;
-            this.world.fpsNode.nodeValue = fps.toFixed(6);
+            if (this.world) this.world.fpsNode.nodeValue = fps.toFixed(6);
         }
     }
 
@@ -143,8 +145,8 @@ export class CApp {
         this.updateFps();
         this.maybeSetColor();
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.world.timeNode.nodeValue = (Date.now() / 1000 - this.startTime).toFixed(2);
         if (this.world) {
+            this.world.timeNode.nodeValue = (Date.now() / 1000 - this.startTime).toFixed(2);
             this.update();
             this.world.renderGl();
         }
@@ -156,12 +158,12 @@ export class CApp {
         }
         if (!this.isReady) {
             this.isReady = true;
-            this.setReady();
+            this.setReady?.();
         }
         this.renderGl();
     }
 
-    readTextFile(file, callback) {
+    readTextFile(file: string, callback: (str: string) => void) {
         var rawFile = new XMLHttpRequest();
         rawFile.overrideMimeType("application/json");
         rawFile.open("GET", file, true);
@@ -182,15 +184,18 @@ export class CApp {
             if (id == EKeyId.ToggleCommand && this.world) {
                 this.world.displayCommand = !this.world.displayCommand;
                 console.log('displayCommand now ', this.world.displayCommand);
-                document.getElementById("instructions").style.visibility = this.world.displayCommand ? "visible" : "hidden";
+                let el = document.getElementById("instructions");
+                if (el) el.style.visibility = this.world.displayCommand ? "visible" : "hidden";
             }
             if (id == EKeyId.ToggleFps && this.world) {
                 this.world.displayFps = !this.world.displayFps;
-                document.getElementById("overlayLeft").style.visibility = this.world.displayFps ? "visible" : "hidden";
+                let el = document.getElementById("overlayLeft");
+                if (el) el.style.visibility = this.world.displayFps ? "visible" : "hidden";
             }
             if (id == EKeyId.ToggleGradient && this.world) {
                 this.world.displayGradient = !this.world.displayGradient;
-                document.getElementById("gradient").style.visibility = this.world.displayGradient ? "visible" : "hidden";
+                let el = document.getElementById("gradient");
+                if (el) el.style.visibility = this.world.displayGradient ? "visible" : "hidden";
             }
             if (id == EKeyId.ToggleHistogram && this.world) {
                 this.world.displayHistogram = !this.world.displayHistogram;
@@ -214,15 +219,15 @@ export class CApp {
     }
 
     public handleClickRelease(x: number, y: number) {
-        this.world.handleClickRelease(x, y - NAVBAR_HEIGHT)
+        this.world?.handleClickRelease(x, y - NAVBAR_HEIGHT)
     }
 
     public handleMouseMove(dx: number, dy: number) {
-        this.world.handleMouseMove(dx, dy);
+        this.world?.handleMouseMove(dx, dy);
     }
 
     public handleClick(x: number, y: number) {
-        this.world.handleClick(x, y - NAVBAR_HEIGHT)
+        this.world?.handleClick(x, y - NAVBAR_HEIGHT)
     }
 
     private updateActions(delta: number) {
@@ -374,7 +379,7 @@ export class CApp {
         this.lastUpdateTime = time
         this.updateActions(delta)
         this.camera.update()
-        this.world.update()
+        this.world?.update()
     }
 
     public async initialize() {

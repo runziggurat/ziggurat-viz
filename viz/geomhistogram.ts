@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 // centered on screen, 
 // width = 50% of screen width
@@ -25,9 +24,9 @@ const positions = [
 ];
 
 
-export function histogramGeometry(gl: WebGL2RenderingContext) : WebGLBuffer {
-    let histogramData : Float32Array = new Float32Array(positions);
-    let histogramBuffer : WebGLBuffer = gl.createBuffer();
+export function histogramGeometry(gl: WebGL2RenderingContext) : WebGLBuffer | null {
+    let histogramData = new Float32Array(positions);
+    let histogramBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, histogramBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, histogramData, gl.STATIC_DRAW);
     return histogramBuffer;

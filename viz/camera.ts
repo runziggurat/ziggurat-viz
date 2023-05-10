@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import { mat4, vec3 } from 'gl-matrix'
 
@@ -29,6 +28,8 @@ export class PCamera {
         this.matProjection = mat4.create()
         this.matViewProjection = mat4.create()
         this.nodeScale = 1.0;
+        this.worldWidth = 640;
+        this.worldHeight = 360;
         this.update()
     }
 

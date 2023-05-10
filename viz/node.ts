@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 /// <reference path="../node_modules/@webgpu/types/dist/index.d.ts" />
 
@@ -19,7 +18,6 @@ export class CNode {
     public id: number;
     public index: number;
     public metadata: vec4;
-    public info: vec4;
     public position: vec3;
     public subnodeOffset: vec3;
     public rotation: vec3;
@@ -30,26 +28,18 @@ export class CNode {
     public numConnections: number;
     private camera: PCamera;
     public nodeType: ENodeType;
-    public superNode: CNode;
+    public superNode: CNode | null;
     public subNodes: CNode [];
     public isOpenedSuper: boolean;
     private abstand: number;
 
-    public getConnectionPosition() {
-        if (this.nodeType == ENodeType.Single) {
-            return this.position;
-        } else if (this.nodeType == ENodeType.Sub) {
+    public getConnectionPosition() : vec3 {
+        if (this.nodeType == ENodeType.Sub && this.superNode) {
             return this.superNode.isOpenedSuper ? this.position : this.superNode.position;
         }
+        return this.position;
     }
 
-    public release() {
-        this.position = null
-        this.rotation = null
-        this.matWorld = null
-        this.matMV = null
-        this.matMVP = null
-    }
     public setRotationZ(z: number) {
         this.rotation[2] = z
         this.updateMatrix()
@@ -114,7 +104,7 @@ export class CNode {
         )
     }
 
-    public constructor(inode: INode, id: number, index: number, camera: PCamera, nodeType: ENodeType, superNode: CNode, abstand: number) {
+    public constructor(inode: INode, id: number, index: number, camera: PCamera, nodeType: ENodeType, superNode: CNode | null, abstand: number) {
         this.inode = inode;
         this.id = id;
         this.index = index;
@@ -141,6 +131,10 @@ export class CNode {
         this.matWorld = mat4.create();
         this.matMV = mat4.create();
         this.matMVP = mat4.create();
+
+        this.betweenColor = COLOR_BLACK;
+        this.closeColor = COLOR_BLACK;
+        this.degreeColor = COLOR_BLACK;
 
         // metadata = A-B-C-D
         //   Aggregate connections
