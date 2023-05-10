@@ -1,12 +1,13 @@
 // @ts-nocheck
 
 import { initShadersGl } from './shaders'
-import { IState, EColorMode, INITIAL_CAMERA_Z } from './core'
+import { IState, INITIAL_CAMERA_Z } from './core'
 import { CMousekeyCtlr } from './mousekeyctlr'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
 import { zoomLogToScale } from './util'
+import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
 
 const APP_VERSION = '0.1.9';
 
@@ -88,7 +89,7 @@ export class CApp {
     }
 
     destroy() {
-        this.mousekey.destroy();
+        this.mousekey?.destroy();
     }
 
     async initializeWebGl(gl: WebGL2RenderingContext) {
@@ -202,7 +203,7 @@ export class CApp {
     }
 
     public handleClickRelease(x: number, y: number) {
-        this.world.handleClickRelease(x - 0.5, y - 0.5)
+        this.world.handleClickRelease(x, y - NAVBAR_HEIGHT)
     }
 
     public handleMouseMove(dx: number, dy: number) {
@@ -210,7 +211,7 @@ export class CApp {
     }
 
     public handleClick(x: number, y: number) {
-        this.world.handleClick(x - 0.5, y - 0.5 + 100)
+        this.world.handleClick(x, y - NAVBAR_HEIGHT)
     }
 
     private updateActions(delta: number) {

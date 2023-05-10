@@ -150,6 +150,10 @@ export async function loadFilteredDemo() {
 // }
 
 function handleStateText(text: string) {
+    const graph = document.getElementById('graph');
+    if (!graph) {
+        return;
+    }
     let istate: IState = JSON.parse(text);
     let nodes = new Array();
     let links = new Array();
@@ -191,7 +195,7 @@ function handleStateText(text: string) {
 
     console.log('Color mode is now CLOSENESS.');
     Graph = ForceGraph3D()
-        (document.getElementById('graph'))
+        (graph)
         .linkVisibility(isTiny)
         .nodeColor(node => node['closeColor'])
         .nodeLabel(node => `${node['name']}: ${node['ip']} ${node['city']}`)

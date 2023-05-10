@@ -54,8 +54,8 @@ export class CMousekeyCtlr {
             return;
         }
 
-        let x = evt.offsetX;
-        let y = evt.offsetY;
+        let x = evt.pageX;
+        let y = evt.pageY;
         if (evt.type == 'mousedown') {
             if (evt.button == 0) {
                 this.onMouseLeftDown(x, y);

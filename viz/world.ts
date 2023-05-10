@@ -4,7 +4,7 @@
 
 import { IState, EShader, INode, EColorMode, ENodeType, IGeolocation } from './core'
 import { CNode } from './node'
-import { vec2, vec3, vec4, mat4 } from 'gl-matrix'
+import { vec2, vec3, vec4 } from 'gl-matrix'
 import { icosaGeometry } from './geomicosa'
 import { gradientGeometry } from './geomgradient'
 import { histogramGeometry } from './geomhistogram'
@@ -17,6 +17,7 @@ import { initWorldMap } from './worldmap'
 import { glShaders } from './shaders';
 import { createRandomTexture, loadTexture } from './util';
 import { getHistogramTexture } from './histogram'
+import { NAVBAR_HEIGHT } from '../utils/constants'
 
 const NODE_TRANSFORM_SIZE: number = 28;
 const CONNECTION_TRANSFORM_SIZE: number = 12;
@@ -145,22 +146,25 @@ export class CWorld {
         this.updateNodeColors();
 
         // Add those text nodes where they need to go
-        document.querySelector("#time").appendChild(this.timeNode);
-        document.querySelector("#fps").appendChild(this.fpsNode);
-        document.querySelector("#ip").appendChild(this.ipNode);
-        document.querySelector("#networktype").appendChild(this.networkTypeNode);
-        document.querySelector("#betweenness").appendChild(this.betweennessNode);
-        document.querySelector("#closeness").appendChild(this.closenessNode);
-        document.querySelector("#connections").appendChild(this.connectionsNode);
-        document.querySelector("#latitude").appendChild(this.latitudeNode);
-        document.querySelector("#longitude").appendChild(this.longitudeNode);
-        document.querySelector("#subnode").appendChild(this.subnodeIndexNode);
-        document.querySelector("#numsubnodes").appendChild(this.numSubnodesNode);
-        document.querySelector("#city").appendChild(this.cityNode);
-        document.querySelector("#country").appendChild(this.countryNode);
-        document.querySelector("#colormode").appendChild(this.colorModeNode);
-        document.querySelector("#gradient").appendChild(this.gradientNode);
-        document.getElementById("overlayRight").style.visibility = "hidden";
+        document.querySelector("#time")?.appendChild(this.timeNode);
+        document.querySelector("#fps")?.appendChild(this.fpsNode);
+        document.querySelector("#ip")?.appendChild(this.ipNode);
+        document.querySelector("#networktype")?.appendChild(this.networkTypeNode);
+        document.querySelector("#betweenness")?.appendChild(this.betweennessNode);
+        document.querySelector("#closeness")?.appendChild(this.closenessNode);
+        document.querySelector("#connections")?.appendChild(this.connectionsNode);
+        document.querySelector("#latitude")?.appendChild(this.latitudeNode);
+        document.querySelector("#longitude")?.appendChild(this.longitudeNode);
+        document.querySelector("#subnode")?.appendChild(this.subnodeIndexNode);
+        document.querySelector("#numsubnodes")?.appendChild(this.numSubnodesNode);
+        document.querySelector("#city")?.appendChild(this.cityNode);
+        document.querySelector("#country")?.appendChild(this.countryNode);
+        document.querySelector("#colormode")?.appendChild(this.colorModeNode);
+        document.querySelector("#gradient")?.appendChild(this.gradientNode);
+        const overlayRight = document.getElementById("overlayRight");
+        if (overlayRight) {
+            overlayRight.style.visibility = "hidden";
+        }
     }
 
     public constructor(istate: IState, gl: WebGL2RenderingContext, canvas: HTMLCanvasElement, camera: PCamera) {
@@ -221,25 +225,29 @@ export class CWorld {
     }
 
     public updateColorDisplay() {
+        const gradient = document.getElementById("gradient");
+        if (!gradient) {
+            return;
+        }
         switch (this.colorMode) {
             case EColorMode.Between:
                 this.colorModeNode.nodeValue = 'betweenness';
                 this.currentHistogramTexture = this.histogramBTexture;
-                document.getElementById("gradient").textContent = this.betweennessDescription;
+                gradient.textContent = this.betweennessDescription;
                 break;
             case EColorMode.Close:
                 this.colorModeNode.nodeValue = 'closeness';
                 this.currentHistogramTexture = this.histogramCTexture;
-                document.getElementById("gradient").textContent = this.closenessDescription;
+                gradient.textContent = this.closenessDescription;
                 break;
             case EColorMode.Degree:
                 this.colorModeNode.nodeValue = 'degree';
                 this.currentHistogramTexture = this.histogramDTexture;
-                document.getElementById("gradient").textContent = this.degreeDescription;
+                gradient.textContent = this.degreeDescription;
                 break;
         }
         console.log('updateColorDisplay this.degreeDescription ', this.degreeDescription);
-        document.getElementById("gradient").style.visibility = this.displayGradient ? "visible" : "hidden";
+        gradient.style.visibility = this.displayGradient ? "visible" : "hidden";
     }
 
     public cycleColorMode() {
@@ -332,15 +340,17 @@ export class CWorld {
 
     public handleClick(x: number, y: number) {
         this.inDrag = true;
-        let screenCoords: vec2 = vec2.fromValues(x / this.canvas.width, 1 - y / this.canvas.height)
+        let screenCoords: vec2 = vec2.fromValues(x / window.innerWidth, 1 - y / (window.innerHeight - NAVBAR_HEIGHT))
         this.picker.preRender(screenCoords[0], screenCoords[1])
         this.renderPicker();
         let id = this.picker.postRender();
         console.log(`  got id ${id}`)
         let node = this.getNode(id);
-        // Changed cuz node was undefined, instead of id == -1, on click outside of nodes
+        // Changed cuz node was undefined, instead of id == -1, on clicking outside of nodes
         // Using same node variable below due to boring reasons!
-        // TODO Revisit. 
+        // TODO Revisit.
+
+        const overlayRight = document.getElementById("overlayRight");
         if (node) {
             this.ipNode.nodeValue = node.nodeType != ENodeType.Super ? 'IP: ' + node.inode.addr : `Super Node: ${node.subNodes.length} nodes`;
             this.networkTypeNode.nodeValue = node.inode.network_type;
@@ -353,9 +363,13 @@ export class CWorld {
             this.countryNode.nodeValue = node.inode.geolocation.country;
             this.subnodeIndexNode.nodeValue = node.nodeType != ENodeType.Sub ? '--' : node.inode.subnode_index.toString();
             this.numSubnodesNode.nodeValue = node.nodeType != ENodeType.Sub ? '--' : node.inode.num_subnodes.toString();
-            document.getElementById("overlayRight").style.visibility = "visible";
+            if (overlayRight) {
+                overlayRight.style.visibility = "visible";
+            }
         } else {
-            document.getElementById("overlayRight").style.visibility = "hidden";
+            if (overlayRight) {
+                overlayRight.style.visibility = "hidden";
+            }
         }
         this.updateSuperStatus(id);
         if (id == this.selectedId) return;

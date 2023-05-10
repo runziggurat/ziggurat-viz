@@ -13,10 +13,8 @@ import { useEffect, useRef } from 'react'
 import { useSetState } from '@mantine/hooks'
 import {
   bg,
-  hover,
   overlay as bgOverlay,
   text,
-  overlay,
 } from '../../utils/theme'
 import { CApp } from '../../viz/app'
 import { useAnimationFrame } from '../../utils/animation-frame'
@@ -115,6 +113,7 @@ const Geo: NextPage<{}> = () => {
     return () => {
       if (appRef.current) {
         appRef.current.destroy()
+        appRef.current = undefined
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
