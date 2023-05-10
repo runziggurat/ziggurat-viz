@@ -90,7 +90,7 @@ export class CApp {
     }
 
     private isReady = false;
-    private setReady: any;
+    private setReady?: (_: void) => void;
     public async ready() {
         const promise = new Promise(resolve => {
             this.setReady = resolve;
@@ -158,7 +158,7 @@ export class CApp {
         }
         if (!this.isReady) {
             this.isReady = true;
-            this.setReady();
+            this.setReady?.();
         }
         this.renderGl();
     }
