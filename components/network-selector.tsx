@@ -98,7 +98,7 @@ export const NetworkSelector: FC = () => {
             <Menu.Item
               key={it.value}
               onClick={() => {
-                window.location.pathname = `/${it.value}`
+                window.location.pathname = `/${it.value}/home`
               }}
             >
               {item(it)}
