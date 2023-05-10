@@ -219,15 +219,15 @@ export class CApp {
     }
 
     public handleClickRelease(x: number, y: number) {
-        if (this.world) this.world.handleClickRelease(x, y - NAVBAR_HEIGHT)
+        this.world?.handleClickRelease(x, y - NAVBAR_HEIGHT)
     }
 
     public handleMouseMove(dx: number, dy: number) {
-        if (this.world) this.world.handleMouseMove(dx, dy);
+        this.world?.handleMouseMove(dx, dy);
     }
 
     public handleClick(x: number, y: number) {
-        if (this.world) this.world.handleClick(x, y - NAVBAR_HEIGHT)
+        this.world?.handleClick(x, y - NAVBAR_HEIGHT)
     }
 
     private updateActions(delta: number) {
@@ -379,7 +379,7 @@ export class CApp {
         this.lastUpdateTime = time
         this.updateActions(delta)
         this.camera.update()
-        if (this.world) this.world.update()
+        this.world?.update()
     }
 
     public async initialize() {
