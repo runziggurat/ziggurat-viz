@@ -1,11 +1,11 @@
-// @ts-nocheck
 
 import { EShader, IShader } from './core'
 
-export var glShaders : WebGLProgram []
+export var glShaders : (WebGLProgram|null) []
 
-export function createProgram(shader: IShader, gl: WebGL2RenderingContext) : WebGLProgram {
+export function createProgram(shader: IShader, gl: WebGL2RenderingContext) : WebGLProgram|null {
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    if (!vertexShader) return null;
     gl.shaderSource(vertexShader, shader.vertex);
     gl.compileShader(vertexShader);
   
@@ -13,13 +13,15 @@ export function createProgram(shader: IShader, gl: WebGL2RenderingContext) : Web
     var compilationLog = gl.getShaderInfoLog(vertexShader);
   
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!fragmentShader) return null;
     gl.shaderSource(fragmentShader, shader.fragment);
     gl.compileShader(fragmentShader);
   
     compiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
     compilationLog = gl.getShaderInfoLog(fragmentShader);
   
-    let program : WebGLProgram = gl.createProgram();
+    let program = gl.createProgram();
+    if (!program) return null;
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 const ICOSA_SCALE: number = 1.5
 const positions = [
@@ -62,7 +61,7 @@ const indices = [
     5, 9, 1
 ]
 
-export function icosaGeometry(gl: WebGL2RenderingContext) : WebGLBuffer {
+export function icosaGeometry(gl: WebGL2RenderingContext) : WebGLBuffer|null {
     let size = 20 * 3 * 6;
     let icosaData : Float32Array = new Float32Array(size)
     let i = 0;
@@ -81,7 +80,7 @@ export function icosaGeometry(gl: WebGL2RenderingContext) : WebGLBuffer {
         }
     }
 
-    let icosaBuffer : WebGLBuffer = gl.createBuffer()
+    let icosaBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, icosaBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, icosaData, gl.STATIC_DRAW);
     return icosaBuffer;

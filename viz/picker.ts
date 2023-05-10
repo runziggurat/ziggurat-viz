@@ -1,14 +1,12 @@
 
-// @ts-nocheck
-
 import { colorToId } from './util'
 
 const PICKER_TEXTURE_SIZE: number = 2048;
 
 export class CPicker {
     private gl: WebGL2RenderingContext;
-    private fb: WebGLFramebuffer;
-    public renderTarget: WebGLTexture;
+    private fb: WebGLFramebuffer|null;
+    public renderTarget: WebGLTexture|null;
     private pixelBuffer: Uint8Array;
     textureWidth: number;
     textureHeight: number;
@@ -20,7 +18,10 @@ export class CPicker {
         this.pixelBuffer = new Uint8Array(4);
         this.textureWidth = PICKER_TEXTURE_SIZE;
         this.textureHeight = PICKER_TEXTURE_SIZE;
+        this.fb = null;
         this.initialize();
+        this.x = 0;
+        this.y = 0;
     }
 
     private initialize() {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import { WORLD_WIDTH, WORLD_HEIGHT } from './core'
 
@@ -7,7 +6,7 @@ const NUM_YTILES: number = 3
 const POLYS_PER_TILE: number = 2
 const VERTEX_SIZE: number = 4
 
-export function initWorldMap(gl: WebGL2RenderingContext) : WebGLBuffer {
+export function initWorldMap(gl: WebGL2RenderingContext) : WebGLBuffer|null {
     console.log('initWorldMap')
     let nverts = NUM_XTILES * NUM_YTILES * POLYS_PER_TILE * 3;
     console.log('nverts ', nverts)
@@ -65,7 +64,7 @@ export function initWorldMap(gl: WebGL2RenderingContext) : WebGLBuffer {
         }
     }
     console.log('worldMapData len ', worldMapData.length);
-    let worldMapBuffer : WebGLBuffer = gl.createBuffer()
+    let worldMapBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, worldMapBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, worldMapData, gl.STATIC_DRAW);
     return worldMapBuffer;
