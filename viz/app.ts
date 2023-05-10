@@ -7,25 +7,26 @@ import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
 import { zoomLogToScale } from './util'
 import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
+import { BubbleControllerDatasetOptions } from 'chart.js'
 
 const APP_VERSION = '0.1.9';
 
 export class CApp {
-    private mousekey: CMousekeyCtlr | null
-    private initialized: boolean;
+    private mousekey: CMousekeyCtlr | null = null;
+    private initialized: boolean = false;
     private startTime: number;
     private lastTime: number;
     private iter: number;
     public gl: WebGL2RenderingContext;
     private canvas: HTMLCanvasElement
     public camera: PCamera;
-    private world: CWorld | null;
+    private world: CWorld | null = null;
 
     public actions: IKeyAction[];
     private velPanX: number;
     private velPanY: number;
     private velZoom: number;
-    private zoomLogarithm: number;
+    private zoomLogarithm: number = 1;
     private lastUpdateTime: number;
     public zoomInTicks: number;
     public zoomOutTicks: number;
@@ -34,11 +35,7 @@ export class CApp {
         this.canvas = canvas
         this.canvas.width = window.innerWidth
         this.canvas.height = window.innerHeight
-        this.zoomLogarithm = 1
-        this.initialized = false;
-        this.mousekey = null;
         this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas);
-        this.world = null;
 
         console.log('p2p-viz version: ', APP_VERSION);
         console.log('Use WebGL')
