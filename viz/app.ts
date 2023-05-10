@@ -39,8 +39,7 @@ export class CApp {
         console.log('Use WebGL')
         this.gl = canvas.getContext("webgl2");
         if (!this.gl) {
-            console.log('Failed to get the rendering context for WebGL');
-            return;
+            throw new Error("WebGL2 not supported.");
         }
 
         let self = this

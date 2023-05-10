@@ -2,21 +2,12 @@ import { NextPage } from 'next'
 import { Navbar } from '../../components/navbar'
 import { useEffect } from 'react'
 import { Center, createStyles, Text } from '@mantine/core'
-import { text } from '../../utils/theme'
 import { useSetState } from '@mantine/hooks'
+import WEBGL from 'three/examples/jsm/capabilities/WebGL'
+import { errorPanel } from '../../styles/global'
 
 const useStyles = createStyles(theme => ({
-  status: {
-    height: '100vh',
-    width: '100vw',
-    position: 'fixed',
-    top: 0,
-    zIndex: 1000,
-  },
-  statusText: {
-    color: `${text(theme)}`,
-    userSelect: 'none',
-  },
+  ...errorPanel(theme),
 }))
 
 let destroy: any
@@ -31,16 +22,22 @@ const Force: NextPage<{}> = () => {
   useEffect(() => {
     import('../../viz/force')
       .then(({ loadFilteredDemo, destroy: _destroy }) => {
+        // Early detect as we can't catch force error's here.
+        if (!WEBGL.isWebGL2Available()) {
+          throw new Error(WEBGL.getWebGL2ErrorMessage().textContent || '')
+        }
         destroy = _destroy
         setStatus({
           done: true,
         })
         return loadFilteredDemo()
       })
-      .catch(() => {
+      .catch(err => {
         setStatus({
           error: true,
-          msg: 'error loading force graph, try again later!',
+          msg:
+            'error loading force graph.\n' +
+            (err?.message || 'Please try again late!.'),
         })
       })
     return () => {

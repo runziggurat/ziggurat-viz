@@ -1,5 +1,7 @@
-import { MantineTheme } from '@mantine/core'
+import { MantineTheme, CSSObject } from '@mantine/core'
 import { Global } from '@mantine/styles'
+import { NAVBAR_HEIGHT } from '../utils/constants'
+import { text } from '../utils/theme'
 
 type Styles = Parameters<typeof Global>['0']['styles']
 
@@ -10,5 +12,23 @@ export const globalStyles: Styles = (theme: MantineTheme) => ({
   body: {
     position: 'relative',
     height: '100%',
+  },
+})
+
+export const errorPanel = (
+  theme: MantineTheme
+): Record<'status' | 'statusText', CSSObject> => ({
+  status: {
+    height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+    width: '100vw',
+    position: 'fixed',
+    bottom: 0,
+    zIndex: 1000,
+  },
+  statusText: {
+    color: `${text(theme)}`,
+    whiteSpace: 'pre',
+    userSelect: 'none',
+    textAlign: 'center',
   },
 })

@@ -11,13 +11,10 @@ import {
 import { NAVBAR_HEIGHT } from '../../utils/constants'
 import { useEffect, useRef } from 'react'
 import { useSetState } from '@mantine/hooks'
-import {
-  bg,
-  overlay as bgOverlay,
-  text,
-} from '../../utils/theme'
+import { bg, overlay as bgOverlay, text } from '../../utils/theme'
 import { CApp } from '../../viz/app'
 import { useAnimationFrame } from '../../utils/animation-frame'
+import { errorPanel } from '../../styles/global'
 
 const useStyles = createStyles(theme => {
   const overlay: CSSObject = {
@@ -42,17 +39,6 @@ const useStyles = createStyles(theme => {
       margin: 0,
       width: '100%',
       height: '100%',
-    },
-    status: {
-      height: '100vh',
-      width: '100vw',
-      position: 'fixed',
-      top: 0,
-      zIndex: 1000,
-    },
-    statusText: {
-      color: `${text(theme)}`,
-      userSelect: 'none',
     },
     kbd: {
       width: 32,
@@ -79,6 +65,7 @@ const useStyles = createStyles(theme => {
       left: '50%',
       transform: 'translateX(-50%)',
     },
+    ...errorPanel(theme),
   }
 })
 
@@ -106,10 +93,12 @@ const Geo: NextPage<{}> = () => {
           })
         }
       })
-      .catch(() => {
+      .catch(err => {
         setStatus({
           error: true,
-          msg: 'error loading geo location graph, try again later!',
+          msg:
+            'error loading geo location graph.\n' +
+            (err?.message || 'Please try again later.'),
         })
       })
     return () => {
