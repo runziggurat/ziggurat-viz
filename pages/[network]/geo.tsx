@@ -94,14 +94,16 @@ const Geo: NextPage<{}> = () => {
   useEffect(() => {
     import('../../viz/app')
       .then(({ CApp }) => {
-        setStatus({
-          done: true,
-        })
         if (!canvasRef.current) {
           throw new Error('canvas not found')
         }
         if (!appRef.current) {
           appRef.current = new CApp(canvasRef.current, null!, true)
+          appRef.current.ready().then(() => {
+            setStatus({
+              done: true,
+            })
+          })
         }
       })
       .catch(() => {

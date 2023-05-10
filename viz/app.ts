@@ -88,7 +88,17 @@ export class CApp {
         this.mousekey = new CMousekeyCtlr(this);
     }
 
-    destroy() {
+    private isReady = false;
+    private setReady: () => void;
+    public async ready() {
+        const promise = new Promise(resolve => {
+            this.setReady = resolve;
+        }
+        );
+        return promise;
+    }
+
+    public destroy() {
         this.mousekey?.destroy();
     }
 
@@ -142,12 +152,14 @@ export class CApp {
     }
 
     public render() {
-        if (!this.initialized) {
+        if (!this.initialized || !this.gl) {
             return;
         }
-        if (this.gl) {
-            this.renderGl();
+        if (!this.isReady) {
+            this.isReady = true;
+            this.setReady();
         }
+        this.renderGl();
     }
 
     readTextFile(file, callback) {
