@@ -166,7 +166,7 @@ export class CApp {
         this.renderGl();
     }
 
-    readTextFile(file: any, callback: any) {
+    readTextFile(file: string, callback: (str: string) => void) {
         var rawFile = new XMLHttpRequest();
         rawFile.overrideMimeType("application/json");
         rawFile.open("GET", file, true);
