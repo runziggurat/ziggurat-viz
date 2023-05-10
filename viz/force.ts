@@ -1,4 +1,3 @@
-// @ts-nocheck
 
 import { showOpenFilePicker } from 'file-system-access'
 import ForceGraph3D, { ForceGraph3DInstance } from '3d-force-graph';
@@ -7,7 +6,7 @@ import { NAVBAR_HEIGHT } from '../utils/constants';
 
 const TINY_GRAPH_NODES: number = 400;
 
-let Graph: ForceGraph3DInstance;
+let Graph: ForceGraph3DInstance|null;
 
 let maxConnections = 0;
 let minConnections = 10000;
@@ -16,6 +15,18 @@ let maxBetweenness = 0;
 let minCloseness = 100;
 let maxCloseness = 0;
 let colorMode = EColorMode.Close;
+
+
+export interface IForceNode {
+    id: string
+    name: string
+    ip: string
+    city: string
+    degreeColor: string
+    betweenColor: string
+    closeColor: string
+}
+
 
 function updateStats(inode: INode) {
     if (inode.connections.length > maxConnections) {
@@ -70,19 +81,20 @@ function colorFromNormalizedValue(v: number): string {
 }
 
 function cycleColorMode() {
+    if (!Graph) return;
     colorMode++;
     if (colorMode == EColorMode.Last) {
         colorMode = EColorMode.Between;
     }
     if (colorMode == EColorMode.Between) {
         console.log('Color mode is now BETWEENNESS.');
-        Graph.nodeColor(node => node['betweenColor']);
+        Graph.nodeColor(node => (node as any)['betweenColor']);
     } else if (colorMode == EColorMode.Close) {
         console.log('Color mode is now CLOSENESS.');
-        Graph.nodeColor(node => node['closeColor']);
+        Graph.nodeColor(node => (node as any)['closeColor']);
     } else {
         console.log('Color mode is now DEGREE.');
-        Graph.nodeColor(node => node['degreeColor']);
+        Graph.nodeColor(node => (node as any)['degreeColor']);
     }
 }
 
@@ -131,7 +143,6 @@ export async function loadUnfilteredState() {
 async function loadDemo(filepath: string) {
     window.addEventListener('keydown', onKeydownEvent);
 
-
     var rawFile = new XMLHttpRequest();
     rawFile.overrideMimeType("application/json");
     rawFile.open("GET", filepath, true);
@@ -164,7 +175,7 @@ function handleStateText(text: string) {
     let isTiny = istate.nodes.length < TINY_GRAPH_NODES;
     for (let node of istate.nodes) {
         let id = 'id' + i.toString();
-        let name = 'N' + i.toString();
+        let name = 'node ' + i.toString();
         let ip = node.addr.substring(0, node.addr.indexOf(':'));
 
         let city = node.geolocation.city;
@@ -197,8 +208,8 @@ function handleStateText(text: string) {
     Graph = ForceGraph3D()
         (graph)
         .linkVisibility(isTiny)
-        .nodeColor(node => node['closeColor'])
-        .nodeLabel(node => `${node['name']}: ${node['ip']} ${node['city']}`)
+        .nodeColor(node => (node as any)['closeColor'])
+        .nodeLabel(node => `${(node as any)['name']}: ${(node as any)['ip']} ${(node as any)['city']}`)
         .graphData(Data);
 
     updateSize()
@@ -206,11 +217,13 @@ function handleStateText(text: string) {
     window.addEventListener("resize", updateSize)
     window.addEventListener("color-scheme-change", setColors)
 
-    if (!isTiny) {
+    if (!isTiny && Graph) {
         Graph.onNodeClick(node => {
-            Graph.linkVisibility((link) => {
-                return link.source['name'] == node['name'];
-            })
+            if (Graph) {
+                Graph.linkVisibility((link) => {
+                    return (link.source as any)['name'] == (node as any)['name'];
+                })    
+            }
         });
     }
 
@@ -224,10 +237,12 @@ function setColors() {
     const bg = isLight ? lightColor : darkColor
     // const text = isLight ? darkColor : lightColor
 
+    if (!Graph) return;
     Graph.backgroundColor(bg)
 }
 
 function updateSize() {
+    if (!Graph) return;
     Graph.height(window.innerHeight - NAVBAR_HEIGHT)
         .width(window.innerWidth)
 }
