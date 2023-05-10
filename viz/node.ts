@@ -28,7 +28,7 @@ export class CNode {
     public numConnections: number;
     private camera: PCamera;
     public nodeType: ENodeType;
-    public superNode: CNode|null;
+    public superNode: CNode | null;
     public subNodes: CNode [];
     public isOpenedSuper: boolean;
     private abstand: number;
@@ -104,7 +104,7 @@ export class CNode {
         )
     }
 
-    public constructor(inode: INode, id: number, index: number, camera: PCamera, nodeType: ENodeType, superNode: CNode|null, abstand: number) {
+    public constructor(inode: INode, id: number, index: number, camera: PCamera, nodeType: ENodeType, superNode: CNode | null, abstand: number) {
         this.inode = inode;
         this.id = id;
         this.index = index;

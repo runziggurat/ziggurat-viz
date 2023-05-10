@@ -6,7 +6,7 @@ const NUM_YTILES: number = 3
 const POLYS_PER_TILE: number = 2
 const VERTEX_SIZE: number = 4
 
-export function initWorldMap(gl: WebGL2RenderingContext) : WebGLBuffer|null {
+export function initWorldMap(gl: WebGL2RenderingContext) : WebGLBuffer | null {
     console.log('initWorldMap')
     let nverts = NUM_XTILES * NUM_YTILES * POLYS_PER_TILE * 3;
     console.log('nverts ', nverts)

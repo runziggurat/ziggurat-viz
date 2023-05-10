@@ -6,7 +6,7 @@ import { NAVBAR_HEIGHT } from '../utils/constants';
 
 const TINY_GRAPH_NODES: number = 400;
 
-let Graph: ForceGraph3DInstance|null;
+let Graph: ForceGraph3DInstance | null;
 
 let maxConnections = 0;
 let minConnections = 10000;

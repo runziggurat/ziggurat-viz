@@ -3,9 +3,9 @@
 
 export class CGroup {
 
-    public vao: WebGLVertexArrayObject|null;
-    public transformBuffer: WebGLBuffer|null;
-    public transformData: Float32Array|null;
+    public vao: WebGLVertexArrayObject | null;
+    public transformBuffer: WebGLBuffer | null;
+    public transformData: Float32Array | null;
 
     public constructor() {
         this.vao = null;

@@ -24,7 +24,7 @@ const positions = [
 ];
 
 
-export function histogramGeometry(gl: WebGL2RenderingContext) : WebGLBuffer|null {
+export function histogramGeometry(gl: WebGL2RenderingContext) : WebGLBuffer | null {
     let histogramData = new Float32Array(positions);
     let histogramBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, histogramBuffer);

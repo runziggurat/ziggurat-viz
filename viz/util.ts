@@ -31,7 +31,7 @@ export function colorToId(color: number) : number {
     return id;
 }
 
-export async function loadTexture(gl: WebGL2RenderingContext, url: string) : Promise<WebGLTexture|null> {
+export async function loadTexture(gl: WebGL2RenderingContext, url: string) : Promise<WebGLTexture | null> {
 
     console.log('loadTexture url ' + url)
     const texture = gl.createTexture();
@@ -77,7 +77,7 @@ export async function loadTexture(gl: WebGL2RenderingContext, url: string) : Pro
     return texture;
 }
   
-export function createRandomTexture(gl: WebGL2RenderingContext, width: number, height: number) : WebGLTexture|null {
+export function createRandomTexture(gl: WebGL2RenderingContext, width: number, height: number) : WebGLTexture | null {
     const npixels = width * height;
     const data = new Uint8Array(npixels*4);
     let n = 0;

@@ -62,7 +62,7 @@ const indices = [
     5, 7, 3
 ]
 
-export function cubeGeometry(gl: WebGL2RenderingContext) : WebGLBuffer|null {
+export function cubeGeometry(gl: WebGL2RenderingContext) : WebGLBuffer | null {
     // 6 sides, 2 polys per side = 12 polys
     const VERTEX_SIZE = 6;
     let size = 3 * CUBE_POLYS * VERTEX_SIZE;

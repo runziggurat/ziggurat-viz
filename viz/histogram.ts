@@ -3,7 +3,7 @@ import { IHistogram } from "./core";
 
 const HISTOGRAM_WIDTH: number = 512;
 
-function createHistogramTexture(gl: WebGL2RenderingContext, summary: IHistogram) : WebGLTexture|null {
+function createHistogramTexture(gl: WebGL2RenderingContext, summary: IHistogram) : WebGLTexture | null {
 
     // we draw the histogram on its side, and then rotate 90 degress when displaying
     // each row of texture corresponds to one column of the histogram, whose height varies
@@ -54,7 +54,7 @@ function createHistogramTexture(gl: WebGL2RenderingContext, summary: IHistogram)
     return texture;
 }
 
-export function getHistogramTexture(gl: WebGL2RenderingContext, histograms: IHistogram [], label: string) : WebGLTexture|null {
+export function getHistogramTexture(gl: WebGL2RenderingContext, histograms: IHistogram [], label: string) : WebGLTexture | null {
     for (let histogram of histograms) {
         if (histogram.label == label) {
             return createHistogramTexture(gl, histogram);

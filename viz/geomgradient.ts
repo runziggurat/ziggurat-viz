@@ -19,7 +19,7 @@ const positions = [
     RIGHT,BOTTOM, 0.999, 0.5,
 ];
 
-export function gradientGeometry(gl: WebGL2RenderingContext) : WebGLBuffer|null {
+export function gradientGeometry(gl: WebGL2RenderingContext) : WebGLBuffer | null {
     let gradientData : Float32Array = new Float32Array(positions);
     let gradientBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, gradientBuffer);

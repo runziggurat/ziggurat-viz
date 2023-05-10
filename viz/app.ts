@@ -11,7 +11,7 @@ import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
 const APP_VERSION = '0.1.9';
 
 export class CApp {
-    private mousekey: CMousekeyCtlr|null
+    private mousekey: CMousekeyCtlr | null
     private initialized: boolean;
     private startTime: number;
     private lastTime: number;
@@ -19,7 +19,7 @@ export class CApp {
     public gl: WebGL2RenderingContext;
     private canvas: HTMLCanvasElement
     public camera: PCamera;
-    private world: CWorld|null;
+    private world: CWorld | null;
 
     public actions: IKeyAction[];
     private velPanX: number;

@@ -1,9 +1,9 @@
 
 import { EShader, IShader } from './core'
 
-export var glShaders : (WebGLProgram|null) []
+export var glShaders : (WebGLProgram | null) []
 
-export function createProgram(shader: IShader, gl: WebGL2RenderingContext) : WebGLProgram|null {
+export function createProgram(shader: IShader, gl: WebGL2RenderingContext) : WebGLProgram | null {
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     if (!vertexShader) return null;
     gl.shaderSource(vertexShader, shader.vertex);

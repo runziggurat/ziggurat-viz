@@ -61,7 +61,7 @@ const indices = [
     5, 9, 1
 ]
 
-export function icosaGeometry(gl: WebGL2RenderingContext) : WebGLBuffer|null {
+export function icosaGeometry(gl: WebGL2RenderingContext) : WebGLBuffer | null {
     let size = 20 * 3 * 6;
     let icosaData : Float32Array = new Float32Array(size)
     let i = 0;
