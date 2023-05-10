@@ -97,8 +97,8 @@ const Geo: NextPage<{}> = () => {
         setStatus({
           error: true,
           msg:
-            'error loading geo location graph.\n' +
-            (err?.message || 'Please try again later.'),
+            'error loading geo location graph\n' +
+            (err?.message || 'Please try again later!'),
         })
       })
     return () => {

@@ -36,8 +36,8 @@ const Force: NextPage<{}> = () => {
         setStatus({
           error: true,
           msg:
-            'error loading force graph.\n' +
-            (err?.message || 'Please try again late!.'),
+            'error loading force graph\n' +
+            (err?.message || 'Please try again later!'),
         })
       })
     return () => {
