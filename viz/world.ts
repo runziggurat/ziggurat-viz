@@ -26,6 +26,7 @@ const BEHIND_CAMERA_DISTANCE: number = 1000000;
 const TINY_GRAPH_NODES: number = 400;
 const COLOR_MAGENTA: vec4 = vec4.fromValues(0.9, 0.0, 0.9, 1.0);
 const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0);
+const COLOR_YELLOW: vec4 = vec4.fromValues(0.9, 0.9, 0.0, 1.0);
 
 
 export class CWorld {
@@ -355,6 +356,7 @@ export class CWorld {
             this.inDrag = true;
         }
         this.selectedId = id
+        if (this.isTiny) this.setGlobalsConnectionData();
     }
 
     public handleMouseMove(dx: number, dy: number) {
@@ -451,19 +453,25 @@ export class CWorld {
 
     private setGlobalsConnectionData() {
         let gl = this.gl;
-        let n: number = 0;
+        let n = 0;
+        let i = 0;
         for (let node of this.nodes) {
             for (let index of node.inode.connections) {
-                let connection: CNode = this.nodes[index];
-                if (connection.inode.ignore) continue;
-                this.connectionData.set(this.isTiny ? COLOR_BLACK : connection.getCurrentColor(this.colorMode), n);
-                this.connectionData.set(node.position, n + 4);
-                let delta: vec3 = vec3.create();
-                let connPosition = connection.getConnectionPosition();
-                vec3.sub(delta, connPosition, node.position);
-                this.connectionData.set(delta, n + 8);
-                n += 12;
+                // draw connection only in one direction: if A < B
+                if (i < index) {
+                    let selectedConnection = index == this.selectedId || i == this.selectedId;
+                    let connection: CNode = this.nodes[index];
+                    if (connection.inode.ignore) continue;
+                    this.connectionData.set(selectedConnection ? COLOR_YELLOW : COLOR_BLACK, n);
+                    this.connectionData.set(node.position, n + 4);
+                    let delta: vec3 = vec3.create();
+                    let connPosition = connection.getConnectionPosition();
+                    vec3.sub(delta, connPosition, node.position);
+                    this.connectionData.set(delta, n + 8);
+                    n += 12;
+                }
             }
+            i++;
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer);
@@ -682,7 +690,9 @@ export class CWorld {
         this.connectionVao = gl.createVertexArray();
         gl.bindVertexArray(this.connectionVao);
 
+        // connections include A->B, and B->A, so we only draw half of them (when A < B)
         this.initConnectionData(this.isTiny ? this.numConnections : this.maxConnections);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer);
         gl.enableVertexAttribArray(colorLoc);
         gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, CONNECTION_TRANSFORM_SIZE * 4, 0);
@@ -698,9 +708,7 @@ export class CWorld {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.lineGeometry);
         gl.enableVertexAttribArray(positionLoc);
         gl.vertexAttribPointer(positionLoc, 3, gl.FLOAT, false, 12, 0);
-        if (this.isTiny) {
-            this.setGlobalsConnectionData();
-        }
+        if (this.isTiny) this.setGlobalsConnectionData();
     }
 
     public async initTexturesGl() {
@@ -892,6 +900,8 @@ export class CWorld {
         for (let inode of this.istate.nodes) {
             this.updateStats(inode);
         }
+        // we only draw half the connection (only A->B, not B->A)
+        this.numConnections = this.numConnections/2;
 
         let minSuperNodeSize = Math.sqrt(2);
         let maxSuperNodeSize = Math.sqrt(this.maxSubnodes);
