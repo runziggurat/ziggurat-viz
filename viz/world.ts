@@ -161,18 +161,14 @@ export class CWorld {
     private updateNodeColors() {
         let n: number = 0;
         for (let node of this.singleNodes) {
-            if (this.mainSingleGroup.transformData) {
-                this.mainSingleGroup.transformData.set(node.getCurrentColor(this.colorMode), n);
-            }
+            this.mainSingleGroup.transformData?.set(node.getCurrentColor(this.colorMode), n);
             n += NODE_TRANSFORM_SIZE;
         }
         n = 0;
         if (this.selectedSuperNode && this.selectedSuperNode.isOpenedSuper) {
             for (let node of this.selectedSuperNode.subNodes) {
-                if (this.mainSingleGroup.transformData) {
-                    this.mainSingleGroup.transformData.set(node.getCurrentColor(this.colorMode), n);
-                }
-                    n += NODE_TRANSFORM_SIZE;
+                this.mainSingleGroup.transformData?.set(node.getCurrentColor(this.colorMode), n);
+                n += NODE_TRANSFORM_SIZE;
             }
         }
     }
@@ -274,12 +270,11 @@ export class CWorld {
                     this.updateNodeColors();
                     let n = 0;
                     for (let subnode of node.subNodes) {
-                        if (this.mainSubGroup.transformData) {
-                            this.mainSubGroup.transformData.set(subnode.getCurrentColor(this.colorMode), n);
-                            this.mainSubGroup.transformData.set(subnode.metadata, n + 4);
-                            this.mainSubGroup.transformData.set(subnode.idColor, n + 8);
-                            this.mainSubGroup.transformData.set(subnode.matWorld, n + 12);
-                        }
+                        let td = this.mainSubGroup.transformData;
+                        td?.set(subnode.getCurrentColor(this.colorMode), n);
+                        td?.set(subnode.metadata, n + 4);
+                        td?.set(subnode.idColor, n + 8);
+                        td?.set(subnode.matWorld, n + 12);
                         n += NODE_TRANSFORM_SIZE
                     }
                     console.log('new subnodes has length ', node.subNodes.length);
@@ -331,23 +326,23 @@ export class CWorld {
         node = this.getNode(this.selectedId);
         if (node) {
             // restore color
-            if (node.nodeType == ENodeType.Single && this.mainSingleGroup.transformData) {
-                this.mainSingleGroup.transformData.set(this.singleNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
-            } else if (node.nodeType == ENodeType.Super && this.mainSuperGroup.transformData) {
-                this.mainSuperGroup.transformData.set(this.superNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
-            } else if (node.nodeType == ENodeType.Sub && this.selectedSuperNode && node.superNode == this.selectedSuperNode && this.mainSubGroup.transformData) {
-                this.mainSubGroup.transformData.set(this.selectedSuperNode.subNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
+            if (node.nodeType == ENodeType.Single) {
+                this.mainSingleGroup.transformData?.set(this.singleNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
+            } else if (node.nodeType == ENodeType.Super) {
+                this.mainSuperGroup.transformData?.set(this.superNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
+            } else if (node.nodeType == ENodeType.Sub && this.selectedSuperNode && node.superNode == this.selectedSuperNode) {
+                this.mainSubGroup.transformData?.set(this.selectedSuperNode.subNodes[node.index].getCurrentColor(this.colorMode), node.index * NODE_TRANSFORM_SIZE);
             }
         }
         node = this.getNode(id);
         if (node) {
-            if (node.nodeType == ENodeType.Single && this.mainSingleGroup.transformData) {
-                this.mainSingleGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
-            } else if (node.nodeType == ENodeType.Super && this.mainSuperGroup.transformData) {
-                this.mainSuperGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
-            } else if (this.mainSubGroup.transformData) {
+            if (node.nodeType == ENodeType.Single) {
+                this.mainSingleGroup.transformData?.set(this.white, node.index * NODE_TRANSFORM_SIZE);
+            } else if (node.nodeType == ENodeType.Super) {
+                this.mainSuperGroup.transformData?.set(this.white, node.index * NODE_TRANSFORM_SIZE);
+            } else {
                 console.log('subnode offset: ', node.subnodeOffset);
-                this.mainSubGroup.transformData.set(this.white, node.index * NODE_TRANSFORM_SIZE);
+                this.mainSubGroup.transformData?.set(this.white, node.index * NODE_TRANSFORM_SIZE);
             }
             if (!this.isTiny) {
                 this.numConnectionsToDraw = this.setConnectionData(node);
@@ -381,10 +376,11 @@ export class CWorld {
         this.mainSingleGroup.transformData = new Float32Array(this.singleNodes.length * NODE_TRANSFORM_SIZE);
         let n: number = 0;
         for (let node of this.singleNodes) {
-            this.mainSingleGroup.transformData.set(node.getCurrentColor(EColorMode.Degree), n);
-            this.mainSingleGroup.transformData.set(node.metadata, n + 4);
-            this.mainSingleGroup.transformData.set(node.idColor, n + 8);
-            this.mainSingleGroup.transformData.set(node.matWorld, n + 12);
+            let td = this.mainSingleGroup.transformData
+            td.set(node.getCurrentColor(EColorMode.Degree), n);
+            td.set(node.metadata, n + 4);
+            td.set(node.idColor, n + 8);
+            td.set(node.matWorld, n + 12);
             n += NODE_TRANSFORM_SIZE
         }
         this.mainSingleGroup.transformBuffer = gl.createBuffer();
@@ -398,10 +394,11 @@ export class CWorld {
         console.log('superNodes size ', this.superNodes.length);
         n = 0;
         for (let node of this.superNodes) {
-            this.mainSuperGroup.transformData.set(node.degreeColor, n);
-            this.mainSuperGroup.transformData.set(node.metadata, n + 4);
-            this.mainSuperGroup.transformData.set(node.idColor, n + 8);
-            this.mainSuperGroup.transformData.set(node.matWorld, n + 12);
+            let td = this.mainSuperGroup.transformData;
+            td.set(node.degreeColor, n);
+            td.set(node.metadata, n + 4);
+            td.set(node.idColor, n + 8);
+            td.set(node.matWorld, n + 12);
             n += NODE_TRANSFORM_SIZE;
         }
 
@@ -477,9 +474,7 @@ export class CWorld {
         let gl = this.gl
         let n: number = 12;
         for (let node of this.singleNodes) {
-            if (this.mainSingleGroup.transformData) {
-                this.mainSingleGroup.transformData.set(node.matWorld, n);
-            }
+            this.mainSingleGroup.transformData?.set(node.matWorld, n);
             n += 28
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mainSingleGroup.transformBuffer);
@@ -490,9 +485,7 @@ export class CWorld {
         let gl = this.gl
         let n: number = 12;
         for (let node of this.superNodes) {
-            if (this.mainSuperGroup.transformData) {
-                this.mainSuperGroup.transformData.set(node.matWorld, n);
-            }
+            this.mainSuperGroup.transformData?.set(node.matWorld, n);
             n += 28
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mainSuperGroup.transformBuffer);
@@ -505,9 +498,7 @@ export class CWorld {
 
         let n: number = 12;
         for (let node of this.selectedSuperNode.subNodes) {
-            if (this.mainSubGroup.transformData) {
-                this.mainSubGroup.transformData.set(node.matWorld, n);
-            }
+            this.mainSubGroup.transformData?.set(node.matWorld, n);
             n += 28
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.mainSubGroup.transformBuffer);
