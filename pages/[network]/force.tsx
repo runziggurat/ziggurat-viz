@@ -5,6 +5,7 @@ import { Center, createStyles, Text } from '@mantine/core'
 import { useSetState } from '@mantine/hooks'
 import WEBGL from 'three/examples/jsm/capabilities/WebGL'
 import { errorPanel } from '../../styles/global'
+import Head from 'next/head'
 
 const useStyles = createStyles(theme => ({
   ...errorPanel(theme),
@@ -47,6 +48,14 @@ const Force: NextPage<{}> = () => {
   }, [])
   return (
     <Navbar>
+      <Head>
+        <title>Ziggurat Explorer</title>
+        <meta
+          name="description"
+          content="P2P Visualizer: Force Graph"
+        />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       {!status.done && (
         <Center className={classes.status}>
           <Text
