@@ -6,8 +6,7 @@ import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
 import { zoomLogToScale } from './util'
 import { vec2 } from 'gl-matrix'
-import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
-import { BubbleControllerDatasetOptions } from 'chart.js'
+import { NAVBAR_HEIGHT } from '../utils/constants'
 
 const APP_VERSION = '0.1.10'
 
