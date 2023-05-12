@@ -1,47 +1,52 @@
-
 import { EShader, IShader } from './core'
 
-export var glShaders : (WebGLProgram | null) []
+export var glShaders: (WebGLProgram | null)[]
 
-export function createProgram(shader: IShader, gl: WebGL2RenderingContext) : WebGLProgram | null {
-    const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    if (!vertexShader) return null;
-    gl.shaderSource(vertexShader, shader.vertex);
-    gl.compileShader(vertexShader);
-  
-    var compiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
-    var compilationLog = gl.getShaderInfoLog(vertexShader);
-  
-    const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    if (!fragmentShader) return null;
-    gl.shaderSource(fragmentShader, shader.fragment);
-    gl.compileShader(fragmentShader);
-  
-    compiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
-    compilationLog = gl.getShaderInfoLog(fragmentShader);
-  
-    let program = gl.createProgram();
-    if (!program) return null;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-  
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program));
-        return null;
-    }
-    return program
+export function createProgram(
+  shader: IShader,
+  gl: WebGL2RenderingContext
+): WebGLProgram | null {
+  const vertexShader = gl.createShader(gl.VERTEX_SHADER)
+  if (!vertexShader) return null
+  gl.shaderSource(vertexShader, shader.vertex)
+  gl.compileShader(vertexShader)
+
+  var compiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)
+  var compilationLog = gl.getShaderInfoLog(vertexShader)
+
+  const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
+  if (!fragmentShader) return null
+  gl.shaderSource(fragmentShader, shader.fragment)
+  gl.compileShader(fragmentShader)
+
+  compiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)
+  compilationLog = gl.getShaderInfoLog(fragmentShader)
+
+  let program = gl.createProgram()
+  if (!program) return null
+  gl.attachShader(program, vertexShader)
+  gl.attachShader(program, fragmentShader)
+  gl.linkProgram(program)
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    alert(
+      'Unable to initialize the shader program: ' +
+        gl.getProgramInfoLog(program)
+    )
+    return null
+  }
+  return program
 }
 
 export function initShadersGl(gl: WebGL2RenderingContext) {
-    glShaders = new Array(EShader.Last)
-    for (let i = 0; i < EShader.Last; i++) {
-      glShaders[i] = createProgram(glslSrc[i], gl);
-    }
+  glShaders = new Array(EShader.Last)
+  for (let i = 0; i < EShader.Last; i++) {
+    glShaders[i] = createProgram(glslSrc[i], gl)
+  }
 }
 
-const glslIcosa : IShader = {
-    vertex: `#version 300 es
+const glslIcosa: IShader = {
+  vertex: `#version 300 es
   uniform mat4 u_viewProjection;
   uniform sampler2D u_noiseTexture;
   uniform vec4 u_params;
@@ -64,18 +69,18 @@ const glslIcosa : IShader = {
     gl_Position = u_viewProjection * a_model * vec4(a_position.xyz, 1.0);
   }
   `,
-    fragment: `#version 300 es
+  fragment: `#version 300 es
   precision highp float;
   in vec4 vColor;
   out vec4 fragColor;
   void main() {
     fragColor = vColor;
   }
-  `
-  }
+  `,
+}
 
-  const glslPicker : IShader = {
-    vertex: `#version 300 es
+const glslPicker: IShader = {
+  vertex: `#version 300 es
   uniform mat4 u_viewProjection;
   uniform sampler2D u_noiseTexture;
   uniform vec4 u_params;
@@ -91,18 +96,18 @@ const glslIcosa : IShader = {
     gl_Position = u_viewProjection * a_model * vec4(a_position.xyz, 1.0);
   }
   `,
-    fragment: `#version 300 es
+  fragment: `#version 300 es
   precision highp float;
   in vec4 vColor;
   out vec4 fragColor;
   void main() {
     fragColor = vColor;
   }
-  `
-  }
+  `,
+}
 
-  const glslWorldMap : IShader = {
-    vertex: `#version 300 es
+const glslWorldMap: IShader = {
+  vertex: `#version 300 es
   uniform mat4 u_viewProjection;
   in vec2 a_position;
   in vec2 a_uv;
@@ -131,11 +136,11 @@ const glslIcosa : IShader = {
         fragColor = vec4(pixel.rgb * 0.3 + vec3(0.2, 0.2, 0.2), 1.0);
     }
   }
-  `
-  }
+  `,
+}
 
-  const glslConnection : IShader = {
-    vertex: `#version 300 es
+const glslConnection: IShader = {
+  vertex: `#version 300 es
   uniform mat4 u_viewProjection;
   in vec3 a_position;
   in vec4 a_color;
@@ -148,18 +153,18 @@ const glslIcosa : IShader = {
     gl_Position = u_viewProjection * vec4(vertex.xyz, 1.0);
   }
   `,
-    fragment: `#version 300 es
+  fragment: `#version 300 es
   precision highp float;
   in vec4 vColor;
   out vec4 fragColor;
   void main() {
     fragColor = vColor;
   }
-  `
-  }
+  `,
+}
 
-  const glslGradient : IShader = {
-    vertex: `#version 300 es
+const glslGradient: IShader = {
+  vertex: `#version 300 es
   in vec2 a_position;
   in vec2 a_uv;
   out vec2 vUv;
@@ -177,13 +182,13 @@ const glslIcosa : IShader = {
   void main() {
      fragColor = texture(u_gradientTexture, vUv);
   }
-  `
-  }
+  `,
+}
 
-let glslSrc : IShader [] = [
-    glslIcosa,
-    glslPicker,
-    glslWorldMap,
-    glslConnection,
-    glslGradient
+let glslSrc: IShader[] = [
+  glslIcosa,
+  glslPicker,
+  glslWorldMap,
+  glslConnection,
+  glslGradient,
 ]
