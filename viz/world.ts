@@ -310,12 +310,65 @@ export class CWorld {
     }
   }
 
+  clickedInHtmlElement(x: number, y: number, el: HTMLElement): boolean {
+    let rect = el.getBoundingClientRect()
+    if (x < rect.x) return false
+    if (y < rect.y - NAVBAR_HEIGHT) return false
+    if (x > rect.x + rect.width) return false
+    if (y > rect.y - NAVBAR_HEIGHT + rect.height) return false
+    return true
+  }
+
+  clickedInText(x: number, y: number): boolean {
+    const overlayRight = document.getElementById('overlayRight')
+    if (
+      overlayRight &&
+      this.selectedId != -1 &&
+      this.clickedInHtmlElement(x, y, overlayRight)
+    ) {
+      console.log('clicked in overlayRight')
+      return true
+    }
+
+    const instructions = document.getElementById('instructions')
+    if (
+      instructions &&
+      this.displayCommand &&
+      this.clickedInHtmlElement(x, y, instructions)
+    ) {
+      console.log('clicked in instructions')
+      return true
+    }
+
+    let overlayLeft = document.getElementById('overlayLeft')
+    if (
+      overlayLeft &&
+      this.displayFps &&
+      this.clickedInHtmlElement(x, y, overlayLeft)
+    ) {
+      console.log('clicked in overlayLeft')
+      return true
+    }
+
+    return false
+  }
+
   public handleClick(x: number, y: number) {
+    console.log('\nhandleClick', x, y)
+    if (this.clickedInText(x, y)) return
     this.inDrag = true
     let screenCoords: vec2 = vec2.fromValues(
       x / window.innerWidth,
       1 - y / (window.innerHeight - NAVBAR_HEIGHT)
     )
+
+    let worldX =
+      (screenCoords[0] - 0.5) * this.camera.worldWidth + this.camera.x
+    let worldY =
+      (screenCoords[1] - 0.5) * this.camera.worldHeight + this.camera.y
+    console.log('screenCoords ', screenCoords)
+    console.log('worldY ', worldY)
+
     this.picker.preRender(screenCoords[0], screenCoords[1])
     this.renderPicker()
     let id = this.picker.postRender()

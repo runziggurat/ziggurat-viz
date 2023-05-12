@@ -5,10 +5,11 @@ import { CWorld } from './world'
 import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
 import { zoomLogToScale } from './util'
+import { vec2 } from 'gl-matrix'
 import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
 import { BubbleControllerDatasetOptions } from 'chart.js'
 
-const APP_VERSION = '0.1.9'
+const APP_VERSION = '0.1.10'
 
 export class CApp {
   private mousekey: CMousekeyCtlr | null = null
@@ -29,6 +30,7 @@ export class CApp {
   private lastUpdateTime: number
   public zoomInTicks: number
   public zoomOutTicks: number
+  public zoomAnchor: vec2 = vec2.create()
 
   public constructor(
     canvas: HTMLCanvasElement,
@@ -252,14 +254,23 @@ export class CApp {
     this.world?.handleClick(x, y - NAVBAR_HEIGHT)
   }
 
+  public handleResize() {
+    this.canvas.width = window.innerWidth
+    this.canvas.height = window.innerHeight
+
+    const bounds = this.canvas.getBoundingClientRect()
+    this.gl?.viewport(0, 0, bounds.width, bounds.height)
+    this.camera?.update()
+  }
+
   private updateActions(delta: number) {
     const ZOOM_INC = 0.025
     if (this.zoomInTicks > 0) {
-      this.incZoomLogarithm(-ZOOM_INC)
+      this.incZoomLogarithm(-ZOOM_INC, true)
       this.zoomInTicks--
     }
     if (this.zoomOutTicks > 0) {
-      this.incZoomLogarithm(ZOOM_INC)
+      this.incZoomLogarithm(ZOOM_INC, true)
       this.zoomOutTicks--
     }
     // reach maximum velocity in 200 ms
@@ -379,11 +390,11 @@ export class CApp {
     // apply zoom velocity
     if (this.velZoom) {
       let dz = (this.velZoom * delta) / 1000
-      this.incZoomLogarithm(dz)
+      this.incZoomLogarithm(dz, false)
     }
   }
 
-  public incZoomLogarithm(dz: number) {
+  public incZoomLogarithm(dz: number, useAnchor: boolean) {
     this.zoomLogarithm += dz
     if (this.zoomLogarithm > 8.14786) {
       this.zoomLogarithm = 8.14786
@@ -394,7 +405,23 @@ export class CApp {
       this.velZoom = 0
     }
     this.camera.nodeScale = zoomLogToScale(this.zoomLogarithm)
+    let oldZ = this.camera.z
     this.camera.z = Math.exp(this.zoomLogarithm)
+    if (useAnchor) {
+      // convert anchor point to world x/y coordinates
+      let normalX = this.zoomAnchor[0] / this.canvas.width
+      let normalY =
+        1 - this.zoomAnchor[1] / (this.canvas.height - NAVBAR_HEIGHT)
+      let worldX = (normalX - 0.5) * this.camera.worldWidth + this.camera.x
+      let worldY = (normalY - 0.5) * this.camera.worldHeight + this.camera.y
+
+      // compute new world width/height based on camera z
+      this.camera.update()
+
+      // determine new camera position
+      this.camera.x = worldX + (0.5 - normalX) * this.camera.worldWidth
+      this.camera.y = worldY + (0.5 - normalY) * this.camera.worldHeight
+    }
     this.camera.update()
   }
 

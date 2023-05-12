@@ -1,5 +1,7 @@
 import { mat4, vec3 } from 'gl-matrix'
+import { NAVBAR_HEIGHT } from '../utils/constants'
 
+const HALF_ROOT_THREE = 0.866025403784439
 export class PCamera {
   private near: number
   private far: number
@@ -8,8 +10,8 @@ export class PCamera {
   public x: number
   public y: number
   public z: number
-  worldWidth: number
-  worldHeight: number
+  public worldWidth: number
+  public worldHeight: number
   matView: mat4
   matViewProjection: mat4
   matProjection: mat4
@@ -38,8 +40,9 @@ export class PCamera {
   }
 
   public update(): void {
-    let aspect = this.canvas.width / this.canvas.height
-    this.worldWidth = (this.z * 1) / 0.886
+    let aspect = this.canvas.width / (this.canvas.height - NAVBAR_HEIGHT)
+    // 60 degrees field-of-view
+    this.worldWidth = this.z / HALF_ROOT_THREE
     this.worldHeight = this.worldWidth / aspect
     mat4.perspective(
       this.matProjection,
@@ -59,7 +62,7 @@ export class PCamera {
 
   public drag(dx: number, dy: number) {
     let x = (dx / this.canvas.width) * this.worldWidth
-    let y = (dy / this.canvas.height) * this.worldHeight
+    let y = (dy / (this.canvas.height - NAVBAR_HEIGHT)) * this.worldHeight
     this.x -= x
     this.y += y
     this.update()
