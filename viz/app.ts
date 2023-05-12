@@ -255,7 +255,7 @@ export class CApp {
 
   public handleResize() {
     this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight
+    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
 
     const bounds = this.canvas.getBoundingClientRect()
     this.gl?.viewport(0, 0, bounds.width, bounds.height)

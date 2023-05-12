@@ -435,7 +435,7 @@ export class CWorld {
   }
 
   public handleClick(x: number, y: number) {
-    console.log('\nhandleClick', x, y)
+    console.log('handleClick', x, y)
     if (this.clickedInText(x, y)) return
     this.inDrag = true
     let screenCoords: vec2 = vec2.fromValues(
@@ -447,15 +447,13 @@ export class CWorld {
       (screenCoords[0] - 0.5) * this.camera.worldWidth + this.camera.x
     let worldY =
       (screenCoords[1] - 0.5) * this.camera.worldHeight + this.camera.y
-    console.log('screenCoords ', screenCoords)
-    console.log('worldY ', worldY)
 
     this.picker.preRender(screenCoords[0], screenCoords[1])
     this.renderPicker()
     let id = this.picker.postRender()
-    console.log(`  got id ${id}`)
     let currNode = this.getNode(id)
     if (!currNode) id = -1
+    console.log(`  got id ${id}`)
 
     if (currNode) {
       this.setNodeInfo(currNode)
