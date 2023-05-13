@@ -55,8 +55,8 @@ export class PCamera {
   }
 
   public drag(dx: number, dy: number) {
-    let x = (dx / this.canvas.width) * this.worldWidth
-    let y = (dy / this.canvas.height) /* - NAVBAR_HEIGHT*/ * this.worldHeight
+    let x = (dx / this.canvas.width) * this.worldWidth * this.aspectRatio
+    let y = (dy / this.canvas.height) * this.worldWidth
     this.x -= x
     this.y += y
     this.update()
