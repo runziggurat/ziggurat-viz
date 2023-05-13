@@ -443,11 +443,6 @@ export class CWorld {
       1 - y / (window.innerHeight - NAVBAR_HEIGHT)
     )
 
-    let worldX =
-      (screenCoords[0] - 0.5) * this.camera.worldWidth + this.camera.x
-    let worldY =
-      (screenCoords[1] - 0.5) * this.camera.worldHeight + this.camera.y
-
     this.picker.preRender(screenCoords[0], screenCoords[1])
     this.renderPicker()
     let id = this.picker.postRender()
