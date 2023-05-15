@@ -254,7 +254,6 @@ export class CApp {
   }
 
   public handleResize() {
-    console.log('resize')
     const bounds = this.canvas.getBoundingClientRect()
     this.canvas.width = this.canvas.getBoundingClientRect().width
     this.canvas.height = this.canvas.getBoundingClientRect().height
