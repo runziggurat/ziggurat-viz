@@ -1,6 +1,6 @@
 export const WORLD_WIDTH: number = 3600
 export const WORLD_HEIGHT: number = 1800
-export const INITIAL_CAMERA_Z: number = 3456
+export const INITIAL_CAMERA_Z: number = 1800
 
 export enum EShader {
   Icosa = 0,

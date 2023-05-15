@@ -310,115 +310,167 @@ export class CWorld {
     }
   }
 
+  clickedInHtmlElement(x: number, y: number, el: HTMLElement): boolean {
+    let rect = el.getBoundingClientRect()
+    if (x < rect.x) return false
+    if (y < rect.y - NAVBAR_HEIGHT) return false
+    if (x > rect.x + rect.width) return false
+    if (y > rect.y - NAVBAR_HEIGHT + rect.height) return false
+    return true
+  }
+
+  clickedInText(x: number, y: number): boolean {
+    const overlayRight = document.getElementById('overlayRight')
+    if (
+      overlayRight &&
+      this.selectedId != -1 &&
+      this.clickedInHtmlElement(x, y, overlayRight)
+    ) {
+      console.log('clicked in overlayRight')
+      return true
+    }
+
+    const instructions = document.getElementById('instructions')
+    if (
+      instructions &&
+      this.displayCommand &&
+      this.clickedInHtmlElement(x, y, instructions)
+    ) {
+      console.log('clicked in instructions')
+      return true
+    }
+
+    let overlayLeft = document.getElementById('overlayLeft')
+    if (
+      overlayLeft &&
+      this.displayFps &&
+      this.clickedInHtmlElement(x, y, overlayLeft)
+    ) {
+      console.log('clicked in overlayLeft')
+      return true
+    }
+
+    return false
+  }
+
+  private setNodeInfo(node: CNode) {
+    const overlayRight = document.getElementById('overlayRight')
+    this.ipNode.nodeValue =
+      node.nodeType != ENodeType.Super
+        ? 'IP: ' + node.inode.addr
+        : `Super Node: ${node.subNodes.length} nodes`
+    this.networkTypeNode.nodeValue = node.inode.network_type
+    this.betweennessNode.nodeValue =
+      node.nodeType != ENodeType.Super
+        ? node.inode.betweenness.toFixed(6)
+        : '--'
+    this.closenessNode.nodeValue =
+      node.nodeType != ENodeType.Super ? node.inode.closeness.toFixed(6) : '--'
+    this.connectionsNode.nodeValue =
+      node.nodeType != ENodeType.Super ? node.numConnections.toString() : '--'
+    this.latitudeNode.nodeValue =
+      node.inode.geolocation.coordinates.latitude.toFixed(4)
+    this.longitudeNode.nodeValue =
+      node.inode.geolocation.coordinates.longitude.toFixed(4)
+    this.cityNode.nodeValue = node.inode.geolocation.city
+    this.countryNode.nodeValue = node.inode.geolocation.country
+    this.subnodeIndexNode.nodeValue =
+      node.nodeType != ENodeType.Sub
+        ? '--'
+        : node.inode.subnode_index.toString()
+    this.numSubnodesNode.nodeValue =
+      node.nodeType != ENodeType.Sub ? '--' : node.inode.num_subnodes.toString()
+    if (overlayRight) {
+      overlayRight.style.visibility = 'visible'
+    }
+  }
+
+  private deselectNode(node: CNode) {
+    if (node.nodeType == ENodeType.Single) {
+      this.mainSingleGroup.transformData?.set(
+        this.singleNodes[node.index].getCurrentColor(this.colorMode),
+        node.index * NODE_TRANSFORM_SIZE
+      )
+    } else if (node.nodeType == ENodeType.Super) {
+      this.mainSuperGroup.transformData?.set(
+        this.superNodes[node.index].getCurrentColor(this.colorMode),
+        node.index * NODE_TRANSFORM_SIZE
+      )
+    } else if (
+      node.nodeType == ENodeType.Sub &&
+      this.selectedSuperNode &&
+      node.superNode == this.selectedSuperNode
+    ) {
+      this.mainSubGroup.transformData?.set(
+        this.selectedSuperNode.subNodes[node.index].getCurrentColor(
+          this.colorMode
+        ),
+        node.index * NODE_TRANSFORM_SIZE
+      )
+    }
+  }
+
+  private selectNode(node: CNode) {
+    if (node.nodeType == ENodeType.Single) {
+      this.mainSingleGroup.transformData?.set(
+        this.white,
+        node.index * NODE_TRANSFORM_SIZE
+      )
+    } else if (node.nodeType == ENodeType.Super) {
+      this.mainSuperGroup.transformData?.set(
+        this.white,
+        node.index * NODE_TRANSFORM_SIZE
+      )
+    } else {
+      console.log('subnode offset: ', node.subnodeOffset)
+      this.mainSubGroup.transformData?.set(
+        this.white,
+        node.index * NODE_TRANSFORM_SIZE
+      )
+    }
+    if (!this.isTiny) {
+      this.numConnectionsToDraw = this.setConnectionData(node)
+      this.drawConnections = this.numConnectionsToDraw > 0
+    }
+  }
+
   public handleClick(x: number, y: number) {
+    console.log('handleClick', x, y)
+    if (this.clickedInText(x, y)) return
     this.inDrag = true
     let screenCoords: vec2 = vec2.fromValues(
       x / window.innerWidth,
       1 - y / (window.innerHeight - NAVBAR_HEIGHT)
     )
+
     this.picker.preRender(screenCoords[0], screenCoords[1])
     this.renderPicker()
     let id = this.picker.postRender()
+    let currNode = this.getNode(id)
+    if (!currNode) id = -1
     console.log(`  got id ${id}`)
-    let node = this.getNode(id)
-    // Changed cuz node was undefined, instead of id == -1, on clicking outside of nodes
-    // Using same node variable below due to boring reasons!
-    // TODO Revisit.
 
-    const overlayRight = document.getElementById('overlayRight')
-    if (node) {
-      this.ipNode.nodeValue =
-        node.nodeType != ENodeType.Super
-          ? 'IP: ' + node.inode.addr
-          : `Super Node: ${node.subNodes.length} nodes`
-      this.networkTypeNode.nodeValue = node.inode.network_type
-      this.betweennessNode.nodeValue =
-        node.nodeType != ENodeType.Super
-          ? node.inode.betweenness.toFixed(6)
-          : '--'
-      this.closenessNode.nodeValue =
-        node.nodeType != ENodeType.Super
-          ? node.inode.closeness.toFixed(6)
-          : '--'
-      this.connectionsNode.nodeValue =
-        node.nodeType != ENodeType.Super ? node.numConnections.toString() : '--'
-      this.latitudeNode.nodeValue =
-        node.inode.geolocation.coordinates.latitude.toFixed(4)
-      this.longitudeNode.nodeValue =
-        node.inode.geolocation.coordinates.longitude.toFixed(4)
-      this.cityNode.nodeValue = node.inode.geolocation.city
-      this.countryNode.nodeValue = node.inode.geolocation.country
-      this.subnodeIndexNode.nodeValue =
-        node.nodeType != ENodeType.Sub
-          ? '--'
-          : node.inode.subnode_index.toString()
-      this.numSubnodesNode.nodeValue =
-        node.nodeType != ENodeType.Sub
-          ? '--'
-          : node.inode.num_subnodes.toString()
-      if (overlayRight) {
-        overlayRight.style.visibility = 'visible'
-      }
+    if (currNode) {
+      this.setNodeInfo(currNode)
     } else {
+      const overlayRight = document.getElementById('overlayRight')
       if (overlayRight) {
         overlayRight.style.visibility = 'hidden'
       }
     }
     this.updateSuperStatus(id)
+
     if (id == this.selectedId) return
-    node = this.getNode(this.selectedId)
-    if (node) {
-      // restore color
-      if (node.nodeType == ENodeType.Single) {
-        this.mainSingleGroup.transformData?.set(
-          this.singleNodes[node.index].getCurrentColor(this.colorMode),
-          node.index * NODE_TRANSFORM_SIZE
-        )
-      } else if (node.nodeType == ENodeType.Super) {
-        this.mainSuperGroup.transformData?.set(
-          this.superNodes[node.index].getCurrentColor(this.colorMode),
-          node.index * NODE_TRANSFORM_SIZE
-        )
-      } else if (
-        node.nodeType == ENodeType.Sub &&
-        this.selectedSuperNode &&
-        node.superNode == this.selectedSuperNode
-      ) {
-        this.mainSubGroup.transformData?.set(
-          this.selectedSuperNode.subNodes[node.index].getCurrentColor(
-            this.colorMode
-          ),
-          node.index * NODE_TRANSFORM_SIZE
-        )
-      }
+
+    let prevNode = this.getNode(this.selectedId)
+    if (prevNode) {
+      this.deselectNode(prevNode)
     }
-    node = this.getNode(id)
-    if (node) {
-      if (node.nodeType == ENodeType.Single) {
-        this.mainSingleGroup.transformData?.set(
-          this.white,
-          node.index * NODE_TRANSFORM_SIZE
-        )
-      } else if (node.nodeType == ENodeType.Super) {
-        this.mainSuperGroup.transformData?.set(
-          this.white,
-          node.index * NODE_TRANSFORM_SIZE
-        )
-      } else {
-        console.log('subnode offset: ', node.subnodeOffset)
-        this.mainSubGroup.transformData?.set(
-          this.white,
-          node.index * NODE_TRANSFORM_SIZE
-        )
-      }
-      if (!this.isTiny) {
-        this.numConnectionsToDraw = this.setConnectionData(node)
-        this.drawConnections = this.numConnectionsToDraw > 0
-      }
+
+    if (currNode) {
+      this.selectNode(currNode)
     } else {
-      if (!this.isTiny) {
-        this.drawConnections = false
-      }
+      if (!this.isTiny) this.drawConnections = false
       this.inDrag = true
     }
     this.selectedId = id

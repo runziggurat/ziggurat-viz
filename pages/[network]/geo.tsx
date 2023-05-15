@@ -1,4 +1,5 @@
 import { NextPage } from 'next'
+import Head from 'next/head'
 import { Navbar } from '../../components/navbar'
 import {
   CSSObject,
@@ -116,6 +117,14 @@ const Geo: NextPage<{}> = () => {
   })
   return (
     <Navbar>
+      <Head>
+        <title>Ziggurat Explorer</title>
+        <meta
+          name="description"
+          content="P2P Visualizer: Geo Location"
+        />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       {!status.done ? (
         <Center className={classes.status}>
           <Text

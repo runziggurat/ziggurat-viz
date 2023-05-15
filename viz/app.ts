@@ -5,10 +5,10 @@ import { CWorld } from './world'
 import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
 import { zoomLogToScale } from './util'
-import { NAVBAR_HEIGHT, NAVBAR_COLOR_MODE } from '../utils/constants'
-import { BubbleControllerDatasetOptions } from 'chart.js'
+import { vec2 } from 'gl-matrix'
+import { NAVBAR_HEIGHT } from '../utils/constants'
 
-const APP_VERSION = '0.1.9'
+const APP_VERSION = '0.1.10'
 
 export class CApp {
   private mousekey: CMousekeyCtlr | null = null
@@ -29,6 +29,7 @@ export class CApp {
   private lastUpdateTime: number
   public zoomInTicks: number
   public zoomOutTicks: number
+  public zoomAnchor: vec2 = vec2.create()
 
   public constructor(
     canvas: HTMLCanvasElement,
@@ -37,7 +38,7 @@ export class CApp {
   ) {
     this.canvas = canvas
     this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight
+    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
     this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
@@ -252,14 +253,22 @@ export class CApp {
     this.world?.handleClick(x, y - NAVBAR_HEIGHT)
   }
 
+  public handleResize() {
+    this.canvas.width = window.innerWidth
+    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
+    const bounds = this.canvas.getBoundingClientRect()
+    this.gl?.viewport(0, 0, bounds.width, bounds.height)
+    this.camera?.update()
+  }
+
   private updateActions(delta: number) {
     const ZOOM_INC = 0.025
     if (this.zoomInTicks > 0) {
-      this.incZoomLogarithm(-ZOOM_INC)
+      this.incZoomLogarithm(-ZOOM_INC, true)
       this.zoomInTicks--
     }
     if (this.zoomOutTicks > 0) {
-      this.incZoomLogarithm(ZOOM_INC)
+      this.incZoomLogarithm(ZOOM_INC, true)
       this.zoomOutTicks--
     }
     // reach maximum velocity in 200 ms
@@ -379,11 +388,11 @@ export class CApp {
     // apply zoom velocity
     if (this.velZoom) {
       let dz = (this.velZoom * delta) / 1000
-      this.incZoomLogarithm(dz)
+      this.incZoomLogarithm(dz, false)
     }
   }
 
-  public incZoomLogarithm(dz: number) {
+  public incZoomLogarithm(dz: number, useAnchor: boolean) {
     this.zoomLogarithm += dz
     if (this.zoomLogarithm > 8.14786) {
       this.zoomLogarithm = 8.14786
@@ -395,6 +404,24 @@ export class CApp {
     }
     this.camera.nodeScale = zoomLogToScale(this.zoomLogarithm)
     this.camera.z = Math.exp(this.zoomLogarithm)
+    if (useAnchor) {
+      // convert anchor point to world coordinates
+      let normalX = this.zoomAnchor[0] / this.canvas.width
+      let normalY = 1 - this.zoomAnchor[1] / this.canvas.height
+      let worldX =
+        (normalX - 0.5) * this.camera.worldWidth * this.camera.aspectRatio +
+        this.camera.x
+      let worldY = (normalY - 0.5) * this.camera.worldWidth + this.camera.y
+
+      // compute new world width/height based on camera z
+      this.camera.update()
+
+      // determine new camera position based on new offset
+      this.camera.x =
+        worldX +
+        (0.5 - normalX) * this.camera.worldWidth * this.camera.aspectRatio
+      this.camera.y = worldY + (0.5 - normalY) * this.camera.worldWidth
+    }
     this.camera.update()
   }
 

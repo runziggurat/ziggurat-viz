@@ -1,5 +1,8 @@
 import { EKeyId } from './core'
 import { CApp } from './app'
+import { NAVBAR_HEIGHT } from '../utils/constants'
+import { vec2 } from 'gl-matrix'
+import { constants } from 'buffer'
 
 export class CMousekeyCtlr {
   app: CApp
@@ -8,26 +11,27 @@ export class CMousekeyCtlr {
     this.app = app
     window.addEventListener('keydown', this.onKeydownEvent)
     window.addEventListener('keyup', this.onKeyupEvent)
-    window.addEventListener('mousedown', this.onMouseDownNoDefault, false)
+    window.addEventListener('mousedown', this.onMouseDown, false)
     window.addEventListener('mouseup', this.onMouseEvent)
     window.addEventListener('mousemove', this.onMouseEvent)
     window.addEventListener('wheel', this.onMouseEvent)
+    window.addEventListener('resize', this.onResize)
   }
 
   public destroy = () => {
     window.removeEventListener('keydown', this.onKeydownEvent)
     window.removeEventListener('keyup', this.onKeyupEvent)
-    window.removeEventListener('mousedown', this.onMouseDownNoDefault, false)
+    window.removeEventListener('mousedown', this.onMouseDown, false)
     window.removeEventListener('mouseup', this.onMouseEvent)
     window.removeEventListener('mousemove', this.onMouseEvent)
     window.removeEventListener('wheel', this.onMouseEvent)
+    window.removeEventListener('resize', this.onResize)
 
     this.app = null! // TODO Check if it actually helps GC.
   }
 
-  onMouseDownNoDefault = (evt: MouseEvent) => {
+  onMouseDown = (evt: MouseEvent) => {
     this.onMouseEvent(evt)
-    evt.preventDefault()
   }
 
   onMouseLeftDown = (x: number, y: number) => {
@@ -46,6 +50,10 @@ export class CMousekeyCtlr {
 
   onMouseLeftUp = (x: number, y: number) => {
     this.app.handleClickRelease(x, y)
+  }
+
+  onResize = () => {
+    this.app.handleResize()
   }
 
   onMouseEvent = (evt: any) => {
@@ -70,6 +78,7 @@ export class CMousekeyCtlr {
         this.onMouseLeftUp(x, y)
       }
     } else if (evt.type == 'wheel') {
+      this.app.zoomAnchor = vec2.fromValues(x, y - NAVBAR_HEIGHT)
       if (evt.deltaY > 0) {
         this.app.zoomOutTicks += evt.deltaY / 16
         if (this.app.zoomOutTicks > 10) {

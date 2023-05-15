@@ -1,19 +1,23 @@
 import { mat4, vec3 } from 'gl-matrix'
+import { NAVBAR_HEIGHT } from '../utils/constants'
 
+// const HALF_ROOT_THREE = 0.866025403784439
 export class PCamera {
-  private near: number
-  private far: number
-  private fovx: number
+  private near = 16
+  private far = 4096
+  // twice arctan 0.5
+  private fovx = 0.46364761 * 2.0
   private canvas: HTMLCanvasElement
   public x: number
   public y: number
   public z: number
-  worldWidth: number
-  worldHeight: number
-  matView: mat4
-  matViewProjection: mat4
-  matProjection: mat4
-  nodeScale: number
+  public worldWidth = 1920
+  public worldHeight = 1080
+  public aspectRatio = 16 / 9
+  matView = mat4.create()
+  matViewProjection = mat4.create()
+  matProjection = mat4.create()
+  nodeScale = 1
 
   public constructor(
     x: number,
@@ -21,30 +25,22 @@ export class PCamera {
     z: number,
     canvas: HTMLCanvasElement
   ) {
-    this.near = 16
-    this.far = 4096
     this.x = x
     this.y = y
     this.z = z
-    this.fovx = (60 * Math.PI) / 180
     this.canvas = canvas
-    this.matView = mat4.create()
-    this.matProjection = mat4.create()
-    this.matViewProjection = mat4.create()
-    this.nodeScale = 1.0
-    this.worldWidth = 640
-    this.worldHeight = 360
     this.update()
   }
 
   public update(): void {
-    let aspect = this.canvas.width / this.canvas.height
-    this.worldWidth = (this.z * 1) / 0.886
-    this.worldHeight = this.worldWidth / aspect
+    this.aspectRatio = this.canvas.width / this.canvas.height
+    // 53.13 degrees field-of-view: screen width = distance to camera
+    this.worldWidth = this.z
+    this.worldHeight = this.worldWidth / this.aspectRatio
     mat4.perspective(
       this.matProjection,
-      this.fovx / aspect,
-      aspect,
+      this.fovx,
+      this.aspectRatio,
       this.near,
       this.far
     )
@@ -58,8 +54,8 @@ export class PCamera {
   }
 
   public drag(dx: number, dy: number) {
-    let x = (dx / this.canvas.width) * this.worldWidth
-    let y = (dy / this.canvas.height) * this.worldHeight
+    let x = (dx / this.canvas.width) * this.worldWidth * this.aspectRatio
+    let y = (dy / this.canvas.height) * this.worldWidth
     this.x -= x
     this.y += y
     this.update()
