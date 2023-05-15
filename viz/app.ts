@@ -37,13 +37,8 @@ export class CApp {
     isFiltered: boolean
   ) {
     this.canvas = canvas
-    const bounds = this.canvas.getBoundingClientRect()
     this.canvas.width = window.innerWidth
     this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
-    console.log(
-      'canvas.getBoundingClientRect()',
-      this.canvas.getBoundingClientRect()
-    )
     this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
