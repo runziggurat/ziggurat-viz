@@ -34,7 +34,6 @@ export class PCamera {
 
   public update(): void {
     this.aspectRatio = this.canvas.width / this.canvas.height
-    console.log('aspect ratio:', this.aspectRatio)
     // 53.13 degrees field-of-view: screen width = distance to camera
     this.worldWidth = this.z
     this.worldHeight = this.worldWidth / this.aspectRatio
