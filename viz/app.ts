@@ -37,8 +37,8 @@ export class CApp {
     isFiltered: boolean
   ) {
     this.canvas = canvas
-    this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
+    this.canvas.width = this.canvas.getBoundingClientRect().width
+    this.canvas.height = this.canvas.getBoundingClientRect().height
     this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
@@ -254,9 +254,9 @@ export class CApp {
   }
 
   public handleResize() {
-    this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
     const bounds = this.canvas.getBoundingClientRect()
+    this.canvas.width = this.canvas.getBoundingClientRect().width
+    this.canvas.height = this.canvas.getBoundingClientRect().height
     this.gl?.viewport(0, 0, bounds.width, bounds.height)
     this.camera?.update()
   }
@@ -406,8 +406,9 @@ export class CApp {
     this.camera.z = Math.exp(this.zoomLogarithm)
     if (useAnchor) {
       // convert anchor point to world coordinates
-      let normalX = this.zoomAnchor[0] / this.canvas.width
-      let normalY = 1 - this.zoomAnchor[1] / this.canvas.height
+      const bounds = this.canvas.getBoundingClientRect()
+      let normalX = this.zoomAnchor[0] / bounds.width
+      let normalY = 1 - this.zoomAnchor[1] / bounds.height
       let worldX =
         (normalX - 0.5) * this.camera.worldWidth * this.camera.aspectRatio +
         this.camera.x
