@@ -37,8 +37,13 @@ export class CApp {
     isFiltered: boolean
   ) {
     this.canvas = canvas
-    this.canvas.width = this.canvas.getBoundingClientRect().width
-    this.canvas.height = this.canvas.getBoundingClientRect().height
+    const bounds = this.canvas.getBoundingClientRect()
+    this.canvas.width = window.innerWidth
+    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
+    console.log(
+      'canvas.getBoundingClientRect()',
+      this.canvas.getBoundingClientRect()
+    )
     this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
@@ -254,6 +259,7 @@ export class CApp {
   }
 
   public handleResize() {
+    console.log('resize')
     const bounds = this.canvas.getBoundingClientRect()
     this.canvas.width = this.canvas.getBoundingClientRect().width
     this.canvas.height = this.canvas.getBoundingClientRect().height
