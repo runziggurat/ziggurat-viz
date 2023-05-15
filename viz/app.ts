@@ -406,9 +406,10 @@ export class CApp {
     this.camera.z = Math.exp(this.zoomLogarithm)
     if (useAnchor) {
       // convert anchor point to world coordinates
-      const bounds = this.canvas.getBoundingClientRect()
-      let normalX = this.zoomAnchor[0] / bounds.width
-      let normalY = 1 - this.zoomAnchor[1] / bounds.height
+      let normalX =
+        this.zoomAnchor[0] / this.canvas.getBoundingClientRect().width
+      let normalY =
+        1 - this.zoomAnchor[1] / this.canvas.getBoundingClientRect().height
       let worldX =
         (normalX - 0.5) * this.camera.worldWidth * this.camera.aspectRatio +
         this.camera.x
