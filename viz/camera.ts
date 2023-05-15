@@ -33,7 +33,8 @@ export class PCamera {
   }
 
   public update(): void {
-    this.aspectRatio = this.canvas.width / this.canvas.height
+    const bounds = this.canvas.getBoundingClientRect()
+    this.aspectRatio = bounds.width / bounds.height
     // 53.13 degrees field-of-view: screen width = distance to camera
     this.worldWidth = this.z
     this.worldHeight = this.worldWidth / this.aspectRatio
@@ -54,8 +55,9 @@ export class PCamera {
   }
 
   public drag(dx: number, dy: number) {
-    let x = (dx / this.canvas.width) * this.worldWidth * this.aspectRatio
-    let y = (dy / this.canvas.height) * this.worldWidth
+    const bounds = this.canvas.getBoundingClientRect()
+    let x = (dx / bounds.width) * this.worldWidth * this.aspectRatio
+    let y = (dy / bounds.height) * this.worldWidth
     this.x -= x
     this.y += y
     this.update()

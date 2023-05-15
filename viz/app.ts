@@ -254,9 +254,9 @@ export class CApp {
   }
 
   public handleResize() {
-    this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
     const bounds = this.canvas.getBoundingClientRect()
+    this.canvas.width = this.canvas.getBoundingClientRect().width
+    this.canvas.height = this.canvas.getBoundingClientRect().height
     this.gl?.viewport(0, 0, bounds.width, bounds.height)
     this.camera?.update()
   }
@@ -406,8 +406,10 @@ export class CApp {
     this.camera.z = Math.exp(this.zoomLogarithm)
     if (useAnchor) {
       // convert anchor point to world coordinates
-      let normalX = this.zoomAnchor[0] / this.canvas.width
-      let normalY = 1 - this.zoomAnchor[1] / this.canvas.height
+      let normalX =
+        this.zoomAnchor[0] / this.canvas.getBoundingClientRect().width
+      let normalY =
+        1 - this.zoomAnchor[1] / this.canvas.getBoundingClientRect().height
       let worldX =
         (normalX - 0.5) * this.camera.worldWidth * this.camera.aspectRatio +
         this.camera.x
