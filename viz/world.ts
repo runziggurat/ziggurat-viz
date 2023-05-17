@@ -30,6 +30,7 @@ const MAX_SUPERNODE_SCALE: number = 2.0
 const MIN_SUPERNODE_SCALE: number = 0.5
 const BEHIND_CAMERA_DISTANCE: number = 1000000
 const TINY_GRAPH_NODES: number = 400
+const TAP_THRESHOLD_MS: number = 320
 const COLOR_MAGENTA: vec4 = vec4.fromValues(0.9, 0.0, 0.9, 1.0)
 const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0)
 const COLOR_YELLOW: vec4 = vec4.fromValues(0.9, 0.9, 0.0, 1.0)
@@ -438,6 +439,15 @@ export class CWorld {
     console.log('handleClick', x, y)
     if (this.clickedInText(x, y)) return
     this.inDrag = true
+
+    let self = this
+    setTimeout(() => {
+      self.handleClickTask(x, y)
+    }, TAP_THRESHOLD_MS)
+  }
+
+  public handleClickTask(x: number, y: number) {
+    console.log('handleClickTask', x, y)
     let screenCoords: vec2 = vec2.fromValues(
       x / window.innerWidth,
       1 - y / (window.innerHeight - NAVBAR_HEIGHT)
@@ -453,6 +463,9 @@ export class CWorld {
     if (currNode) {
       this.setNodeInfo(currNode)
     } else {
+      // if we're in a press, rather than a tap (shorter than 400 ms),
+      // and originally clicked on empty space: we are done, so do nothing
+      if (this.inDrag) return
       const overlayRight = document.getElementById('overlayRight')
       if (overlayRight) {
         overlayRight.style.visibility = 'hidden'
@@ -471,7 +484,6 @@ export class CWorld {
       this.selectNode(currNode)
     } else {
       if (!this.isTiny) this.drawConnections = false
-      this.inDrag = true
     }
     this.selectedId = id
     if (this.isTiny) this.setGlobalsConnectionData()
