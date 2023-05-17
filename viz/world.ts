@@ -29,10 +29,12 @@ const CONNECTION_TRANSFORM_SIZE: number = 12
 const MAX_SUPERNODE_SCALE: number = 2.0
 const MIN_SUPERNODE_SCALE: number = 0.5
 const BEHIND_CAMERA_DISTANCE: number = 1000000
-const TINY_GRAPH_NODES: number = 400
+const TINY_GRAPH_NODES: number = 500
+const TAP_THRESHOLD_MS: number = 150
 const COLOR_MAGENTA: vec4 = vec4.fromValues(0.9, 0.0, 0.9, 1.0)
 const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0)
 const COLOR_YELLOW: vec4 = vec4.fromValues(0.9, 0.9, 0.0, 1.0)
+const SUBNODE_DISTANCE: number = 2.9
 
 export class CWorld {
   public istate: IState
@@ -375,11 +377,9 @@ export class CWorld {
     this.cityNode.nodeValue = node.inode.geolocation.city
     this.countryNode.nodeValue = node.inode.geolocation.country
     this.subnodeIndexNode.nodeValue =
-      node.nodeType != ENodeType.Sub
-        ? '--'
-        : node.inode.subnode_index.toString()
+      node.inode.num_subnodes <= 1 ? '--' : node.inode.subnode_index.toString()
     this.numSubnodesNode.nodeValue =
-      node.nodeType != ENodeType.Sub ? '--' : node.inode.num_subnodes.toString()
+      node.inode.num_subnodes <= 1 ? '--' : node.inode.num_subnodes.toString()
     if (overlayRight) {
       overlayRight.style.visibility = 'visible'
     }
@@ -438,6 +438,15 @@ export class CWorld {
     console.log('handleClick', x, y)
     if (this.clickedInText(x, y)) return
     this.inDrag = true
+
+    let self = this
+    setTimeout(() => {
+      self.handleClickTask(x, y)
+    }, TAP_THRESHOLD_MS)
+  }
+
+  public handleClickTask(x: number, y: number) {
+    console.log('handleClickTask', x, y)
     let screenCoords: vec2 = vec2.fromValues(
       x / window.innerWidth,
       1 - y / (window.innerHeight - NAVBAR_HEIGHT)
@@ -453,6 +462,9 @@ export class CWorld {
     if (currNode) {
       this.setNodeInfo(currNode)
     } else {
+      // if we're in a press, rather than a tap (shorter than 400 ms),
+      // and originally clicked on empty space: we are done, so do nothing
+      if (this.inDrag) return
       const overlayRight = document.getElementById('overlayRight')
       if (overlayRight) {
         overlayRight.style.visibility = 'hidden'
@@ -471,7 +483,6 @@ export class CWorld {
       this.selectNode(currNode)
     } else {
       if (!this.isTiny) this.drawConnections = false
-      this.inDrag = true
     }
     this.selectedId = id
     if (this.isTiny) this.setGlobalsConnectionData()
@@ -1167,7 +1178,8 @@ export class CWorld {
   }
 
   private createGeoString(geolocation: IGeolocation): string {
-    const DEGREE_RESOLUTION: number = 1.0 / 0.2
+    const DEGREE_RESOLUTION: number = 1.0 / 1.0
+
     let result: string =
       Math.floor(
         geolocation.coordinates.latitude * DEGREE_RESOLUTION
@@ -1176,6 +1188,15 @@ export class CWorld {
       Math.floor(
         geolocation.coordinates.longitude * DEGREE_RESOLUTION
       ).toString()
+
+    geolocation.coordinates.latitude =
+      Math.floor(geolocation.coordinates.latitude * DEGREE_RESOLUTION) /
+        DEGREE_RESOLUTION +
+      DEGREE_RESOLUTION / 2
+    geolocation.coordinates.longitude =
+      Math.floor(geolocation.coordinates.longitude * DEGREE_RESOLUTION) /
+        DEGREE_RESOLUTION +
+      DEGREE_RESOLUTION / 2
     return result
   }
 
@@ -1225,7 +1246,7 @@ export class CWorld {
     let id = 0
     this.assignSubNodes(this.istate.nodes)
     this.isTiny = this.istate.nodes.length < TINY_GRAPH_NODES
-    let abstand: number = this.isTiny ? 4.0 : 2.0
+    let abstand: number = this.isTiny ? SUBNODE_DISTANCE : 2.0
     for (let inode of this.istate.nodes) {
       if (inode.ignore) {
         let node = new CNode(
@@ -1235,7 +1256,8 @@ export class CWorld {
           this.camera,
           ENodeType.Hide,
           null,
-          abstand
+          abstand,
+          this.isTiny
         )
         this.nodes.push(node)
         id++
@@ -1253,7 +1275,8 @@ export class CWorld {
             this.camera,
             ENodeType.Super,
             null,
-            0
+            0,
+            this.isTiny
           )
           // make super nodes magenta
           superNode.degreeColor = COLOR_MAGENTA
@@ -1267,7 +1290,8 @@ export class CWorld {
             this.camera,
             ENodeType.Sub,
             superNode,
-            abstand
+            abstand,
+            this.isTiny
           )
           this.nodes.push(node)
           superNode.subNodes.push(node)
@@ -1280,7 +1304,8 @@ export class CWorld {
             this.camera,
             ENodeType.Single,
             null,
-            abstand
+            abstand,
+            this.isTiny
           )
           this.nodes.push(node)
           this.singleNodes.push(node)
@@ -1298,7 +1323,8 @@ export class CWorld {
             this.camera,
             ENodeType.Sub,
             superNode,
-            abstand
+            abstand,
+            this.isTiny
           )
           this.nodes.push(node)
           superNode.subNodes.push(node)
