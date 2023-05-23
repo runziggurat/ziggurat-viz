@@ -16,7 +16,6 @@ const useStyles = createStyles(theme => ({
 let destroy: any
 
 const Force: NextPage<{ data: VizData }> = ({ data }) => {
-  console.log({ force: data })
   const { classes } = useStyles()
   const [status, setStatus] = useSetState({
     msg: 'loading force graph...',
@@ -25,16 +24,16 @@ const Force: NextPage<{ data: VizData }> = ({ data }) => {
   })
   useEffect(() => {
     import('../../viz/force')
-      .then(({ loadFilteredDemo, destroy: _destroy }) => {
+      .then(({ renderForceGraph, destroyForceGraph }) => {
         // Early detect as we can't catch force error's here.
         if (!WEBGL.isWebGL2Available()) {
           throw new Error(WEBGL.getWebGL2ErrorMessage().textContent || '')
         }
-        destroy = _destroy
+        destroy = destroyForceGraph
         setStatus({
           done: true,
         })
-        return loadFilteredDemo()
+        return renderForceGraph(data.viz_state)
       })
       .catch(err => {
         setStatus({
@@ -75,7 +74,6 @@ export const getStaticPaths = networkStaticPaths
 
 export const getStaticProps: GetStaticProps<{ data: {} }> = async context => {
   const network = parseNetwork(context.params)
-
   if (!network) {
     return {
       notFound: true,

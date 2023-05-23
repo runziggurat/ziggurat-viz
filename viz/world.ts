@@ -1069,11 +1069,11 @@ export class CWorld {
     let precision = gl.getParameter(gl.DEPTH_BITS)
     console.log('precision is ', precision)
     if (width >= 8192) {
-      this.worldMapTexture = await loadTexture(gl, '/data/world-mono-8k.png')
+      this.worldMapTexture = await loadTexture(gl, '/world-mono-8k.png')
     } else {
-      this.worldMapTexture = await loadTexture(gl, '/data/world-mono-4k.png')
+      this.worldMapTexture = await loadTexture(gl, '/world-mono-4k.png')
     }
-    this.gradientTexture = await loadTexture(gl, '/data/gradient.jpeg')
+    this.gradientTexture = await loadTexture(gl, '/gradient.jpeg')
     this.histogramBTexture = getHistogramTexture(
       gl,
       this.istate.histograms,

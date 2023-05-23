@@ -89,8 +89,8 @@ const Geo: NextPage<{ data: VizData }> = ({ data }) => {
           throw new Error('canvas not found')
         }
         if (!appRef.current) {
-          appRef.current = new CApp(canvasRef.current, null!, true)
-          appRef.current.ready().then(() => {
+          appRef.current = new CApp(canvasRef.current)
+          appRef.current.start(data.viz_state).then(() => {
             setStatus({
               done: true,
             })
@@ -212,7 +212,6 @@ export const getStaticProps: GetStaticProps<{
   data: VizData
 }> = async context => {
   const network = parseNetwork(context.params)
-
   if (!network) {
     return {
       notFound: true,

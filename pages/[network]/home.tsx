@@ -87,7 +87,6 @@ export const getStaticPaths = networkStaticPaths;
 
 export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
   const network = parseNetwork(context.params)
-
   if (!network) {
     return {
       notFound: true,
