@@ -1,4 +1,3 @@
-import { showOpenFilePicker } from 'file-system-access'
 import ForceGraph3D, { ForceGraph3DInstance } from '3d-force-graph'
 import { IState, INode, EColorMode } from './core'
 import { NAVBAR_HEIGHT } from '../utils/constants'
@@ -101,78 +100,19 @@ const onKeydownEvent = (evt: KeyboardEvent) => {
   }
 }
 
-export async function loadForceState() {
-  window.addEventListener('keydown', onKeydownEvent)
-  let fileHandle: FileSystemFileHandle
-  try {
-    if (window.showOpenFilePicker) {
-      console.log('Using native window.showOpenFilePicker')
-      ;[fileHandle] = await window.showOpenFilePicker()
-    } else {
-      console.log('Using polyfile version of showOpenFilePicker')
-      ;[fileHandle] = await showOpenFilePicker()
-    }
-  } catch (err) {
-    console.log(err)
-    console.log(
-      'User cancelled request, or problem loading file.  Gracefully exiting loadState'
-    )
-    return
-  }
-  fileHandle.getFile().then(async file => {
-    const contents = await file.text()
-    handleStateText(contents)
-  })
-}
-
-export async function loadUnfilteredState() {
-  window.addEventListener('keydown', onKeydownEvent)
-
-  var rawFile = new XMLHttpRequest()
-  rawFile.overrideMimeType('application/json')
-  rawFile.open('GET', '/data/state.json', true)
-  rawFile.onreadystatechange = function () {
-    if (rawFile.readyState == 4 && rawFile.status == 200) {
-      handleStateText(rawFile.responseText)
-    }
-  }
-  rawFile.send(null)
-}
-
-async function loadDemo(filepath: string) {
-  window.addEventListener('keydown', onKeydownEvent)
-
-  var rawFile = new XMLHttpRequest()
-  rawFile.overrideMimeType('application/json')
-  rawFile.open('GET', filepath, true)
-  rawFile.onreadystatechange = function () {
-    if (rawFile.readyState == 4 && rawFile.status == 200) {
-      handleStateText(rawFile.responseText)
-    }
-  }
-  rawFile.send(null)
-}
-export async function loadFilteredDemo() {
-  loadDemo('/data/filtered.json')
-}
-// export async function loadUnfilteredDemo() {
-//     loadDemo('/data/state.json')
-// }
-
-function handleStateText(text: string) {
+export function renderForceGraph(state: IState) {
   const graph = document.getElementById('graph')
   if (!graph) {
     return
   }
-  let istate: IState = JSON.parse(text)
   let nodes = new Array()
   let links = new Array()
   let i = 0
-  for (let node of istate.nodes) {
+  for (let node of state.nodes) {
     updateStats(node)
   }
-  let isTiny = istate.nodes.length < TINY_GRAPH_NODES
-  for (let node of istate.nodes) {
+  let isTiny = state.nodes.length < TINY_GRAPH_NODES
+  for (let node of state.nodes) {
     let id = 'id' + i.toString()
     let name = 'node ' + i.toString()
     let ip = node.addr.substring(0, node.addr.indexOf(':'))
@@ -254,7 +194,7 @@ function updateSize() {
   Graph.height(window.innerHeight - NAVBAR_HEIGHT).width(window.innerWidth)
 }
 
-export function destroy() {
+export function destroyForceGraph() {
   Graph = null
   window.removeEventListener('resize', updateSize)
   window.removeEventListener('color-scheme-change', setColors)

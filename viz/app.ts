@@ -14,27 +14,25 @@ export class CApp {
   private mousekey: CMousekeyCtlr | null = null
   private initialized: boolean = false
   private startTime: number
-  private lastTime: number
-  private iter: number
+  private lastTime: number = 0
+  private iter: number = 0
   public gl: WebGL2RenderingContext
   private canvas: HTMLCanvasElement
   public camera: PCamera
   private world: CWorld | null = null
 
-  public actions: IKeyAction[]
-  private velPanX: number
-  private velPanY: number
-  private velZoom: number
+  public actions: IKeyAction[] = []
+  private velPanX: number = 0
+  private velPanY: number = 0
+  private velZoom: number = 0
   private zoomLogarithm: number = 1
   private lastUpdateTime: number
-  public zoomInTicks: number
-  public zoomOutTicks: number
+  public zoomInTicks: number = 0
+  public zoomOutTicks: number = 0
   public zoomAnchor: vec2 = vec2.create()
 
   public constructor(
     canvas: HTMLCanvasElement,
-    handle: FileSystemFileHandle,
-    isFiltered: boolean
   ) {
     this.canvas = canvas
     this.canvas.width = window.innerWidth
@@ -49,45 +47,11 @@ export class CApp {
     }
     this.gl = gl
 
-    let self = this
-    if (handle) {
-      handle.getFile().then(async (file: File) => {
-        const contents = await file.text()
-        let istate = <IState>JSON.parse(contents)
-        await self.init(istate)
-      })
-    } else {
-      if (isFiltered) {
-        console.log('load demo filtered state.json')
-        self.readTextFile(
-          '/data/filtered.json',
-          async function (atext: string) {
-            let istate = <IState>JSON.parse(atext)
-            await self.init(istate)
-          }
-        )
-      } else {
-        console.log('load demo unfiltered state.json')
-        self.readTextFile('/data/state.json', async function (atext: string) {
-          let istate = <IState>JSON.parse(atext)
-          await self.init(istate)
-        })
-      }
-    }
-
     this.startTime = Date.now() / 1000
-    this.lastTime = 0
-    this.iter = 0
     this.lastUpdateTime = Date.now()
-    this.velPanX = 0
-    this.velPanY = 0
-    this.velZoom = 0
-    this.actions = new Array()
-    this.zoomInTicks = 0
-    this.zoomOutTicks = 0
   }
 
-  async init(state: IState) {
+  async start(state: IState) {
     this.initialize()
     this.initializeWebGl(this.gl)
     this.world = new CWorld(state, this.gl, this.canvas, this.camera)
@@ -96,20 +60,11 @@ export class CApp {
     this.mousekey = new CMousekeyCtlr(this)
   }
 
-  private isReady = false
-  private setReady?: (_: void) => void
-  public async ready() {
-    const promise = new Promise(resolve => {
-      this.setReady = resolve
-    })
-    return promise
-  }
-
   public destroy() {
     this.mousekey?.destroy()
   }
 
-  async initializeWebGl(gl: WebGL2RenderingContext) {
+  initializeWebGl(gl: WebGL2RenderingContext) {
     gl.clearColor(1, 1, 1, 1.0)
     gl.clearDepth(1.0)
     gl.clearStencil(0.0)
@@ -171,23 +126,7 @@ export class CApp {
     if (!this.initialized || !this.gl) {
       return
     }
-    if (!this.isReady) {
-      this.isReady = true
-      this.setReady?.()
-    }
     this.renderGl()
-  }
-
-  readTextFile(file: string, callback: (str: string) => void) {
-    var rawFile = new XMLHttpRequest()
-    rawFile.overrideMimeType('application/json')
-    rawFile.open('GET', file, true)
-    rawFile.onreadystatechange = function () {
-      if (rawFile.readyState == 4 && rawFile.status == 200) {
-        callback(rawFile.responseText)
-      }
-    }
-    rawFile.send(null)
   }
 
   onAction(isDown: boolean, id: EKeyId) {
@@ -436,7 +375,7 @@ export class CApp {
     this.world?.update()
   }
 
-  public async initialize() {
+  public initialize() {
     this.zoomLogarithm = Math.log(INITIAL_CAMERA_Z)
     this.camera.nodeScale = zoomLogToScale(this.zoomLogarithm)
     this.camera.update()
