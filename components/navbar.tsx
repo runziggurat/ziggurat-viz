@@ -195,6 +195,10 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
             tab: classes.tab,
             tabsList: classes.tabsList,
           }}
+          value={router.pathname.split('/')[2] || 'home'}
+          onTabChange={page => {
+            router.push(`/${network}/${page}`)
+          }}
         >
           <Tabs.List>
             <NextLink legacyBehavior href={`/${network}/home`}>
@@ -202,12 +206,12 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
                 <Text className={classes.tabLabel}>home</Text>
               </Tabs.Tab>
             </NextLink>
-            <NextLink legacyBehavior href={`/${network}/home`}>
+            <NextLink legacyBehavior href={`/${network}/force`}>
               <Tabs.Tab value="force" title="May the force be with you!">
                 <Text className={classes.tabLabel}>force</Text>
               </Tabs.Tab>
             </NextLink>
-            <NextLink legacyBehavior href={`/${network}/home`}>
+            <NextLink legacyBehavior href={`/${network}/geo`}>
               <Tabs.Tab value="geo">
                 <Text className={classes.tabLabel}>geo</Text>
               </Tabs.Tab>
