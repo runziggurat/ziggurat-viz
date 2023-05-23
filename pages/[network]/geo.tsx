@@ -119,7 +119,7 @@ const Geo: NextPage<{ data: VizData }> = ({ data }) => {
     }
   })
   return (
-    <Navbar>
+    <Navbar metaData={data.meta_data}>
       <Head>
         <title>Ziggurat Explorer</title>
         <meta name="description" content="P2P Visualizer: Geo Location" />

@@ -197,17 +197,17 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
           }}
         >
           <Tabs.List>
-            <NextLink prefetch legacyBehavior href={`/${network}/home`}>
+            <NextLink legacyBehavior href={`/${network}/home`}>
               <Tabs.Tab value="home">
                 <Text className={classes.tabLabel}>home</Text>
               </Tabs.Tab>
             </NextLink>
-            <NextLink prefetch legacyBehavior href={`/${network}/home`}>
+            <NextLink legacyBehavior href={`/${network}/home`}>
               <Tabs.Tab value="force" title="May the force be with you!">
                 <Text className={classes.tabLabel}>force</Text>
               </Tabs.Tab>
             </NextLink>
-            <NextLink prefetch legacyBehavior href={`/${network}/home`}>
+            <NextLink legacyBehavior href={`/${network}/home`}>
               <Tabs.Tab value="geo">
                 <Text className={classes.tabLabel}>geo</Text>
               </Tabs.Tab>

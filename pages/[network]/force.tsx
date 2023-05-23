@@ -49,7 +49,7 @@ const Force: NextPage<{ data: VizData }> = ({ data }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return (
-    <Navbar>
+    <Navbar metaData={data.meta_data}>
       <Head>
         <title>Ziggurat Explorer</title>
         <meta name="description" content="P2P Visualizer: Force Graph" />
