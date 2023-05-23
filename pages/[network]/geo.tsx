@@ -1,4 +1,4 @@
-import { NextPage } from 'next'
+import { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
 import { Navbar } from '../../components/navbar'
 import {
@@ -16,6 +16,9 @@ import { bg, overlay as bgOverlay, text } from '../../utils/theme'
 import { CApp } from '../../viz/app'
 import { useAnimationFrame } from '../../utils/animation-frame'
 import { errorPanel } from '../../styles/global'
+import { parseNetwork } from '../../utils/network'
+
+import { VizData, fetchVizData, networkStaticPaths } from '../../utils/next'
 
 const useStyles = createStyles(theme => {
   const overlay: CSSObject = {
@@ -70,7 +73,7 @@ const useStyles = createStyles(theme => {
   }
 })
 
-const Geo: NextPage<{}> = () => {
+const Geo: NextPage<{ data: VizData }> = ({ data }) => {
   const { classes } = useStyles()
   const [status, setStatus] = useSetState({
     msg: 'loading geo location graph...',
@@ -119,10 +122,7 @@ const Geo: NextPage<{}> = () => {
     <Navbar>
       <Head>
         <title>Ziggurat Explorer</title>
-        <meta
-          name="description"
-          content="P2P Visualizer: Geo Location"
-        />
+        <meta name="description" content="P2P Visualizer: Geo Location" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       {!status.done ? (
@@ -204,6 +204,29 @@ const Geo: NextPage<{}> = () => {
       </Center>
     </Navbar>
   )
+}
+
+export const getStaticPaths = networkStaticPaths
+
+export const getStaticProps: GetStaticProps<{
+  data: VizData
+}> = async context => {
+  const network = parseNetwork(context.params)
+
+  if (!network) {
+    return {
+      notFound: true,
+    }
+  }
+
+  const data = await fetchVizData(network)
+  return {
+    props: {
+      data,
+    },
+    // Refresh every day
+    revalidate: 24 * 60 * 60,
+  }
 }
 
 export default Geo

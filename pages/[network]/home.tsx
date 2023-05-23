@@ -8,10 +8,12 @@ import { useMemo } from 'react'
 import { TestsTable, TestsTableProps } from '../../components/tests-table'
 
 import { CrawlerCard } from '../../components/crawler-card'
-import { CONTENT_MAX_WIDTH } from '../../utils/constants'
-import { networks, parseNetwork } from '../../utils/network'
+import { CONTENT_MAX_WIDTH, ZCASH_BUCKET } from '../../utils/constants'
+import { parseNetwork } from '../../utils/network'
 
 import * as gcloud from '@google-cloud/storage'
+import { getLatestTimestamp } from '../../utils/gcloud'
+import { networkStaticPaths } from '../../utils/next'
 
 type TestResults = {
   full_name: string
@@ -81,12 +83,7 @@ const Home: NextPage<{ data: Data }> = ({
   )
 }
 
-export async function getStaticPaths() {
-  return {
-    paths: networks.map(({ value: network }) => ({ params: { network } })),
-    fallback: false,
-  }
-}
+export const getStaticPaths = networkStaticPaths;
 
 export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
   const network = parseNetwork(context.params)
@@ -105,27 +102,11 @@ export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
     },
   })
 
-  const bucket = storage.bucket('egq-runziggurat-zcash-bucket')
+  const bucket = storage.bucket(ZCASH_BUCKET)
   const testsPath = `results/${network.value}/latest.jsonl`
   const crawlerPath = 'results/crawler/latest.json'
 
-  const [files] = await bucket.getFiles({
-    prefix: 'results/crawler',
-  })
-
-  // Figure out the latest date.
-  const date = files
-    .map(file => file.name)
-    .map(file => {
-      const [y, m, d] =
-        file.match(/(\d{4})-(\d{2})-(\d{2})\.json\.gz$/)?.slice(1) || []
-      return new Date(+y, +m - 1, +d)
-    })
-    .filter(date => !isNaN(date.getTime()))
-    .sort((a, b) => b.getTime() - a.getTime())
-    .shift()
-
-  const updated_at = date?.getTime() || 0
+  const updated_at = await getLatestTimestamp(bucket, 'results/crawler');
 
   const [tests] = await bucket.file(testsPath).download()
   // Parse valid json lines and filter out junk
