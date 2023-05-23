@@ -14,7 +14,7 @@ import {
   Tabs,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { NextLink } from '@mantine/next'
+import NextLink from 'next/link'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
@@ -195,23 +195,23 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
             tab: classes.tab,
             tabsList: classes.tabsList,
           }}
-          value={router.pathname.split('/')[2] || 'home'}
-          onTabChange={page => {
-            router.push(`/${network}/${page}`)
-          }}
         >
           <Tabs.List>
-            <Tabs.Tab value="home">
-              <Text className={classes.tabLabel}>
-                home
-              </Text>
-            </Tabs.Tab>
-            <Tabs.Tab value="force" title="May the force be with you!">
-              <Text className={classes.tabLabel}>force</Text>
-            </Tabs.Tab>
-            <Tabs.Tab value="geo">
-              <Text className={classes.tabLabel}>geo</Text>
-            </Tabs.Tab>
+            <NextLink prefetch legacyBehavior href={`/${network}/home`}>
+              <Tabs.Tab value="home">
+                <Text className={classes.tabLabel}>home</Text>
+              </Tabs.Tab>
+            </NextLink>
+            <NextLink prefetch legacyBehavior href={`/${network}/home`}>
+              <Tabs.Tab value="force" title="May the force be with you!">
+                <Text className={classes.tabLabel}>force</Text>
+              </Tabs.Tab>
+            </NextLink>
+            <NextLink prefetch legacyBehavior href={`/${network}/home`}>
+              <Tabs.Tab value="geo">
+                <Text className={classes.tabLabel}>geo</Text>
+              </Tabs.Tab>
+            </NextLink>
           </Tabs.List>
         </Tabs>
       </Group>
