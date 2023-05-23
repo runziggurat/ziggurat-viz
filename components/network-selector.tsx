@@ -11,6 +11,7 @@ import { IconChevronDown, IconPlus } from '@tabler/icons'
 import { useRouter } from 'next/router'
 import { FC, forwardRef, useState } from 'react'
 import { networks, parseNetwork, ZiggNetwork } from '../utils/network'
+import { bg, hover, text } from '../utils/theme'
 
 const NetworkButton = forwardRef<
   HTMLButtonElement,
@@ -25,21 +26,21 @@ const NetworkButton = forwardRef<
       py={2}
       mx="sm"
       ref={ref}
-      sx={({ colors, spacing, fn, colorScheme, primaryColor, radius }) => ({
-        display: 'block',
-        width: '100%',
-        padding: spacing.md,
-        color: colors.gray[0],
-        borderRadius: radius.sm,
-        userSelect: 'none',
+      sx={theme => {
+        const { spacing, radius } = theme
+        return {
+          display: 'block',
+          width: '100%',
+          padding: spacing.md,
+          color: text(theme, true),
+          borderRadius: radius.sm,
+          userSelect: 'none',
 
-        '&:hover': {
-          backgroundColor:
-            colorScheme === 'dark'
-              ? fn.lighten(colors[primaryColor][8], 0.075)
-              : fn.lighten(colors[primaryColor][6], 0.075),
-        },
-      })}
+          '&:hover': {
+            backgroundColor: hover(bg(theme, true), theme),
+          },
+        }
+      }}
       {...rest}
     >
       <Group noWrap>
@@ -75,6 +76,7 @@ export const NetworkSelector: FC = () => {
       shadow="md"
       styles={{
         item: {
+          height: 42,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-start',
@@ -96,7 +98,7 @@ export const NetworkSelector: FC = () => {
             <Menu.Item
               key={it.value}
               onClick={() => {
-                window.location.pathname = `/${it.value}`
+                window.location.pathname = `/${it.value}/home`
               }}
             >
               {item(it)}

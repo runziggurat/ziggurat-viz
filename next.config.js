@@ -10,9 +10,9 @@ const nextConfig = {
     return [
       {
         source: '/',
-        destination: `/zcashd`,
+        destination: `/zcashd/home`,
         permanent: false,
-      },
+      }
     ]
   },
 }

@@ -21,7 +21,7 @@ export const Link: FC<Props> = ({
       }
     : {}
   return (
-    <NextLink {...props} passHref>
+    <NextLink {...props} passHref legacyBehavior>
       <Anchor {...extProps} className={className}>
         {children}
       </Anchor>
