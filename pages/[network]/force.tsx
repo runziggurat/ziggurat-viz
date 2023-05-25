@@ -29,11 +29,11 @@ const Force: NextPage<{ data: VizData }> = ({ data }) => {
         if (!WEBGL.isWebGL2Available()) {
           throw new Error(WEBGL.getWebGL2ErrorMessage().textContent || '')
         }
+        renderForceGraph(data.viz_state)
         destroy = destroyForceGraph
         setStatus({
           done: true,
         })
-        return renderForceGraph(data.viz_state)
       })
       .catch(err => {
         setStatus({

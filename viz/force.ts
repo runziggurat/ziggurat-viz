@@ -117,7 +117,7 @@ export function renderForceGraph(state: IState) {
     let name = 'node ' + i.toString()
     let ip = node.addr.substring(0, node.addr.indexOf(':'))
 
-    let city = node.geolocation.city
+    let city = node.geolocation?.city || 'unknown'
 
     let b =
       (node.betweenness - minBetweenness) / (maxBetweenness - minBetweenness)
