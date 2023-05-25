@@ -80,7 +80,10 @@ export const CrawlerCard: FC<Props> = ({ data, title }) => {
   }
 
   return (
-    <Accordion defaultValue="crawler">
+    <Accordion
+      defaultValue="crawler"
+      styles={{ content: { paddingRight: 0, paddingLeft: 0 } }}
+    >
       <Accordion.Item value="crawler">
         <Accordion.Control py="xs" mt="xs">
           <Title size="h2">{title}</Title>

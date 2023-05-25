@@ -1,16 +1,19 @@
 import { Container } from '@mantine/core'
 import type { GetStaticProps, NextPage } from 'next'
 import Head from 'next/head'
-import { parseJSON } from '../utils/helpers'
+import { parseJSON } from '../../utils/helpers'
 
-import { Navbar } from '../components/navbar'
+import { Navbar } from '../../components/navbar'
 import { useMemo } from 'react'
-import { TestsTable, TestsTableProps } from '../components/tests-table'
+import { TestsTable, TestsTableProps } from '../../components/tests-table'
 
-import { CrawlerCard } from '../components/crawler-card'
-import { CONTENT_MAX_WIDTH } from '../utils/constants'
-import assert from 'assert'
-import { networks, parseNetwork } from '../utils/network'
+import { CrawlerCard } from '../../components/crawler-card'
+import { CONTENT_MAX_WIDTH, ZCASH_BUCKET } from '../../utils/constants'
+import { parseNetwork } from '../../utils/network'
+
+import * as gcloud from '@google-cloud/storage'
+import { getLatestTimestamp } from '../../utils/gcloud'
+import { networkStaticPaths } from '../../utils/next'
 
 type TestResults = {
   full_name: string
@@ -18,10 +21,10 @@ type TestResults = {
   exec_time: string
 }[]
 
-type Data = { test_results: TestResults; crawler_data: any }
+type Data = { test_results: TestResults; crawler_data: any; meta_data: any }
 
 const Home: NextPage<{ data: Data }> = ({
-  data: { test_results: results, crawler_data: crawlerData },
+  data: { test_results: results, crawler_data: crawlerData, meta_data: meta },
 }) => {
   const tables: TestsTableProps['tables'] = useMemo(() => {
     const suites: Record<string, TestResults> = {}
@@ -70,7 +73,7 @@ const Home: NextPage<{ data: Data }> = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Navbar>
+      <Navbar metaData={meta}>
         <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
           <CrawlerCard title="Crawler Results" data={crawlerData} />
           <TestsTable header="Test Results" tables={tables} />
@@ -80,40 +83,40 @@ const Home: NextPage<{ data: Data }> = ({
   )
 }
 
-export async function getStaticPaths() {
-  return {
-    paths: networks.map(({ value: network }) => ({ params: { network } })),
-    fallback: false,
-  }
-}
+export const getStaticPaths = networkStaticPaths;
 
-export const getStaticProps: GetStaticProps = async context => {
+export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
   const network = parseNetwork(context.params)
-
   if (!network) {
     return {
       notFound: true,
     }
   }
 
-  const tests = await fetch(
-    `https://raw.githubusercontent.com/runziggurat/${network.paths.tests}`
-  )
-  assert(tests.ok, 'Fetching tests data failed.')
+  if (network.value === "xrpl") {
+    return {
+      notFound: true // TODO
+    }
+  }
 
-  const crawler = await fetch(
-    `https://raw.githubusercontent.com/runziggurat/${network.paths.crawler}`
-  )
-  assert(crawler.ok, 'Fetching crawler data failed.')
+  const storage = new gcloud.Storage({
+    projectId: process.env.GCLOUD_PROJECT_ID,
+    credentials: {
+      client_email: process.env.GCLOUD_CLIENT_EMAIL,
+      private_key: process.env.GCLOUD_PRIVATE_KEY,
+    },
+  })
 
-  const crawler_data = (await crawler.json()).result
-  // Delete unused data to reduce bundle size
-  delete crawler_data.node_addrs
-  delete crawler_data.node_network_types
-  delete crawler_data.nodes_indices
+  const bucket = storage.bucket(ZCASH_BUCKET)
+  const testsPath = `results/${network.value}/latest.jsonl`
+  const crawlerPath = 'results/crawler/latest.json'
 
+  const updated_at = await getLatestTimestamp(bucket, 'results/crawler');
+
+  const [tests] = await bucket.file(testsPath).download()
   // Parse valid json lines and filter out junk
-  const test_results: TestResults = (await tests.text())
+  const test_results: TestResults = tests
+    .toString()
     .split('\n')
     .map(parseJSON)
     .filter(Boolean)
@@ -126,9 +129,20 @@ export const getStaticProps: GetStaticProps = async context => {
       exec_time,
     }))
 
+  const [crawler] = await bucket.file(crawlerPath).download()
+  const crawler_data = JSON.parse(crawler.toString()).result
+  // Delete unused fields
+  delete crawler_data.node_addrs
+  delete crawler_data.node_network_types
+  delete crawler_data.nodes_indices
+
   return {
     props: {
-      data: { test_results, crawler_data },
+      data: {
+        test_results,
+        crawler_data,
+        meta_data: { updated_at },
+      },
     },
     // Refresh every day
     revalidate: 24 * 60 * 60,

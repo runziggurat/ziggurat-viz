@@ -24,7 +24,7 @@ export const networks: ZiggNetwork[] = [
 
 export interface ZiggNetwork {
     label: ReactNode
-    value: string
+    value: 'zcashd' | 'zebra' | 'xrpl'
     paths: {
         crawler: string
         tests: string

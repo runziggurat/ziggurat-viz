@@ -31,6 +31,8 @@ import {
 import { capitalize, useIsMobile } from '../utils/helpers'
 import { Link } from './link'
 import { Tooltip } from './tooltip'
+import { NAVBAR_HEIGHT } from '../utils/constants'
+import { bg } from '../utils/theme'
 
 export interface TestColumnType {
   id: string
@@ -52,8 +54,7 @@ const useStyles = createStyles(theme => ({
     zIndex: 200,
     position: 'sticky',
     top: 0,
-    backgroundColor:
-      theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
+    backgroundColor: bg(theme),
     transition: 'box-shadow 150ms ease',
 
     '&::after': {
@@ -148,7 +149,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const isMobile = useIsMobile()
   const [searchValue, setSearchValue] = useState('')
   const [activeTab, setActiveTab] = useState<string | null>(
-    tables[0].suite_name
+    tables.length ? tables[0].suite_name : null
   )
 
   const data = useMemo(
@@ -194,7 +195,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
         </Accordion.Control>
         <Accordion.Panel>
           <ScrollArea
-            sx={{ height: 'calc(100vh - 75px)' }}
+            sx={{ height: `calc(100vh - ${NAVBAR_HEIGHT}px - 10px)` }}
             type="auto"
             onScrollPositionChange={({ y, x }) => {
               const scrolled = y !== 0
