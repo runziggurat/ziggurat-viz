@@ -12,3 +12,4 @@ export const NAVBAR_HEIGHT = 100
 export const NAVBAR_COLOR_MODE: "filled" | "transparent" = "transparent"
 
 export const ZCASH_BUCKET = "egq-runziggurat-zcash-bucket"
+export const XRPL_BUCKET = "egq-runziggurat-xrpl-bucket"

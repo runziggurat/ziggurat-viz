@@ -10,7 +10,7 @@ export const getLatestTimestamp = async (bucket: Bucket, path: string) => {
         .map(file => file.name)
         .map(file => {
             const [y, m, d] =
-                file.match(/(\d{4})-(\d{2})-(\d{2})\.json\.gz$/)?.slice(1) || []
+                file.match(/(\d{4})-(\d{2})-(\d{2})\.jsonl?\.gz$/)?.slice(1) || []
             return new Date(+y, +m - 1, +d)
         })
         .filter(date => !isNaN(date.getTime()))

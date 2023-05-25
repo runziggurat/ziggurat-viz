@@ -8,7 +8,11 @@ import { useMemo } from 'react'
 import { TestsTable, TestsTableProps } from '../../components/tests-table'
 
 import { CrawlerCard } from '../../components/crawler-card'
-import { CONTENT_MAX_WIDTH, ZCASH_BUCKET } from '../../utils/constants'
+import {
+  CONTENT_MAX_WIDTH,
+  XRPL_BUCKET,
+  ZCASH_BUCKET,
+} from '../../utils/constants'
 import { parseNetwork } from '../../utils/network'
 
 import * as gcloud from '@google-cloud/storage'
@@ -83,19 +87,13 @@ const Home: NextPage<{ data: Data }> = ({
   )
 }
 
-export const getStaticPaths = networkStaticPaths;
+export const getStaticPaths = networkStaticPaths
 
 export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
   const network = parseNetwork(context.params)
   if (!network) {
     return {
       notFound: true,
-    }
-  }
-  // TODO xrpl
-  if (network.value === "xrpl") {
-    return {
-      notFound: true
     }
   }
 
@@ -107,11 +105,13 @@ export const getStaticProps: GetStaticProps<{ data: Data }> = async context => {
     },
   })
 
-  const bucket = storage.bucket(ZCASH_BUCKET)
-  const testsPath = `results/${network.value}/latest.jsonl`
-  const crawlerPath = 'results/crawler/latest.json'
+  const bucket = storage.bucket(
+    network.value === 'xrpl' ? XRPL_BUCKET : ZCASH_BUCKET
+  )
+  const testsPath = network.paths.tests + '/latest.jsonl' // TODO maybe use path.join
+  const crawlerPath = network.paths.crawler + '/latest.json'
 
-  const updated_at = await getLatestTimestamp(bucket, 'results/crawler');
+  const updated_at = await getLatestTimestamp(bucket, network.paths.crawler)
 
   const [tests] = await bucket.file(testsPath).download()
   // Parse valid json lines and filter out junk

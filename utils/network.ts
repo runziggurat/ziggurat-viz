@@ -1,13 +1,13 @@
 import type { NextRouter } from 'next/router'
 import type { ReactNode } from 'react'
 
-const crawler = "results/crawler"
+export const CRAWLER_PATH = "results/crawler"
 export const networks = [
     {
         label: 'zcashd',
         value: 'zcashd',
         paths: {
-            crawler,
+            crawler: CRAWLER_PATH,
             tests: "results/zcashd"
         },
         default: true,
@@ -15,7 +15,7 @@ export const networks = [
     {
         label: 'Zebra',
         paths: {
-            crawler,
+            crawler: CRAWLER_PATH,
             tests: "results/zebra"
         },
         value: 'zebra',
@@ -23,7 +23,7 @@ export const networks = [
     {
         label: 'Xrpl',
         paths: {
-            crawler,
+            crawler: CRAWLER_PATH,
             tests: "results/rippled"
         },
         value: 'xrpl',
