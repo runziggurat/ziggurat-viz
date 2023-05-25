@@ -13,6 +13,7 @@ import { Tooltip } from './tooltip'
 import { useRouter } from 'next/router'
 import { parseNetwork } from '../utils/network'
 import { duration } from '../utils/helpers'
+import { bg } from '../utils/theme'
 
 const useStatStyles = createStyles(theme => ({
   container: {
@@ -20,8 +21,7 @@ const useStatStyles = createStyles(theme => ({
     width: '100%',
   },
   card: {
-    backgroundColor:
-      theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
+    backgroundColor: bg(theme),
   },
 
   label: {

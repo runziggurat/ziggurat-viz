@@ -33,6 +33,8 @@ import { Link } from './link'
 import { Tooltip } from './tooltip'
 import { useRouter } from 'next/router'
 import { parseNetwork } from '../utils/network'
+import { NAVBAR_HEIGHT } from '../utils/constants'
+import { bg } from '../utils/theme'
 
 export interface TestColumnType {
   id: string
@@ -54,8 +56,7 @@ const useStyles = createStyles(theme => ({
     zIndex: 200,
     position: 'sticky',
     top: 0,
-    backgroundColor:
-      theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.white,
+    backgroundColor: bg(theme),
     transition: 'box-shadow 150ms ease',
 
     '&::after': {
@@ -198,7 +199,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
         </Accordion.Control>
         <Accordion.Panel>
           <ScrollArea
-            sx={{ height: 'calc(100vh - 75px)' }}
+            sx={{ height: `calc(100vh - ${NAVBAR_HEIGHT}px - 10px)` }}
             type="auto"
             onScrollPositionChange={({ y, x }) => {
               const scrolled = y !== 0

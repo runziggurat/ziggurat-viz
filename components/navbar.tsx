@@ -11,35 +11,40 @@ import {
   MediaQuery,
   AppShell,
   Navbar as NavbarPrim,
+  Tabs,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import NextLink from 'next/link'
 import { IconChevronDown, IconExternalLink } from '@tabler/icons'
 import { FC, ReactNode } from 'react'
 import Logo from '../public/logo.png'
-import { NAV_MAX_WIDTH } from '../utils/constants'
+import {
+  CONTENT_MAX_WIDTH,
+  NAVBAR_COLOR_MODE,
+  NAVBAR_HEIGHT,
+  NAV_BREAKPOINT,
+  NAV_MAX_WIDTH,
+  THEME_SWITCH_BREAKPOINT,
+} from '../utils/constants'
 import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
-
-const NAV_BREAKPOINT = 'xs' as const
-const THEME_SWITCH_BREAKPOINT = 395 as const
+import { bg, hover, secondary, text } from '../utils/theme'
+import { parseNetwork } from '../utils/network'
+import { useRouter } from 'next/router'
 
 const useStyles = createStyles(theme => ({
   header: {
-    backgroundColor: theme.fn.variant({
-      variant: 'filled',
-      color: theme.primaryColor,
-    }).background,
     borderBottom: 0,
-    color: 'white',
+    color: text(theme, true),
     zIndex: 300,
   },
 
-  inner: {
+  topbar: {
+    backgroundColor: bg(theme, true),
     height: 56,
     display: 'flex',
-    justifyContent: 'space-between',
+    flexDirection: 'row',
     alignItems: 'center',
   },
 
@@ -56,7 +61,7 @@ const useStyles = createStyles(theme => ({
   },
 
   version: {
-    background: theme.fn.darken(theme.colors[theme.primaryColor][5], 0.5),
+    background: secondary(bg(theme, true), theme),
     borderRadius: theme.spacing.lg,
     fontSize: 11,
     padding: '0 6px',
@@ -77,7 +82,7 @@ const useStyles = createStyles(theme => ({
     padding: '8px 12px',
     borderRadius: theme.radius.sm,
     textDecoration: 'none',
-    color: theme.white,
+    color: text(theme, true),
     fontSize: theme.fontSizes.sm,
     fontWeight: 500,
     display: 'flex',
@@ -90,13 +95,9 @@ const useStyles = createStyles(theme => ({
       margin: `2px 0`,
       borderRadius: theme.radius.md,
       fontSize: theme.fontSizes.md,
+      color: text(theme),
       '&:hover': {
-        backgroundColor: theme.fn.lighten(
-          theme.colorScheme === 'dark'
-            ? theme.colors.dark[8]
-            : theme.colors.blue[6],
-          0.1
-        ),
+        backgroundColor: hover(bg(theme), theme),
       },
     },
   },
@@ -106,14 +107,29 @@ const useStyles = createStyles(theme => ({
   },
 
   navbar: {
-    backgroundColor: theme.fn.variant({
-      variant: 'filled',
-      color: theme.colorScheme === 'dark' ? 'dark' : 'blue',
-    }).background,
-    color: theme.white,
+    backgroundColor:
+      theme.colorScheme === 'dark'
+        ? theme.fn.darken(bg(theme), 0.25)
+        : theme.white,
     zIndex: 400,
     padding: theme.spacing.sm,
     overscrollBehavior: 'contain',
+  },
+  tabs: {},
+
+  tabLabel: {
+    ':hover': {
+      textDecoration: 'underline',
+    },
+  },
+
+  tabsList: {
+    borderBottom: '0 !important',
+  },
+
+  tab: {
+    fontWeight: 'bolder',
+    height: 35,
   },
 }))
 
@@ -126,6 +142,7 @@ type Link = {
 export interface NavbarProps {
   links?: Link[]
   children?: ReactNode
+  metaData?: any
 }
 
 const defaultLinks: Link[] = [
@@ -139,7 +156,84 @@ const defaultLinks: Link[] = [
   },
 ]
 
-export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
+const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
+  const { classes } = useStyles()
+  const router = useRouter()
+  const network = parseNetwork(router.query)?.value
+  if (!network) {
+    return null
+  }
+  const updated = meta?.updated_at
+    ? new Date(meta.updated_at).toDateString()
+    : 'N/A'
+  const UpdatedAt = () => {
+    return (
+      <Group
+        spacing={3}
+        align="center"
+        noWrap
+        position="right"
+        sx={theme => ({ color: text(theme) })}
+      >
+        <Text color="dimmed" size={11}>
+          Updated
+        </Text>
+        <Text italic size={11}>
+          {updated}
+        </Text>
+      </Group>
+    )
+  }
+
+  const Links = () => {
+    return (
+      <Group spacing="xs" align="center">
+        <Tabs
+          radius={NAVBAR_COLOR_MODE === 'filled' ? 0 : 'sm'}
+          classNames={{
+            root: classes.tabs,
+            tab: classes.tab,
+            tabsList: classes.tabsList,
+          }}
+          value={router.pathname.split('/')[2] || 'home'}
+          onTabChange={page => {
+            router.push(`/${network}/${page}`)
+          }}
+        >
+          <Tabs.List>
+            <NextLink legacyBehavior href={`/${network}/home`}>
+              <Tabs.Tab value="home">
+                <Text className={classes.tabLabel}>home</Text>
+              </Tabs.Tab>
+            </NextLink>
+            <NextLink legacyBehavior href={`/${network}/force`}>
+              <Tabs.Tab value="force" title="May the force be with you!">
+                <Text className={classes.tabLabel}>force</Text>
+              </Tabs.Tab>
+            </NextLink>
+            <NextLink legacyBehavior href={`/${network}/geo`}>
+              <Tabs.Tab value="geo">
+                <Text className={classes.tabLabel}>geo</Text>
+              </Tabs.Tab>
+            </NextLink>
+          </Tabs.List>
+        </Tabs>
+      </Group>
+    )
+  }
+  return (
+    <Group position="apart" spacing="xs" mt={3} mb={-4}>
+      <Links />
+      <UpdatedAt />
+    </Group>
+  )
+}
+
+export const Navbar: FC<NavbarProps> = ({
+  links = defaultLinks,
+  children,
+  metaData,
+}) => {
   const [opened, { toggle }] = useDisclosure(false)
   const { classes } = useStyles()
 
@@ -163,7 +257,12 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
     }
 
     return (
-      <Link key={label} external href={link} className={classes.link}>
+      <Link
+        key={label}
+        external={external}
+        href={link}
+        className={classes.link}
+      >
         <Text mr="xs">{label}</Text>
         <IconExternalLink size={16} stroke={1.5} />
       </Link>
@@ -177,46 +276,51 @@ export const Navbar: FC<NavbarProps> = ({ links = defaultLinks, children }) => {
       navbarOffsetBreakpoint={NAV_BREAKPOINT}
       asideOffsetBreakpoint={NAV_BREAKPOINT}
       header={
-        <Header height={56} className={classes.header}>
-          <Container style={{ maxWidth: NAV_MAX_WIDTH }}>
-            <div className={classes.inner}>
-              <Center>
-                <NextLink href="/" legacyBehavior>
-                  <Image
-                    title="Ziggurat"
-                    alt="Logo"
-                    src={Logo.src}
-                    width={22}
-                    height={22}
+        <Header height={NAVBAR_HEIGHT} className={classes.header}>
+          <div className={classes.topbar}>
+            <Container style={{ maxWidth: NAV_MAX_WIDTH, width: '100%' }}>
+              <Group position="apart">
+                <Center>
+                  <NextLink href="/" legacyBehavior>
+                    <Image
+                      title="Ziggurat"
+                      alt="Logo"
+                      src={Logo.src}
+                      width={22}
+                      height={22}
+                    />
+                  </NextLink>
+                  <NetworkSelector />
+                  <div className={classes.version}>
+                    <Text>v0.0.0</Text>
+                  </div>
+                </Center>
+                <Center>
+                  <Group noWrap spacing={5} className={classes.links}>
+                    {items}
+                  </Group>
+                  <MediaQuery
+                    smallerThan={THEME_SWITCH_BREAKPOINT}
+                    styles={{
+                      display: 'none',
+                    }}
+                  >
+                    <ThemeSwitch />
+                  </MediaQuery>
+                  <Burger
+                    ml="sm"
+                    opened={opened}
+                    onClick={toggle}
+                    className={classes.burger}
+                    size="sm"
+                    color="#fff"
                   />
-                </NextLink>
-                <NetworkSelector />
-                <div className={classes.version}>
-                  <Text>v0.0.0</Text>
-                </div>
-              </Center>
-              <Center>
-                <Group noWrap spacing={5} className={classes.links}>
-                  {items}
-                </Group>
-                <MediaQuery
-                  smallerThan={THEME_SWITCH_BREAKPOINT}
-                  styles={{
-                    display: 'none',
-                  }}
-                >
-                  <ThemeSwitch />
-                </MediaQuery>
-                <Burger
-                  ml="sm"
-                  opened={opened}
-                  onClick={toggle}
-                  className={classes.burger}
-                  size="sm"
-                  color="#fff"
-                />
-              </Center>
-            </div>
+                </Center>
+              </Group>
+            </Container>
+          </div>
+          <Container style={{ maxWidth: CONTENT_MAX_WIDTH }}>
+            <Navigation metaData={metaData} />
           </Container>
         </Header>
       }
