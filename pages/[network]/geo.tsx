@@ -217,6 +217,12 @@ export const getStaticProps: GetStaticProps<{
       notFound: true,
     }
   }
+  // TODO xrpl
+  if (network.value === 'xrpl') {
+    return {
+      notFound: true,
+    }
+  }
 
   const data = await fetchVizData(network)
   return {

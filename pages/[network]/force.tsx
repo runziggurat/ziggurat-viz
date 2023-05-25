@@ -80,6 +80,13 @@ export const getStaticProps: GetStaticProps<{ data: {} }> = async context => {
     }
   }
 
+  // TODO xrpl
+  if (network.value === 'xrpl') {
+    return {
+      notFound: true,
+    }
+  }
+
   const data = await fetchVizData(network)
   return {
     props: {
