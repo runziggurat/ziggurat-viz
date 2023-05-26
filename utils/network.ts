@@ -6,27 +6,33 @@ export const networks = [
     {
         label: 'zcashd',
         value: 'zcashd',
+        default: true,
         paths: {
             crawler: CRAWLER_PATH,
             tests: "results/zcashd"
         },
-        default: true,
+        image: "",
+        description: "",
     },
     {
         label: 'Zebra',
+        value: 'zebra',
         paths: {
             crawler: CRAWLER_PATH,
             tests: "results/zebra"
         },
-        value: 'zebra',
+        image: "",
+        description: "",
     },
     {
         label: 'Xrpl',
+        value: 'xrpl',
         paths: {
             crawler: CRAWLER_PATH,
             tests: "results/rippled"
         },
-        value: 'xrpl',
+        image: "",
+        description: "",
     }
 ] as const;
 
