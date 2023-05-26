@@ -18,7 +18,11 @@ import { useAnimationFrame } from '../../utils/animation-frame'
 import { errorPanel } from '../../styles/global'
 import { parseNetwork } from '../../utils/network'
 
-import { VizData, fetchVizData, networkStaticPaths } from '../../utils/next'
+import {
+  fetchVizData,
+  networkStaticPaths,
+} from '../../utils/next'
+import { Status, StatusCode, VizData } from '../../utils/types'
 
 const useStyles = createStyles(theme => {
   const overlay: CSSObject = {
@@ -73,34 +77,39 @@ const useStyles = createStyles(theme => {
   }
 })
 
-const Geo: NextPage<{ data: VizData }> = ({ data }) => {
+const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
   const { classes } = useStyles()
-  const [status, setStatus] = useSetState({
-    msg: 'loading geo location graph...',
-    error: false,
-    done: false,
+  const [status, setStatus] = useSetState<Status>({
+    message: 'loading geo location graph...',
+    code: StatusCode.Loading,
   })
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const appRef = useRef<CApp>()
   useEffect(() => {
+    if (!data) {
+      setStatus({
+        code: StatusCode.Warning,
+        message: 'geo location graph is not available for the current network',
+      })
+    }
     import('../../viz/app')
       .then(({ CApp }) => {
         if (!canvasRef.current) {
           throw new Error('canvas not found')
         }
-        if (!appRef.current) {
+        if (!appRef.current && data) {
           appRef.current = new CApp(canvasRef.current)
           appRef.current.start(data.viz_state).then(() => {
             setStatus({
-              done: true,
+              code: StatusCode.Success,
             })
           })
         }
       })
       .catch(err => {
         setStatus({
-          error: true,
-          msg:
+          code: StatusCode.Error,
+          message:
             'error loading geo location graph\n' +
             (err?.message || 'Please try again later!'),
         })
@@ -119,24 +128,32 @@ const Geo: NextPage<{ data: VizData }> = ({ data }) => {
     }
   })
   return (
-    <Navbar metaData={data.meta_data}>
+    <Navbar metaData={data?.meta_data}>
       <Head>
         <title>Ziggurat Explorer</title>
         <meta name="description" content="P2P Visualizer: Geo Location" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {!status.done ? (
+      {status.code !== StatusCode.Success ? (
         <Center className={classes.status}>
           <Text
-            color={status.error ? 'red !important' : undefined}
+            color={
+              status.code === StatusCode.Error
+                ? 'red !important'
+                : status.code === StatusCode.Warning
+                ? 'yellow !important'
+                : undefined
+            }
             className={classes.statusText}
           >
-            {status.msg}
+            {status.message}
           </Text>
         </Center>
       ) : null}
       <Center
-        style={{ display: !status.done ? 'none' : undefined }}
+        style={{
+          display: status.code !== StatusCode.Success ? 'none' : undefined,
+        }}
         className={classes.main}
       >
         <canvas className={classes.canvas} ref={canvasRef}></canvas>
@@ -209,7 +226,7 @@ const Geo: NextPage<{ data: VizData }> = ({ data }) => {
 export const getStaticPaths = networkStaticPaths
 
 export const getStaticProps: GetStaticProps<{
-  data: VizData
+  data: VizData | null
 }> = async context => {
   const network = parseNetwork(context.params)
   if (!network) {

@@ -18,6 +18,14 @@ export const capitalize = (str: Maybe<string>) => {
     return str[0].toLocaleUpperCase() + str.slice(1)
 }
 
+export const duration = (time: string) => {
+    const seconds = Number(time)
+    if (isNaN(seconds)) return time.toString();
+    if (seconds > 60) return (seconds / 60).toFixed(2) + 'm'
+    if (seconds > (1 / 100)) return seconds.toFixed(2) + 's'
+    return (seconds * 1000).toPrecision(2) + 'ms'
+}
+
 export const useIsMobile = () => {
     const os = useOs()
     if (os === 'android' || os === 'ios') return true

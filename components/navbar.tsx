@@ -147,7 +147,7 @@ export interface NavbarProps {
 
 const defaultLinks: Link[] = [
   {
-    link: 'https://github.com/runziggurat/zcash',
+    link: 'https://github.com/runziggurat',
     label: 'GitHub',
   },
   {

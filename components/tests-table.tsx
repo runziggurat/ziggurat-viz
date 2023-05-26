@@ -28,9 +28,11 @@ import {
   useSortBy,
   useTable,
 } from 'react-table'
-import { capitalize, useIsMobile } from '../utils/helpers'
+import { capitalize, duration, useIsMobile } from '../utils/helpers'
 import { Link } from './link'
 import { Tooltip } from './tooltip'
+import { useRouter } from 'next/router'
+import { parseNetwork } from '../utils/network'
 import { NAVBAR_HEIGHT } from '../utils/constants'
 import { bg } from '../utils/theme'
 
@@ -77,6 +79,11 @@ const useStyles = createStyles(theme => ({
 }))
 
 export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
+  const router = useRouter()
+  const repo = useMemo(
+    () => (parseNetwork(router.query)?.value == 'xrpl' ? 'xrpl' : 'zcash'),
+    [router.query]
+  )
   const columns: Column<TestColumnType>[] = useMemo(
     () => [
       {
@@ -96,17 +103,14 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
                   View{' '}
                   <Link
                     external
-                    href={`https://github.com/runziggurat/zcash/blob/main/SPEC.md#${original.id
+                    href={`https://github.com/runziggurat/${repo}/blob/main/SPEC.md#${original.id
                       .split(' ')[0]
                       .toLocaleLowerCase()}`}
                   >
                     Spec
                   </Link>
                 </div>
-                <i>
-                  Test took about {Number(original.exec_time).toFixed(2)}{' '}
-                  seconds.
-                </i>
+                <i>Test took about {duration(original.exec_time)} to execute</i>
               </Stack>
             </Tooltip>
           </Group>
@@ -142,7 +146,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
         ),
       },
     ],
-    []
+    [repo]
   )
 
   const { classes, cx } = useStyles()
@@ -188,7 +192,7 @@ export const TestsTable: FC<TestsTableProps> = ({ tables, header }) => {
   const scrollPos = useRef({ x: 0, y: 0 })
 
   return (
-    <Accordion defaultValue="table">
+    <Accordion defaultValue="table" styles={{ label: { padding: 0 } }}>
       <Accordion.Item value="table">
         <Accordion.Control py="xs" mt="xs">
           <Title size="h2">{header}</Title>

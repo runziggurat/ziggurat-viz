@@ -3,11 +3,11 @@ import { Navbar } from '../../components/navbar'
 import { useEffect } from 'react'
 import { Center, createStyles, Text } from '@mantine/core'
 import { useSetState } from '@mantine/hooks'
-import WEBGL from 'three/examples/jsm/capabilities/WebGL'
 import { errorPanel } from '../../styles/global'
 import Head from 'next/head'
-import { VizData, fetchVizData, networkStaticPaths } from '../../utils/next'
+import { fetchVizData, networkStaticPaths } from '../../utils/next'
 import { parseNetwork } from '../../utils/network'
+import { Status, StatusCode, VizData } from '../../utils/types'
 
 const useStyles = createStyles(theme => ({
   ...errorPanel(theme),
@@ -15,30 +15,32 @@ const useStyles = createStyles(theme => ({
 
 let destroy: any
 
-const Force: NextPage<{ data: VizData }> = ({ data }) => {
+const Force: NextPage<{ data: VizData | null }> = ({ data }) => {
   const { classes } = useStyles()
-  const [status, setStatus] = useSetState({
-    msg: 'loading force graph...',
-    error: false,
-    done: false,
+  const [status, setStatus] = useSetState<Status>({
+    message: 'loading force graph...',
+    code: StatusCode.Loading,
   })
   useEffect(() => {
+    if (!data) {
+      setStatus({
+        code: StatusCode.Warning,
+        message: 'force graph is not available for the current network',
+      })
+      return
+    }
     import('../../viz/force')
       .then(({ renderForceGraph, destroyForceGraph }) => {
-        // Early detect as we can't catch force error's here.
-        if (!WEBGL.isWebGL2Available()) {
-          throw new Error(WEBGL.getWebGL2ErrorMessage().textContent || '')
-        }
+        renderForceGraph(data.viz_state)
         destroy = destroyForceGraph
         setStatus({
-          done: true,
+          code: StatusCode.Success,
         })
-        return renderForceGraph(data.viz_state)
       })
       .catch(err => {
         setStatus({
-          error: true,
-          msg:
+          code: StatusCode.Error,
+          message:
             'error loading force graph\n' +
             (err?.message || 'Please try again later!'),
         })
@@ -49,19 +51,25 @@ const Force: NextPage<{ data: VizData }> = ({ data }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return (
-    <Navbar metaData={data.meta_data}>
+    <Navbar metaData={data?.meta_data}>
       <Head>
         <title>Ziggurat Explorer</title>
         <meta name="description" content="P2P Visualizer: Force Graph" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {!status.done && (
+      {status.code !== StatusCode.Success && (
         <Center className={classes.status}>
           <Text
-            color={status.error ? 'red !important' : undefined}
+            color={
+              status.code === StatusCode.Error
+                ? 'red !important'
+                : status.code === StatusCode.Warning
+                ? 'yellow !important'
+                : undefined
+            }
             className={classes.statusText}
           >
-            {status.msg}
+            {status.message}
           </Text>
         </Center>
       )}
@@ -72,7 +80,9 @@ const Force: NextPage<{ data: VizData }> = ({ data }) => {
 
 export const getStaticPaths = networkStaticPaths
 
-export const getStaticProps: GetStaticProps<{ data: {} }> = async context => {
+export const getStaticProps: GetStaticProps<{
+  data: VizData | null
+}> = async context => {
   const network = parseNetwork(context.params)
   if (!network) {
     return {

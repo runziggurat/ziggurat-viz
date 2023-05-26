@@ -1,6 +1,6 @@
 import { Center, Stack, Text } from '@mantine/core'
 import { Link } from '../components/link'
-import { Navbar, NavbarProps } from '../components/navbar'
+import { Navbar } from '../components/navbar'
 
 const NotFound = () => {
   return (

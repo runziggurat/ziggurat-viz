@@ -70,6 +70,7 @@ export const NetworkSelector: FC = () => {
       </Stack>
     </Group>
   )
+  const tab = router.pathname.split('/')[2] || 'home'
   return (
     <Menu
       width={225}
@@ -98,7 +99,7 @@ export const NetworkSelector: FC = () => {
             <Menu.Item
               key={it.value}
               onClick={() => {
-                window.location.pathname = `/${it.value}/home`
+                window.location.pathname = `/${it.value}/${tab}`
               }}
             >
               {item(it)}
@@ -111,7 +112,7 @@ export const NetworkSelector: FC = () => {
           component="a"
           target="_blank"
           rel="noopener noreferrer"
-          href={'https://github.com/runziggurat'}
+          href={'https://equilibrium.co/contact'}
         >
           Add your own network
         </Menu.Item>
