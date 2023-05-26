@@ -28,21 +28,11 @@ export const networks = [
         },
         value: 'xrpl',
     }
-] as const satisfies ReadonlyArray<ZiggNetwork>
+] as const;
 
-export interface ZiggNetwork {
-    label: ReactNode
-    value: string
-    paths: {
-        tests: string
-        crawler: string
-    }
-    description?: string
-    image?: string
-    default?: boolean
-}
+export type ZiggNetwork = typeof networks[number];
 
-export const parseNetwork = (urlQuery?: NextRouter['query']) => {
+export const parseNetwork = (urlQuery?: NextRouter['query']): ZiggNetwork | undefined => {
     let network = urlQuery?.network
     if (!network) return
 

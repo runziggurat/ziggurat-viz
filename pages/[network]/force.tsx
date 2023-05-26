@@ -3,7 +3,6 @@ import { Navbar } from '../../components/navbar'
 import { useEffect } from 'react'
 import { Center, createStyles, Text } from '@mantine/core'
 import { useSetState } from '@mantine/hooks'
-import WEBGL from 'three/examples/jsm/capabilities/WebGL'
 import { errorPanel } from '../../styles/global'
 import Head from 'next/head'
 import { VizData, fetchVizData, networkStaticPaths } from '../../utils/next'
@@ -25,10 +24,6 @@ const Force: NextPage<{ data: VizData }> = ({ data }) => {
   useEffect(() => {
     import('../../viz/force')
       .then(({ renderForceGraph, destroyForceGraph }) => {
-        // Early detect as we can't catch force error's here.
-        if (!WEBGL.isWebGL2Available()) {
-          throw new Error(WEBGL.getWebGL2ErrorMessage().textContent || '')
-        }
         renderForceGraph(data.viz_state)
         destroy = destroyForceGraph
         setStatus({
