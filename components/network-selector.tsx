@@ -32,7 +32,7 @@ const NetworkButton = forwardRef<
           display: 'block',
           width: '100%',
           padding: spacing.md,
-          color: text(theme, true),
+          color: text(theme, { isFilled: true }),
           borderRadius: radius.sm,
           userSelect: 'none',
 

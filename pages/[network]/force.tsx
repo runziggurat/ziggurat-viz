@@ -8,6 +8,7 @@ import Head from 'next/head'
 import { fetchVizData, networkStaticPaths } from '../../utils/next'
 import { parseNetwork } from '../../utils/network'
 import { Status, StatusCode, VizData } from '../../utils/types'
+import { text } from '../../utils/theme'
 
 const useStyles = createStyles(theme => ({
   ...errorPanel(theme),
@@ -60,14 +61,15 @@ const Force: NextPage<{ data: VizData | null }> = ({ data }) => {
       {status.code !== StatusCode.Success && (
         <Center className={classes.status}>
           <Text
-            color={
-              status.code === StatusCode.Error
-                ? 'red !important'
-                : status.code === StatusCode.Warning
-                ? 'yellow !important'
-                : undefined
-            }
             className={classes.statusText}
+            sx={theme => ({
+              color:
+                status.code === StatusCode.Error
+                  ? text(theme, { variant: 'error' })
+                  : status.code === StatusCode.Warning
+                  ? text(theme, { variant: 'warning' })
+                  : text(theme),
+            })}
           >
             {status.message}
           </Text>

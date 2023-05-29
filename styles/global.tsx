@@ -19,7 +19,7 @@ export const errorPanel = (
   theme: MantineTheme
 ): Record<'status' | 'statusText', CSSObject> => ({
   status: {
-    height: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
+    height: `calc(100% - ${NAVBAR_HEIGHT}px)`,
     width: '100vw',
     position: 'fixed',
     bottom: 0,
@@ -27,7 +27,7 @@ export const errorPanel = (
   },
   statusText: {
     color: `${text(theme)}`,
-    whiteSpace: 'pre',
+    whiteSpace: 'pre-line',
     userSelect: 'none',
     textAlign: 'center',
   },
