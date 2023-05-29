@@ -137,13 +137,14 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
       {status.code !== StatusCode.Success ? (
         <Center className={classes.status}>
           <Text
-            color={
-              status.code === StatusCode.Error
-                ? 'red !important'
-                : status.code === StatusCode.Warning
-                ? 'yellow !important'
-                : undefined
-            }
+            sx={theme => ({
+              color:
+                status.code === StatusCode.Error
+                  ? text(theme, { variant: 'error' })
+                  : status.code === StatusCode.Warning
+                  ? text(theme, { variant: 'warning' })
+                  : text(theme),
+            })}
             className={classes.statusText}
           >
             {status.message}

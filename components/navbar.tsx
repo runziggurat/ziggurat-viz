@@ -36,7 +36,7 @@ import { useRouter } from 'next/router'
 const useStyles = createStyles(theme => ({
   header: {
     borderBottom: 0,
-    color: text(theme, true),
+    color: text(theme, { isFilled: true }),
     zIndex: 300,
   },
 
@@ -82,7 +82,7 @@ const useStyles = createStyles(theme => ({
     padding: '8px 12px',
     borderRadius: theme.radius.sm,
     textDecoration: 'none',
-    color: text(theme, true),
+    color: text(theme, { isFilled: true }),
     fontSize: theme.fontSizes.sm,
     fontWeight: 500,
     display: 'flex',
