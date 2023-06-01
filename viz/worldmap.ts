@@ -6,9 +6,7 @@ const POLYS_PER_TILE: number = 2
 const VERTEX_SIZE: number = 4
 
 export function initWorldMap(gl: WebGL2RenderingContext): WebGLBuffer | null {
-  console.log('initWorldMap')
   let nverts = NUM_XTILES * NUM_YTILES * POLYS_PER_TILE * 3
-  console.log('nverts ', nverts)
   let worldMapData: Float32Array = new Float32Array(nverts * VERTEX_SIZE)
   let i: number = 0
   let udelta = 1 / NUM_XTILES
@@ -62,7 +60,6 @@ export function initWorldMap(gl: WebGL2RenderingContext): WebGLBuffer | null {
       i += 4
     }
   }
-  console.log('worldMapData len ', worldMapData.length)
   let worldMapBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, worldMapBuffer)
   gl.bufferData(gl.ARRAY_BUFFER, worldMapData, gl.STATIC_DRAW)

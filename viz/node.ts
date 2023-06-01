@@ -277,7 +277,6 @@ export class CNode {
     let ry = mat4.create()
     let t = mat4.create()
     let scale = this.camera.nodeScale * this.scale
-    // console.log('scale = ', scale);
     mat4.identity(this.matWorld)
     mat4.scale(
       this.matWorld,

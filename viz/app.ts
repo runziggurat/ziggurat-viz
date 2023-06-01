@@ -40,7 +40,6 @@ export class CApp {
     this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
-    console.log('Use WebGL')
     let gl = canvas.getContext('webgl2')
     if (!gl) {
       throw new Error('WebGL2 not supported')
@@ -114,7 +113,6 @@ export class CApp {
     ) {
       return
     }
-    console.log('changing bg color')
     this.gl.clearColor(...bgColor)
   }
 
