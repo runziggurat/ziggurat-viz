@@ -52,7 +52,7 @@ export enum EKeyId {
   ToggleFps = 'fps',
   ToggleGradient = 'gradient',
   ToggleHistogram = 'histogram',
-  ColorMode = 'colormode',
+  ToggleColorMode = 'colormode',
 }
 
 export interface IKeyAction {

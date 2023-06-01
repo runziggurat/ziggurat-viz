@@ -22,7 +22,6 @@ import { initWorldMap } from './worldmap'
 import { glShaders } from './shaders'
 import { createRandomTexture, loadTexture } from './util'
 import { getHistogramTexture } from './histogram'
-import { NAVBAR_HEIGHT } from '../utils/constants'
 
 const NODE_TRANSFORM_SIZE: number = 28
 const CONNECTION_TRANSFORM_SIZE: number = 12
@@ -52,9 +51,6 @@ export class CWorld {
   private currentHistogramTexture: WebGLTexture | null = null
   private picker: CPicker
 
-  public inDrag: boolean = false
-  public inTap: boolean = false
-  public inSwipe: boolean = false
   private icosaGeometry: WebGLBuffer | null = null
   private cubeGeometry: WebGLBuffer | null = null
   private gradientGeometry: WebGLBuffer | null = null
@@ -312,49 +308,6 @@ export class CWorld {
     }
   }
 
-  clickedInHtmlElement(x: number, y: number, el: HTMLElement): boolean {
-    let rect = el.getBoundingClientRect()
-    if (x < rect.x) return false
-    if (y < rect.y - NAVBAR_HEIGHT) return false
-    if (x > rect.x + rect.width) return false
-    if (y > rect.y - NAVBAR_HEIGHT + rect.height) return false
-    return true
-  }
-
-  clickedInText(x: number, y: number): boolean {
-    const overlayRight = document.getElementById('overlayRight')
-    if (
-      overlayRight &&
-      this.selectedId != -1 &&
-      this.clickedInHtmlElement(x, y, overlayRight)
-    ) {
-      console.log('clicked in overlayRight')
-      return true
-    }
-
-    const instructions = document.getElementById('instructions')
-    if (
-      instructions &&
-      this.displayCommand &&
-      this.clickedInHtmlElement(x, y, instructions)
-    ) {
-      console.log('clicked in instructions')
-      return true
-    }
-
-    let overlayLeft = document.getElementById('overlayLeft')
-    if (
-      overlayLeft &&
-      this.displayFps &&
-      this.clickedInHtmlElement(x, y, overlayLeft)
-    ) {
-      console.log('clicked in overlayLeft')
-      return true
-    }
-
-    return false
-  }
-
   private setNodeInfo(node: CNode) {
     const overlayRight = document.getElementById('overlayRight')
     this.ipNode.nodeValue =
@@ -435,21 +388,15 @@ export class CWorld {
   }
 
   public handleClick(x: number, y: number) {
-    console.log('handleClick', x, y)
-    if (this.clickedInText(x, y)) return
-    this.inDrag = true
-
-    let self = this
     setTimeout(() => {
-      self.handleClickTask(x, y)
+      this.handleClickTask(x, y)
     }, TAP_THRESHOLD_MS)
   }
 
   public handleClickTask(x: number, y: number) {
-    console.log('handleClickTask', x, y)
     let screenCoords: vec2 = vec2.fromValues(
-      x / window.innerWidth,
-      1 - y / (window.innerHeight - NAVBAR_HEIGHT)
+      x / this.canvas.width,
+      1 - y / (this.canvas.height)
     )
 
     this.picker.preRender(screenCoords[0], screenCoords[1])
@@ -462,9 +409,10 @@ export class CWorld {
     if (currNode) {
       this.setNodeInfo(currNode)
     } else {
-      // if we're in a press, rather than a tap (shorter than 400 ms),
-      // and originally clicked on empty space: we are done, so do nothing
-      if (this.inDrag) return
+      // TODO Revisit.
+      // // if we're in a press, rather than a tap (shorter than 400 ms),
+      // // and originally clicked on empty space: we are done, so do nothing
+      // if (this.inDrag) return
       const overlayRight = document.getElementById('overlayRight')
       if (overlayRight) {
         overlayRight.style.visibility = 'hidden'
@@ -488,16 +436,8 @@ export class CWorld {
     if (this.isTiny) this.setGlobalsConnectionData()
   }
 
-  public handleMouseMove(dx: number, dy: number) {
-    if (this.inDrag) {
-      this.camera.drag(dx, dy)
-    }
-  }
-
-  public handleClickRelease(x: number, y: number) {
-    if (this.inDrag) {
-      this.inDrag = false
-    }
+  public handleDrag(dx: number, dy: number) {
+    this.camera.drag(dx, dy)
   }
 
   private initTransformData() {
