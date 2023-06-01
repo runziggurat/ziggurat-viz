@@ -81,12 +81,28 @@ export class Events {
     }
   }
 
+  private shouldIgnoreKB = (evt: KeyboardEvent) => {
+    const tagsToIgnore = ['INPUT', 'TEXTAREA']
+    const target = evt.target instanceof HTMLElement ? evt.target : undefined
+    if (target && tagsToIgnore.includes(target.tagName)) {
+      return true
+    }
+    return false
+  }
+
+  private shouldIgnoreMouse = (evt: MouseEvent) => {
+    const target = evt.target instanceof HTMLElement ? evt.target : undefined
+    if (target && this.element && target !== this.element) {
+      return true
+    }
+    return false
+  }
+
   private isDragging = false
   private prevTouch?: Touch
 
   private onClick = (evt: MouseEvent) => {
-    const target = evt.target instanceof HTMLElement ? evt.target : undefined
-    if (target && this.element && target !== this.element) {
+    if (this.shouldIgnoreMouse(evt)) {
       return
     }
 
@@ -101,6 +117,9 @@ export class Events {
   private onMouseDown = (evt: MouseEvent) => {
     if (evt.button != 0) {
       // not left click
+      return
+    }
+    if (this.shouldIgnoreMouse(evt)) {
       return
     }
     this.isDragging = true
@@ -143,13 +162,11 @@ export class Events {
 
   private onWheel = (evt: WheelEvent) => {
     const { x, y } = this.getPosition(evt)
-    // TODO Zoom!
+    this.listeners.onZoom?.(x, y, evt.deltaY)
   }
 
   onKeydown = (evt: KeyboardEvent) => {
-    const tagsToIgnore = ['INPUT', 'TEXTAREA']
-    const target = evt.target instanceof HTMLElement ? evt.target : undefined
-    if (target && tagsToIgnore.includes(target.tagName)) {
+    if (this.shouldIgnoreKB(evt)) {
       return
     }
 
