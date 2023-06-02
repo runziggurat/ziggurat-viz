@@ -264,16 +264,17 @@ export class CApp {
   }
 
   public handleZoom = (x: number, y: number, delta: number) => {
-    this.zoomAnchor = vec2.fromValues(x, y - NAVBAR_HEIGHT)
+    this.zoomAnchor = vec2.fromValues(x, y)
+    const MAX_ZOOM = 30
     if (delta > 0) {
       this.zoomOutTicks += delta / 16
-      if (this.zoomOutTicks > 10) {
-        this.zoomOutTicks = 10
+      if (this.zoomOutTicks > MAX_ZOOM) {
+        this.zoomOutTicks = MAX_ZOOM
       }
     } else {
       this.zoomInTicks += -delta / 16
-      if (this.zoomInTicks > 10) {
-        this.zoomInTicks = 10
+      if (this.zoomInTicks > MAX_ZOOM) {
+        this.zoomInTicks = MAX_ZOOM
       }
     }
   }
