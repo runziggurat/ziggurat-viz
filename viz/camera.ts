@@ -1,5 +1,4 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { NAVBAR_HEIGHT } from '../utils/constants'
 
 // const HALF_ROOT_THREE = 0.866025403784439
 export class PCamera {

@@ -1,5 +1,3 @@
-/// <reference path="../node_modules/@webgpu/types/dist/index.d.ts" />
-
 import {
   IState,
   EShader,
@@ -22,7 +20,6 @@ import { initWorldMap } from './worldmap'
 import { glShaders } from './shaders'
 import { createRandomTexture, loadTexture } from './util'
 import { getHistogramTexture } from './histogram'
-import { NAVBAR_HEIGHT } from '../utils/constants'
 
 const NODE_TRANSFORM_SIZE: number = 28
 const CONNECTION_TRANSFORM_SIZE: number = 12
@@ -30,7 +27,6 @@ const MAX_SUPERNODE_SCALE: number = 2.0
 const MIN_SUPERNODE_SCALE: number = 0.5
 const BEHIND_CAMERA_DISTANCE: number = 1000000
 const TINY_GRAPH_NODES: number = 500
-const TAP_THRESHOLD_MS: number = 150
 const COLOR_MAGENTA: vec4 = vec4.fromValues(0.9, 0.0, 0.9, 1.0)
 const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0)
 const COLOR_YELLOW: vec4 = vec4.fromValues(0.9, 0.9, 0.0, 1.0)
@@ -52,9 +48,6 @@ export class CWorld {
   private currentHistogramTexture: WebGLTexture | null = null
   private picker: CPicker
 
-  public inDrag: boolean = false
-  public inTap: boolean = false
-  public inSwipe: boolean = false
   private icosaGeometry: WebGLBuffer | null = null
   private cubeGeometry: WebGLBuffer | null = null
   private gradientGeometry: WebGLBuffer | null = null
@@ -214,10 +207,6 @@ export class CWorld {
         gradient.textContent = this.degreeDescription
         break
     }
-    console.log(
-      'updateColorDisplay this.degreeDescription ',
-      this.degreeDescription
-    )
     gradient.style.visibility = this.displayGradient ? 'visible' : 'hidden'
   }
 
@@ -301,7 +290,6 @@ export class CWorld {
             td?.set(subnode.matWorld, n + 12)
             n += NODE_TRANSFORM_SIZE
           }
-          console.log('new subnodes has length ', node.subNodes.length)
         }
       } else {
         this.selectedSuperNode = node
@@ -310,49 +298,6 @@ export class CWorld {
     } else {
       this.selectedSuperNode = node
     }
-  }
-
-  clickedInHtmlElement(x: number, y: number, el: HTMLElement): boolean {
-    let rect = el.getBoundingClientRect()
-    if (x < rect.x) return false
-    if (y < rect.y - NAVBAR_HEIGHT) return false
-    if (x > rect.x + rect.width) return false
-    if (y > rect.y - NAVBAR_HEIGHT + rect.height) return false
-    return true
-  }
-
-  clickedInText(x: number, y: number): boolean {
-    const overlayRight = document.getElementById('overlayRight')
-    if (
-      overlayRight &&
-      this.selectedId != -1 &&
-      this.clickedInHtmlElement(x, y, overlayRight)
-    ) {
-      console.log('clicked in overlayRight')
-      return true
-    }
-
-    const instructions = document.getElementById('instructions')
-    if (
-      instructions &&
-      this.displayCommand &&
-      this.clickedInHtmlElement(x, y, instructions)
-    ) {
-      console.log('clicked in instructions')
-      return true
-    }
-
-    let overlayLeft = document.getElementById('overlayLeft')
-    if (
-      overlayLeft &&
-      this.displayFps &&
-      this.clickedInHtmlElement(x, y, overlayLeft)
-    ) {
-      console.log('clicked in overlayLeft')
-      return true
-    }
-
-    return false
   }
 
   private setNodeInfo(node: CNode) {
@@ -422,7 +367,6 @@ export class CWorld {
         node.index * NODE_TRANSFORM_SIZE
       )
     } else {
-      console.log('subnode offset: ', node.subnodeOffset)
       this.mainSubGroup.transformData?.set(
         this.white,
         node.index * NODE_TRANSFORM_SIZE
@@ -435,21 +379,9 @@ export class CWorld {
   }
 
   public handleClick(x: number, y: number) {
-    console.log('handleClick', x, y)
-    if (this.clickedInText(x, y)) return
-    this.inDrag = true
-
-    let self = this
-    setTimeout(() => {
-      self.handleClickTask(x, y)
-    }, TAP_THRESHOLD_MS)
-  }
-
-  public handleClickTask(x: number, y: number) {
-    console.log('handleClickTask', x, y)
     let screenCoords: vec2 = vec2.fromValues(
-      x / window.innerWidth,
-      1 - y / (window.innerHeight - NAVBAR_HEIGHT)
+      x / this.canvas.width,
+      1 - y / (this.canvas.height)
     )
 
     this.picker.preRender(screenCoords[0], screenCoords[1])
@@ -457,14 +389,14 @@ export class CWorld {
     let id = this.picker.postRender()
     let currNode = this.getNode(id)
     if (!currNode) id = -1
-    console.log(`  got id ${id}`)
 
     if (currNode) {
       this.setNodeInfo(currNode)
     } else {
-      // if we're in a press, rather than a tap (shorter than 400 ms),
-      // and originally clicked on empty space: we are done, so do nothing
-      if (this.inDrag) return
+      // TODO Revisit.
+      // // if we're in a press, rather than a tap (shorter than 400 ms),
+      // // and originally clicked on empty space: we are done, so do nothing
+      // if (this.inDrag) return
       const overlayRight = document.getElementById('overlayRight')
       if (overlayRight) {
         overlayRight.style.visibility = 'hidden'
@@ -488,16 +420,8 @@ export class CWorld {
     if (this.isTiny) this.setGlobalsConnectionData()
   }
 
-  public handleMouseMove(dx: number, dy: number) {
-    if (this.inDrag) {
-      this.camera.drag(dx, dy)
-    }
-  }
-
-  public handleClickRelease(x: number, y: number) {
-    if (this.inDrag) {
-      this.inDrag = false
-    }
+  public handleDrag(dx: number, dy: number) {
+    this.camera.drag(dx, dy)
   }
 
   private initTransformData() {
@@ -533,7 +457,6 @@ export class CWorld {
     this.mainSuperGroup.transformData = new Float32Array(
       this.superNodes.length * NODE_TRANSFORM_SIZE
     )
-    console.log('superNodes size ', this.superNodes.length)
     n = 0
     for (let node of this.superNodes) {
       let td = this.mainSuperGroup.transformData
@@ -1065,9 +988,7 @@ export class CWorld {
     let gl = this.gl
     this.noiseTexture = createRandomTexture(gl, 1024, 1)
     let width = gl.getParameter(gl.MAX_TEXTURE_SIZE)
-    console.log('max width is ', width)
     let precision = gl.getParameter(gl.DEPTH_BITS)
-    console.log('precision is ', precision)
     if (width >= 8192) {
       this.worldMapTexture = await loadTexture(gl, '/world-mono-8k.png')
     } else {
@@ -1079,19 +1000,16 @@ export class CWorld {
       this.istate.histograms,
       'betweenness'
     )
-    console.log('this.histogramBTexture ', this.histogramBTexture)
     this.histogramCTexture = getHistogramTexture(
       gl,
       this.istate.histograms,
       'closeness'
     )
-    console.log('this.histogramCTexture ', this.histogramCTexture)
     this.histogramDTexture = getHistogramTexture(
       gl,
       this.istate.histograms,
       'degree'
     )
-    console.log('this.histogramDTexture ', this.histogramDTexture)
     this.currentHistogramTexture = this.histogramDTexture
   }
 
@@ -1172,9 +1090,6 @@ export class CWorld {
       this.minConnections +
       ' ------- DEGREE ------ MAX: ' +
       this.maxConnections
-    console.log(this.betweennessDescription)
-    console.log(this.closenessDescription)
-    console.log(this.degreeDescription)
   }
 
   private createGeoString(geolocation: IGeolocation): string {
@@ -1207,7 +1122,6 @@ export class CWorld {
     for (let inode of nodes) {
       if (!inode.geolocation) {
         nogeo++
-        // console.log(`no geo location: ${nogeo}`, inode);
         inode.geolocation = {
           country: 'unknown',
           city: 'unknown',
@@ -1237,11 +1151,9 @@ export class CWorld {
         inode.num_subnodes = value.length
       }
     }
-    console.log('nodeMap length ', nodeMap.size)
   }
 
   public async initialize() {
-    console.log('world::initialize, num nodes: ' + this.istate.nodes.length)
     let gl = this.gl
     let id = 0
     this.assignSubNodes(this.istate.nodes)
@@ -1313,8 +1225,9 @@ export class CWorld {
       } else {
         let superNode = this.superMap.get(inode.geostr)
         if (!superNode) {
-          console.log('  could not find supernode for geostr ', inode.geostr)
-          console.log('  could not find supernode for inode ', inode)
+          // TODO Does this need to be an error?
+          console.warn('Could not find supernode for geostr ', inode.geostr)
+          console.warn('Could not find supernode for inode ', inode)
         } else {
           let node = new CNode(
             inode,

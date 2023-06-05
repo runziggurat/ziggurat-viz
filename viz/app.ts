@@ -1,6 +1,6 @@
 import { initShadersGl } from './shaders'
 import { IState, INITIAL_CAMERA_Z } from './core'
-import { CMousekeyCtlr } from './mousekeyctlr'
+import { Events } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { EKeyId, IKeyAction } from './core'
@@ -11,7 +11,7 @@ import { NAVBAR_HEIGHT } from '../utils/constants'
 const APP_VERSION = '0.1.10'
 
 export class CApp {
-  private mousekey: CMousekeyCtlr | null = null
+  private events: Events | null = null
   private initialized: boolean = false
   private startTime: number
   private lastTime: number = 0
@@ -21,7 +21,7 @@ export class CApp {
   public camera: PCamera
   private world: CWorld | null = null
 
-  public actions: IKeyAction[] = []
+  public activeActions: EKeyId[] = []
   private velPanX: number = 0
   private velPanY: number = 0
   private velZoom: number = 0
@@ -40,7 +40,6 @@ export class CApp {
     this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
-    console.log('Use WebGL')
     let gl = canvas.getContext('webgl2')
     if (!gl) {
       throw new Error('WebGL2 not supported')
@@ -51,17 +50,27 @@ export class CApp {
     this.lastUpdateTime = Date.now()
   }
 
-  async start(state: IState) {
+  async create(state: IState) {
     this.initialize()
     this.initializeWebGl(this.gl)
     this.world = new CWorld(state, this.gl, this.canvas, this.camera)
     await this.world.initialize()
     this.initialized = true
-    this.mousekey = new CMousekeyCtlr(this)
+    this.events = new Events({
+      onClick: this.handleClick,
+      onResize: this.handleResize,
+      onKeyPress: this.handleKeyPress,
+      onKeyRelease: this.handleKeyRelease,
+      onZoom: this.handleZoom,
+      onSlide: (_x, _y, dx, dy) => this.handleDrag(dx, dy),
+      element: this.canvas,
+    }).create()
+
+    return this
   }
 
   public destroy() {
-    this.mousekey?.destroy()
+    this.events?.destroy()
   }
 
   initializeWebGl(gl: WebGL2RenderingContext) {
@@ -104,7 +113,6 @@ export class CApp {
     ) {
       return
     }
-    console.log('changing bg color')
     this.gl.clearColor(...bgColor)
   }
 
@@ -129,70 +137,153 @@ export class CApp {
     this.renderGl()
   }
 
-  onAction(isDown: boolean, id: EKeyId) {
-    if (isDown) {
-      if (id == EKeyId.ToggleConnection && this.world) {
+  onActionStart(id: EKeyId) {
+    if (!this.world) {
+      return
+    }
+    switch (id) {
+      case EKeyId.ToggleConnection: {
         this.world.connectionMode = !this.world.connectionMode
-        console.log('connection mode is now ', this.world.connectionMode)
+        break
       }
-      if (id == EKeyId.ToggleCommand && this.world) {
+      case EKeyId.ToggleCommand: {
         this.world.displayCommand = !this.world.displayCommand
-        console.log('displayCommand now ', this.world.displayCommand)
         let el = document.getElementById('instructions')
-        if (el)
+        if (el) {
           el.style.visibility = this.world.displayCommand ? 'visible' : 'hidden'
+        }
+        break
       }
-      if (id == EKeyId.ToggleFps && this.world) {
+      case EKeyId.ToggleFps: {
         this.world.displayFps = !this.world.displayFps
-        let el = document.getElementById('overlayLeft')
-        if (el)
-          el.style.visibility = this.world.displayFps ? 'visible' : 'hidden'
+        let el2 = document.getElementById('overlayLeft')
+        if (el2) {
+          el2.style.visibility = this.world.displayFps ? 'visible' : 'hidden'
+        }
+        break
       }
-      if (id == EKeyId.ToggleGradient && this.world) {
+      case EKeyId.ToggleGradient: {
         this.world.displayGradient = !this.world.displayGradient
         let el = document.getElementById('gradient')
         if (el)
           el.style.visibility = this.world.displayGradient
             ? 'visible'
             : 'hidden'
+        break
       }
-      if (id == EKeyId.ToggleHistogram && this.world) {
+      case EKeyId.ToggleHistogram: {
         this.world.displayHistogram = !this.world.displayHistogram
-        console.log(
-          'this.world.displayHistogram now ',
-          this.world.displayHistogram
-        )
+        break
       }
-      if (id == EKeyId.ColorMode && this.world) {
+      case EKeyId.ToggleColorMode: {
         this.world.cycleColorMode()
       }
-      let action: IKeyAction = {
-        id: id,
-        timestamp: Date.now(),
-        acceleration: 0,
-        velocity: 0,
+      case EKeyId.ArrowUp:
+      case EKeyId.ArrowDown:
+      case EKeyId.ArrowLeft:
+      case EKeyId.ArrowRight:
+      case EKeyId.ZoomIn:
+      case EKeyId.ZoomOut: {
+        this.activeActions.push(id)
       }
-      this.actions.push(action)
-    } else {
-      this.actions = this.actions.filter(function (action, index, arr) {
-        return action.id != id
-      })
     }
   }
 
-  public handleClickRelease(x: number, y: number) {
-    this.world?.handleClickRelease(x, y - NAVBAR_HEIGHT)
+  onActionEnd(id: EKeyId) {
+    this.activeActions = this.activeActions.filter((a) => a !== id)
   }
 
-  public handleMouseMove(dx: number, dy: number) {
-    this.world?.handleMouseMove(dx, dy)
+  public handleKeyPress = (key: string) => {
+    switch (key) {
+      case 'ArrowUp':
+        this.onActionStart(EKeyId.ArrowUp)
+        break
+      case 'ArrowDown':
+        this.onActionStart(EKeyId.ArrowDown)
+        break
+      case 'ArrowLeft':
+        this.onActionStart(EKeyId.ArrowLeft)
+        break
+      case 'ArrowRight':
+        this.onActionStart(EKeyId.ArrowRight)
+        break
+      case 'KeyC':
+        this.onActionStart(EKeyId.ToggleColorMode)
+        break
+      case 'KeyG':
+        this.onActionStart(EKeyId.ToggleGradient)
+        break
+      case 'KeyH':
+        this.onActionStart(EKeyId.ToggleHistogram)
+        break
+      case 'KeyN':
+        this.onActionStart(EKeyId.ToggleConnection)
+        break
+      case 'KeyX':
+        this.onActionStart(EKeyId.ToggleCommand)
+        break
+      case 'KeyF':
+        this.onActionStart(EKeyId.ToggleFps)
+        break
+      case 'KeyI':
+        this.onActionStart(EKeyId.ZoomIn)
+        break
+      case 'KeyO':
+        this.onActionStart(EKeyId.ZoomOut)
+        break
+      default:
+        break
+    }
   }
 
-  public handleClick(x: number, y: number) {
-    this.world?.handleClick(x, y - NAVBAR_HEIGHT)
+  public handleKeyRelease = (key: string) => {
+    switch (key) {
+      case 'ArrowUp':
+        this.onActionEnd(EKeyId.ArrowUp)
+        break
+      case 'ArrowDown':
+        this.onActionEnd(EKeyId.ArrowDown)
+        break
+      case 'ArrowLeft':
+        this.onActionEnd(EKeyId.ArrowLeft)
+        break
+      case 'ArrowRight':
+        this.onActionEnd(EKeyId.ArrowRight)
+        break
+      case 'KeyI':
+        this.onActionEnd(EKeyId.ZoomIn)
+        break
+      case 'KeyO':
+        this.onActionEnd(EKeyId.ZoomOut)
+        break
+    }
   }
 
-  public handleResize() {
+  public handleDrag = (dx: number, dy: number) => {
+    this.world?.handleDrag(dx, dy)
+  }
+
+  public handleZoom = (x: number, y: number, delta: number) => {
+    this.zoomAnchor = vec2.fromValues(x, y)
+    const MAX_ZOOM = 30
+    if (delta > 0) {
+      this.zoomOutTicks += delta / 16
+      if (this.zoomOutTicks > MAX_ZOOM) {
+        this.zoomOutTicks = MAX_ZOOM
+      }
+    } else {
+      this.zoomInTicks += -delta / 16
+      if (this.zoomInTicks > MAX_ZOOM) {
+        this.zoomInTicks = MAX_ZOOM
+      }
+    }
+  }
+
+  public handleClick = (x: number, y: number) => {
+    this.world?.handleClick(x, y)
+  }
+
+  public handleResize = () => {
     const bounds = this.canvas.getBoundingClientRect()
     this.canvas.width = this.canvas.getBoundingClientRect().width
     this.canvas.height = this.canvas.getBoundingClientRect().height
@@ -216,52 +307,50 @@ export class CApp {
     let accelX: number = 0
     let accelY: number = 0
     let accelZ: number = 0
-    if (this.actions.length) {
-      for (let action of this.actions) {
-        switch (action.id) {
-          case EKeyId.ArrowLeft:
-            accelX = (-ACC * delta) / 1500
-            this.velPanX += accelX
-            if (this.velPanX < -MAXVEL) {
-              this.velPanX = -MAXVEL
-            }
-            break
-          case EKeyId.ArrowRight:
-            accelX = (ACC * delta) / 1500
-            this.velPanX += accelX
-            if (this.velPanX > MAXVEL) {
-              this.velPanX = MAXVEL
-            }
-            break
-          case EKeyId.ArrowDown:
-            accelY = (ACC * delta) / 1500
-            this.velPanY += accelY
-            if (this.velPanY > MAXVEL) {
-              this.velPanY = MAXVEL
-            }
-            break
-          case EKeyId.ArrowUp:
-            accelY = (-ACC * delta) / 1500
-            this.velPanY += accelY
-            if (this.velPanY < -MAXVEL) {
-              this.velPanY = -MAXVEL
-            }
-            break
-          case EKeyId.ZoomIn:
-            accelZ = (-ACC * delta) / 1000
-            this.velZoom += accelZ
-            if (this.velZoom < -MAXVEL) {
-              this.velZoom = -MAXVEL
-            }
-            break
-          case EKeyId.ZoomOut:
-            accelZ = (ACC * delta) / 1000
-            this.velZoom += accelZ
-            if (this.velZoom > MAXVEL) {
-              this.velZoom = MAXVEL
-            }
-            break
-        }
+    for (let id of this.activeActions) {
+      switch (id) {
+        case EKeyId.ArrowLeft:
+          accelX = (-ACC * delta) / 1500
+          this.velPanX += accelX
+          if (this.velPanX < -MAXVEL) {
+            this.velPanX = -MAXVEL
+          }
+          break
+        case EKeyId.ArrowRight:
+          accelX = (ACC * delta) / 1500
+          this.velPanX += accelX
+          if (this.velPanX > MAXVEL) {
+            this.velPanX = MAXVEL
+          }
+          break
+        case EKeyId.ArrowDown:
+          accelY = (ACC * delta) / 1500
+          this.velPanY += accelY
+          if (this.velPanY > MAXVEL) {
+            this.velPanY = MAXVEL
+          }
+          break
+        case EKeyId.ArrowUp:
+          accelY = (-ACC * delta) / 1500
+          this.velPanY += accelY
+          if (this.velPanY < -MAXVEL) {
+            this.velPanY = -MAXVEL
+          }
+          break
+        case EKeyId.ZoomIn:
+          accelZ = (-ACC * delta) / 1000
+          this.velZoom += accelZ
+          if (this.velZoom < -MAXVEL) {
+            this.velZoom = -MAXVEL
+          }
+          break
+        case EKeyId.ZoomOut:
+          accelZ = (ACC * delta) / 1000
+          this.velZoom += accelZ
+          if (this.velZoom > MAXVEL) {
+            this.velZoom = MAXVEL
+          }
+          break
       }
     }
 

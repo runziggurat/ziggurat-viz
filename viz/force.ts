@@ -83,13 +83,10 @@ function cycleColorMode() {
     colorMode = EColorMode.Between
   }
   if (colorMode == EColorMode.Between) {
-    console.log('Color mode is now BETWEENNESS.')
     Graph.nodeColor(node => (node as any)['betweenColor'])
   } else if (colorMode == EColorMode.Close) {
-    console.log('Color mode is now CLOSENESS.')
     Graph.nodeColor(node => (node as any)['closeColor'])
   } else {
-    console.log('Color mode is now DEGREE.')
     Graph.nodeColor(node => (node as any)['degreeColor'])
   }
 }
@@ -147,7 +144,6 @@ export function renderForceGraph(state: IState) {
     links,
   }
 
-  console.log('Color mode is now CLOSENESS.')
   Graph = ForceGraph3D()(graph)
     .linkVisibility(isTiny)
     .nodeColor(node => (node as any)['closeColor'])
@@ -163,6 +159,7 @@ export function renderForceGraph(state: IState) {
   setColors()
   window.addEventListener('resize', updateSize)
   window.addEventListener('color-scheme-change', setColors)
+  window.addEventListener('keydown', onKeydownEvent)
 
   if (!isTiny && Graph) {
     Graph.onNodeClick(node => {
@@ -195,8 +192,15 @@ function updateSize() {
 }
 
 export function destroyForceGraph() {
-  Graph = null
   window.removeEventListener('resize', updateSize)
   window.removeEventListener('color-scheme-change', setColors)
   window.removeEventListener('keydown', onKeydownEvent)
+
+  Graph?.pauseAnimation()
+  Graph?.graphData({
+    nodes: [],
+    links: [],
+  })
+  // TODO On safari there is still some leaks. Investigate.
+  Graph = null
 }

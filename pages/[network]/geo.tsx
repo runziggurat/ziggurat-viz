@@ -18,10 +18,7 @@ import { useAnimationFrame } from '../../utils/animation-frame'
 import { errorPanel } from '../../styles/global'
 import { parseNetwork } from '../../utils/network'
 
-import {
-  fetchVizData,
-  networkStaticPaths,
-} from '../../utils/next'
+import { fetchVizData, networkStaticPaths } from '../../utils/next'
 import { Status, StatusCode, VizData } from '../../utils/types'
 
 const useStyles = createStyles(theme => {
@@ -99,7 +96,7 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
         }
         if (!appRef.current && data) {
           appRef.current = new CApp(canvasRef.current)
-          appRef.current.start(data.viz_state).then(() => {
+          appRef.current.create(data.viz_state).then(() => {
             setStatus({
               code: StatusCode.Success,
             })
@@ -134,6 +131,11 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
         <meta name="description" content="P2P Visualizer: Geo Location" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <style jsx global>{`
+        body {
+          overflow: hidden;
+        }
+      `}</style>
       {status.code !== StatusCode.Success ? (
         <Center className={classes.status}>
           <Text

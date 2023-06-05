@@ -10,7 +10,6 @@ function createHistogramTexture(
   // each row of texture corresponds to one column of the histogram, whose height varies
   // with the corresponding count for that entry.
   let height = summary.counts.length
-  console.log('histogram height is ', height)
   const npixels = HISTOGRAM_WIDTH * height
   const data = new Uint8Array(npixels * 4)
   let n = 0
@@ -22,7 +21,6 @@ function createHistogramTexture(
     if (h == 0 && summary.counts[y] > 0) {
       h = 1
     }
-    // console.log(`y ${y} h ${h} `)
     for (let x = 0; x < HISTOGRAM_WIDTH; x++) {
       if (x < h) {
         // use yellow where the data is valid
