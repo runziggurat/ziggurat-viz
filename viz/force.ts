@@ -159,6 +159,7 @@ export function renderForceGraph(state: IState) {
   setColors()
   window.addEventListener('resize', updateSize)
   window.addEventListener('color-scheme-change', setColors)
+  window.addEventListener('keydown', onKeydownEvent)
 
   if (!isTiny && Graph) {
     Graph.onNodeClick(node => {
@@ -191,8 +192,15 @@ function updateSize() {
 }
 
 export function destroyForceGraph() {
-  Graph = null
   window.removeEventListener('resize', updateSize)
   window.removeEventListener('color-scheme-change', setColors)
   window.removeEventListener('keydown', onKeydownEvent)
+
+  Graph?.pauseAnimation()
+  Graph?.graphData({
+    nodes: [],
+    links: [],
+  })
+  // TODO On safari there is still some leaks. Investigate.
+  Graph = null
 }

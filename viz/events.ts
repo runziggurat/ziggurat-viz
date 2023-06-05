@@ -1,5 +1,3 @@
-import { EKeyId } from './core'
-
 interface Opts {
   onClick?: (x: number, y: number) => void
   onKeyPress?: (key: string) => void
@@ -56,6 +54,7 @@ export class Events {
     window.removeEventListener('mousedown', this.onMouseDown)
     window.removeEventListener('touchstart', this.onTouchStart)
     window.removeEventListener('mousemove', this.onMouseMove)
+    window.removeEventListener('touchmove', this.onTouchMove)
     window.removeEventListener('mouseup', this.onMouseUp)
     window.removeEventListener('touchend', this.onTouchEnd)
     window.removeEventListener('click', this.onClick)
