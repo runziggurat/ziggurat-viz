@@ -202,7 +202,7 @@ export class Events {
   private onWheel = (evt: WheelEvent) => {
     evt.preventDefault()
     const { x, y } = this.getPosition(evt)
-    const delta = evt.ctrlKey ? evt.deltaY * 4 : evt.deltaY
+    const delta = evt.deltaY * (evt.ctrlKey ? 10 : 1);
     this.listeners.onZoom?.(x, y, delta)
   }
 

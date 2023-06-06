@@ -1,4 +1,4 @@
-import { vec3, vec4 } from 'gl-matrix'
+import { vec4 } from 'gl-matrix'
 
 export function idToColor(id: number): vec4 {
   let red = (id >> 12) * 4 + 2

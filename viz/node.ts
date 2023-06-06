@@ -9,7 +9,7 @@ import {
   ENetworkType,
 } from './core'
 import { mat4, vec3, vec4, vec2 } from 'gl-matrix'
-import { idToColor } from './util'
+import { idToColor, zoomLogToScale } from './util'
 import { PCamera } from './camera'
 
 const COLOR_BLACK: vec4 = vec4.fromValues(0.2, 0.2, 0.2, 1.0)
@@ -161,9 +161,9 @@ export class CNode {
       isTiny
         ? this.setSubnodeOffsetTiny(this.inode.subnode_index)
         : this.setSubnodeOffset(
-            this.inode.subnode_index,
-            this.inode.num_subnodes
-          )
+          this.inode.subnode_index,
+          this.inode.num_subnodes
+        )
     }
 
     let longitude = x - 0.5
@@ -276,7 +276,7 @@ export class CNode {
   public updateMatrix() {
     let ry = mat4.create()
     let t = mat4.create()
-    let scale = this.camera.nodeScale * this.scale
+    let scale = this.scale * zoomLogToScale(Math.log(this.camera.z))
     mat4.identity(this.matWorld)
     mat4.scale(
       this.matWorld,
