@@ -26,6 +26,14 @@ export const duration = (time: string) => {
     return (seconds * 1000).toPrecision(2) + 'ms'
 }
 
+export const bound = (value: number, min: number, max: number) => {
+    return Math.max(min, Math.min(max, value))
+}
+
+export const normalize = (value: number, min: number = 0, max: number = 1) => {
+    return bound((value - min) / (max - min), 0, 1)
+}
+
 export const useIsMobile = () => {
     const os = useOs()
     if (os === 'android' || os === 'ios') return true

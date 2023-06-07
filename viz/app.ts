@@ -1,12 +1,11 @@
 import { initShadersGl } from './shaders'
-import { IState, INITIAL_CAMERA_Z } from './core'
+import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z } from './core'
 import { Events } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
-import { EKeyId, IKeyAction } from './core'
-import { zoomLogToScale } from './util'
-import { vec2 } from 'gl-matrix'
+import { Action } from './core'
 import { NAVBAR_HEIGHT } from '../utils/constants'
+import { bound, normalize } from '../utils/helpers'
 
 const APP_VERSION = '0.1.10'
 
@@ -16,28 +15,19 @@ export class CApp {
   private startTime: number
   private lastTime: number = 0
   private iter: number = 0
-  public gl: WebGL2RenderingContext
   private canvas: HTMLCanvasElement
-  public camera: PCamera
+  private gl: WebGL2RenderingContext
+  private camera: PCamera
   private world: CWorld | null = null
 
-  public activeActions: EKeyId[] = []
-  private velPanX: number = 0
-  private velPanY: number = 0
-  private velZoom: number = 0
-  private zoomLogarithm: number = 1
+  private activeActions: { action: Action; start: number }[] = []
   private lastUpdateTime: number
-  public zoomInTicks: number = 0
-  public zoomOutTicks: number = 0
-  public zoomAnchor: vec2 = vec2.create()
 
-  public constructor(
-    canvas: HTMLCanvasElement,
-  ) {
+  public constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.canvas.width = window.innerWidth
     this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
-    this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
+    this.camera = new PCamera(0, 0, CAMERA_INITIAL_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
     let gl = canvas.getContext('webgl2')
@@ -50,8 +40,7 @@ export class CApp {
     this.lastUpdateTime = Date.now()
   }
 
-  async create(state: IState) {
-    this.initialize()
+  public async create(state: IState) {
     this.initializeWebGl(this.gl)
     this.world = new CWorld(state, this.gl, this.canvas, this.camera)
     await this.world.initialize()
@@ -73,7 +62,7 @@ export class CApp {
     this.events?.destroy()
   }
 
-  initializeWebGl(gl: WebGL2RenderingContext) {
+  private initializeWebGl(gl: WebGL2RenderingContext) {
     gl.clearColor(1, 1, 1, 1.0)
     gl.clearDepth(1.0)
     gl.clearStencil(0.0)
@@ -116,7 +105,7 @@ export class CApp {
     this.gl.clearColor(...bgColor)
   }
 
-  public renderGl() {
+  private renderGl() {
     this.updateFps()
     this.maybeSetColor()
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
@@ -137,16 +126,33 @@ export class CApp {
     this.renderGl()
   }
 
-  onActionStart(id: EKeyId) {
+  private isContinuousAction(action: Action) {
+    switch (action) {
+      case Action.ArrowUp:
+      case Action.ArrowDown:
+      case Action.ArrowLeft:
+      case Action.ArrowRight:
+      case Action.ZoomIn:
+      case Action.ZoomOut:
+        return true
+      default:
+        return false
+    }
+  }
+
+  private onActionStart(action: Action) {
     if (!this.world) {
       return
     }
-    switch (id) {
-      case EKeyId.ToggleConnection: {
+    if (this.activeActions.find(a => a.action === action)) {
+      return
+    }
+    switch (action) {
+      case Action.ToggleConnection: {
         this.world.connectionMode = !this.world.connectionMode
         break
       }
-      case EKeyId.ToggleCommand: {
+      case Action.ToggleCommand: {
         this.world.displayCommand = !this.world.displayCommand
         let el = document.getElementById('instructions')
         if (el) {
@@ -154,7 +160,7 @@ export class CApp {
         }
         break
       }
-      case EKeyId.ToggleFps: {
+      case Action.ToggleFps: {
         this.world.displayFps = !this.world.displayFps
         let el2 = document.getElementById('overlayLeft')
         if (el2) {
@@ -162,7 +168,7 @@ export class CApp {
         }
         break
       }
-      case EKeyId.ToggleGradient: {
+      case Action.ToggleGradient: {
         this.world.displayGradient = !this.world.displayGradient
         let el = document.getElementById('gradient')
         if (el)
@@ -171,65 +177,64 @@ export class CApp {
             : 'hidden'
         break
       }
-      case EKeyId.ToggleHistogram: {
+      case Action.ToggleHistogram: {
         this.world.displayHistogram = !this.world.displayHistogram
         break
       }
-      case EKeyId.ToggleColorMode: {
+      case Action.ToggleColorMode: {
         this.world.cycleColorMode()
       }
-      case EKeyId.ArrowUp:
-      case EKeyId.ArrowDown:
-      case EKeyId.ArrowLeft:
-      case EKeyId.ArrowRight:
-      case EKeyId.ZoomIn:
-      case EKeyId.ZoomOut: {
-        this.activeActions.push(id)
+      default: {
+        if (this.isContinuousAction(action)) {
+          this.activeActions.push({ action, start: Date.now() })
+        }
       }
     }
   }
 
-  onActionEnd(id: EKeyId) {
-    this.activeActions = this.activeActions.filter((a) => a !== id)
+  private onActionEnd(ac: Action) {
+    this.activeActions = this.activeActions.filter(
+      ({ action }) => action !== ac
+    )
   }
 
   public handleKeyPress = (key: string) => {
     switch (key) {
       case 'ArrowUp':
-        this.onActionStart(EKeyId.ArrowUp)
+        this.onActionStart(Action.ArrowUp)
         break
       case 'ArrowDown':
-        this.onActionStart(EKeyId.ArrowDown)
+        this.onActionStart(Action.ArrowDown)
         break
       case 'ArrowLeft':
-        this.onActionStart(EKeyId.ArrowLeft)
+        this.onActionStart(Action.ArrowLeft)
         break
       case 'ArrowRight':
-        this.onActionStart(EKeyId.ArrowRight)
+        this.onActionStart(Action.ArrowRight)
         break
       case 'KeyC':
-        this.onActionStart(EKeyId.ToggleColorMode)
+        this.onActionStart(Action.ToggleColorMode)
         break
       case 'KeyG':
-        this.onActionStart(EKeyId.ToggleGradient)
+        this.onActionStart(Action.ToggleGradient)
         break
       case 'KeyH':
-        this.onActionStart(EKeyId.ToggleHistogram)
+        this.onActionStart(Action.ToggleHistogram)
         break
       case 'KeyN':
-        this.onActionStart(EKeyId.ToggleConnection)
+        this.onActionStart(Action.ToggleConnection)
         break
       case 'KeyX':
-        this.onActionStart(EKeyId.ToggleCommand)
+        this.onActionStart(Action.ToggleCommand)
         break
       case 'KeyF':
-        this.onActionStart(EKeyId.ToggleFps)
+        this.onActionStart(Action.ToggleFps)
         break
       case 'KeyI':
-        this.onActionStart(EKeyId.ZoomIn)
+        this.onActionStart(Action.ZoomIn)
         break
       case 'KeyO':
-        this.onActionStart(EKeyId.ZoomOut)
+        this.onActionStart(Action.ZoomOut)
         break
       default:
         break
@@ -239,22 +244,22 @@ export class CApp {
   public handleKeyRelease = (key: string) => {
     switch (key) {
       case 'ArrowUp':
-        this.onActionEnd(EKeyId.ArrowUp)
+        this.onActionEnd(Action.ArrowUp)
         break
       case 'ArrowDown':
-        this.onActionEnd(EKeyId.ArrowDown)
+        this.onActionEnd(Action.ArrowDown)
         break
       case 'ArrowLeft':
-        this.onActionEnd(EKeyId.ArrowLeft)
+        this.onActionEnd(Action.ArrowLeft)
         break
       case 'ArrowRight':
-        this.onActionEnd(EKeyId.ArrowRight)
+        this.onActionEnd(Action.ArrowRight)
         break
       case 'KeyI':
-        this.onActionEnd(EKeyId.ZoomIn)
+        this.onActionEnd(Action.ZoomIn)
         break
       case 'KeyO':
-        this.onActionEnd(EKeyId.ZoomOut)
+        this.onActionEnd(Action.ZoomOut)
         break
     }
   }
@@ -264,19 +269,21 @@ export class CApp {
   }
 
   public handleZoom = (x: number, y: number, delta: number) => {
-    this.zoomAnchor = vec2.fromValues(x, y)
-    const MAX_ZOOM = 30
-    if (delta > 0) {
-      this.zoomOutTicks += delta / 16
-      if (this.zoomOutTicks > MAX_ZOOM) {
-        this.zoomOutTicks = MAX_ZOOM
-      }
-    } else {
-      this.zoomInTicks += -delta / 16
-      if (this.zoomInTicks > MAX_ZOOM) {
-        this.zoomInTicks = MAX_ZOOM
-      }
-    }
+    const zoom = delta / 500
+    const z = bound(
+      Math.exp(Math.log(this.camera.z) + zoom),
+      CAMERA_MIN_Z,
+      CAMERA_MAX_Z
+    )
+
+    const bounds = this.canvas.getBoundingClientRect()
+    const normalX = x / bounds.width
+    const normalY = 1 - y / bounds.height
+    const aspectRatio = bounds.width / bounds.height
+
+    this.camera.x += (normalX - 0.5) * aspectRatio * (this.camera.z - z)
+    this.camera.y += (normalY - 0.5) * (this.camera.z - z)
+    this.camera.z = z
   }
 
   public handleClick = (x: number, y: number) => {
@@ -291,182 +298,52 @@ export class CApp {
     this.camera?.update()
   }
 
-  private updateActions(delta: number) {
-    const ZOOM_INC = 0.025
-    if (this.zoomInTicks > 0) {
-      this.incZoomLogarithm(-ZOOM_INC, true)
-      this.zoomInTicks--
-    }
-    if (this.zoomOutTicks > 0) {
-      this.incZoomLogarithm(ZOOM_INC, true)
-      this.zoomOutTicks--
-    }
-    // reach maximum velocity in 200 ms
-    const ACC = 2.5
-    const MAXVEL = 0.7
-    let accelX: number = 0
-    let accelY: number = 0
-    let accelZ: number = 0
-    for (let id of this.activeActions) {
-      switch (id) {
-        case EKeyId.ArrowLeft:
-          accelX = (-ACC * delta) / 1500
-          this.velPanX += accelX
-          if (this.velPanX < -MAXVEL) {
-            this.velPanX = -MAXVEL
-          }
+  private updateActions() {
+    const duration = Date.now() - this.lastUpdateTime
+    const MAX_DELTA = 30
+    const x = Math.min(duration, MAX_DELTA)
+    const y = Math.min(duration, MAX_DELTA)
+    const z = Math.min(duration, MAX_DELTA)
+    for (let { action, start } of this.activeActions) {
+      const norm = 1 - normalize(Math.log(Date.now() - start), 5, 12)
+      switch (action) {
+        case Action.ArrowLeft: {
+          this.handleDrag(x * norm, 0)
           break
-        case EKeyId.ArrowRight:
-          accelX = (ACC * delta) / 1500
-          this.velPanX += accelX
-          if (this.velPanX > MAXVEL) {
-            this.velPanX = MAXVEL
-          }
-          break
-        case EKeyId.ArrowDown:
-          accelY = (ACC * delta) / 1500
-          this.velPanY += accelY
-          if (this.velPanY > MAXVEL) {
-            this.velPanY = MAXVEL
-          }
-          break
-        case EKeyId.ArrowUp:
-          accelY = (-ACC * delta) / 1500
-          this.velPanY += accelY
-          if (this.velPanY < -MAXVEL) {
-            this.velPanY = -MAXVEL
-          }
-          break
-        case EKeyId.ZoomIn:
-          accelZ = (-ACC * delta) / 1000
-          this.velZoom += accelZ
-          if (this.velZoom < -MAXVEL) {
-            this.velZoom = -MAXVEL
-          }
-          break
-        case EKeyId.ZoomOut:
-          accelZ = (ACC * delta) / 1000
-          this.velZoom += accelZ
-          if (this.velZoom > MAXVEL) {
-            this.velZoom = MAXVEL
-          }
-          break
-      }
-    }
-
-    // if no acceleration, apply deacceleration to any current velocities
-    if (accelX == 0 && this.velPanX != 0) {
-      accelX = (ACC * 2 * delta) / 1000
-      if (this.velPanX > 0) {
-        this.velPanX -= accelX
-        if (this.velPanX < 0) {
-          this.velPanX = 0
         }
-      } else {
-        this.velPanX += accelX
-        if (this.velPanX > 0) {
-          this.velPanX = 0
+        case Action.ArrowRight: {
+          this.handleDrag(-x * norm, 0)
+          break
+        }
+        case Action.ArrowDown: {
+          this.handleDrag(0, -y * norm)
+          break
+        }
+        case Action.ArrowUp: {
+          this.handleDrag(0, y * norm)
+          break
+        }
+        case Action.ZoomIn: {
+          const x = this.canvas.width / 2
+          const y = this.canvas.height / 2
+          this.handleZoom(x, y, -z * norm)
+          break
+        }
+        case Action.ZoomOut: {
+          const x = this.canvas.width / 2
+          const y = this.canvas.height / 2
+          this.handleZoom(x, y, z * norm)
+          break
         }
       }
-    }
-
-    if (accelY == 0 && this.velPanY != 0) {
-      accelY = (ACC * 2 * delta) / 1000
-      if (this.velPanY > 0) {
-        this.velPanY -= accelY
-        if (this.velPanY < 0) {
-          this.velPanY = 0
-        }
-      } else {
-        this.velPanY += accelY
-        if (this.velPanY > 0) {
-          this.velPanY = 0
-        }
-      }
-    }
-
-    if (accelZ == 0 && this.velZoom != 0) {
-      accelZ = (ACC * 2 * delta) / 1000
-      if (this.velZoom > 0) {
-        this.velZoom -= accelZ
-        if (this.velZoom < 0) {
-          this.velZoom = 0
-        }
-      } else {
-        this.velZoom += accelZ
-        if (this.velZoom > 0) {
-          this.velZoom = 0
-        }
-      }
-    }
-
-    // apply pan velocity
-    if (this.velPanX || this.velPanY) {
-      let dimen: number =
-        this.camera.worldWidth > this.camera.worldHeight
-          ? this.camera.worldWidth
-          : this.camera.worldHeight
-      let dx = ((this.velPanX * delta) / 1000) * dimen
-      let dy = ((this.velPanY * delta) / 1000) * dimen
-      this.camera.x += dx
-      this.camera.y -= dy
-      this.camera.update()
-    }
-
-    // apply zoom velocity
-    if (this.velZoom) {
-      let dz = (this.velZoom * delta) / 1000
-      this.incZoomLogarithm(dz, false)
     }
   }
 
-  public incZoomLogarithm(dz: number, useAnchor: boolean) {
-    this.zoomLogarithm += dz
-    if (this.zoomLogarithm > 8.14786) {
-      this.zoomLogarithm = 8.14786
-      this.velZoom = 0
-    }
-    if (this.zoomLogarithm < 3.158883) {
-      this.zoomLogarithm = 3.158883
-      this.velZoom = 0
-    }
-    this.camera.nodeScale = zoomLogToScale(this.zoomLogarithm)
-    this.camera.z = Math.exp(this.zoomLogarithm)
-    if (useAnchor) {
-      // convert anchor point to world coordinates
-      let normalX =
-        this.zoomAnchor[0] / this.canvas.getBoundingClientRect().width
-      let normalY =
-        1 - this.zoomAnchor[1] / this.canvas.getBoundingClientRect().height
-      let worldX =
-        (normalX - 0.5) * this.camera.worldWidth * this.camera.aspectRatio +
-        this.camera.x
-      let worldY = (normalY - 0.5) * this.camera.worldWidth + this.camera.y
-
-      // compute new world width/height based on camera z
-      this.camera.update()
-
-      // determine new camera position based on new offset
-      this.camera.x =
-        worldX +
-        (0.5 - normalX) * this.camera.worldWidth * this.camera.aspectRatio
-      this.camera.y = worldY + (0.5 - normalY) * this.camera.worldWidth
-    }
-    this.camera.update()
-  }
-
-  public update() {
-    let time = Date.now()
-    let delta = time - this.lastUpdateTime
-    this.lastUpdateTime = time
-    this.updateActions(delta)
+  private update() {
+    this.updateActions()
     this.camera.update()
     this.world?.update()
-  }
 
-  public initialize() {
-    this.zoomLogarithm = Math.log(INITIAL_CAMERA_Z)
-    this.camera.nodeScale = zoomLogToScale(this.zoomLogarithm)
-    this.camera.update()
+    this.lastUpdateTime = Date.now()
   }
 }

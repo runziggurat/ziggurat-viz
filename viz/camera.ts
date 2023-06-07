@@ -16,7 +16,6 @@ export class PCamera {
   matView = mat4.create()
   matViewProjection = mat4.create()
   matProjection = mat4.create()
-  nodeScale = 1
 
   public constructor(
     x: number,
