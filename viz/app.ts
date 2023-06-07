@@ -5,7 +5,7 @@ import { CWorld } from './world'
 import { PCamera } from './camera'
 import { Action } from './core'
 import { NAVBAR_HEIGHT } from '../utils/constants'
-import { bound } from '../utils/helpers'
+import { bound, normalize } from '../utils/helpers'
 
 const APP_VERSION = '0.1.10'
 
@@ -20,7 +20,7 @@ export class CApp {
   private camera: PCamera
   private world: CWorld | null = null
 
-  private activeActions: Action[] = []
+  private activeActions: { action: Action; start: number }[] = []
   private lastUpdateTime: number
 
   public constructor(canvas: HTMLCanvasElement) {
@@ -126,11 +126,28 @@ export class CApp {
     this.renderGl()
   }
 
-  private onActionStart(ac: Action) {
+  private isContinuousAction(action: Action) {
+    switch (action) {
+      case Action.ArrowUp:
+      case Action.ArrowDown:
+      case Action.ArrowLeft:
+      case Action.ArrowRight:
+      case Action.ZoomIn:
+      case Action.ZoomOut:
+        return true
+      default:
+        return false
+    }
+  }
+
+  private onActionStart(action: Action) {
     if (!this.world) {
       return
     }
-    switch (ac) {
+    if (this.activeActions.find(a => a.action === action)) {
+      return
+    }
+    switch (action) {
       case Action.ToggleConnection: {
         this.world.connectionMode = !this.world.connectionMode
         break
@@ -167,19 +184,18 @@ export class CApp {
       case Action.ToggleColorMode: {
         this.world.cycleColorMode()
       }
-      case Action.ArrowUp:
-      case Action.ArrowDown:
-      case Action.ArrowLeft:
-      case Action.ArrowRight:
-      case Action.ZoomIn:
-      case Action.ZoomOut: {
-        this.activeActions.push(ac)
+      default: {
+        if (this.isContinuousAction(action)) {
+          this.activeActions.push({ action, start: Date.now() })
+        }
       }
     }
   }
 
   private onActionEnd(ac: Action) {
-    this.activeActions = this.activeActions.filter((a) => a !== ac)
+    this.activeActions = this.activeActions.filter(
+      ({ action }) => action !== ac
+    )
   }
 
   public handleKeyPress = (key: string) => {
@@ -254,17 +270,18 @@ export class CApp {
 
   public handleZoom = (x: number, y: number, delta: number) => {
     const zoom = delta / 500
-    const z = bound(Math.exp(Math.log(this.camera.z) + zoom), CAMERA_MIN_Z, CAMERA_MAX_Z)
+    const z = bound(
+      Math.exp(Math.log(this.camera.z) + zoom),
+      CAMERA_MIN_Z,
+      CAMERA_MAX_Z
+    )
 
     const bounds = this.canvas.getBoundingClientRect()
-    const normalX =
-      x / bounds.width
-    const normalY =
-      1 - y / bounds.height
+    const normalX = x / bounds.width
+    const normalY = 1 - y / bounds.height
     const aspectRatio = bounds.width / bounds.height
 
-    this.camera.x +=
-      (normalX - 0.5) * aspectRatio * (this.camera.z - z)
+    this.camera.x += (normalX - 0.5) * aspectRatio * (this.camera.z - z)
     this.camera.y += (normalY - 0.5) * (this.camera.z - z)
     this.camera.z = z
   }
@@ -283,40 +300,39 @@ export class CApp {
 
   private updateActions() {
     const duration = Date.now() - this.lastUpdateTime
-    const MAX_DRAG = 5
-    const MAX_ZOOM = 30
-    // TODO decelerate
-    const x = Math.min(duration / 10, MAX_DRAG)
-    const y = Math.min(duration / 10, MAX_DRAG)
-    const z = Math.min(duration, MAX_ZOOM)
-    for (let ac of this.activeActions) {
-      switch (ac) {
+    const MAX_DELTA = 30
+    const x = Math.min(duration, MAX_DELTA)
+    const y = Math.min(duration, MAX_DELTA)
+    const z = Math.min(duration, MAX_DELTA)
+    for (let { action, start } of this.activeActions) {
+      const norm = 1 - normalize(Math.log(Date.now() - start), 5, 12)
+      switch (action) {
         case Action.ArrowLeft: {
-          this.handleDrag(-x, 0)
+          this.handleDrag(x * norm, 0)
           break
         }
         case Action.ArrowRight: {
-          this.handleDrag(x, 0)
+          this.handleDrag(-x * norm, 0)
           break
         }
         case Action.ArrowDown: {
-          this.handleDrag(0, y)
+          this.handleDrag(0, -y * norm)
           break
         }
         case Action.ArrowUp: {
-          this.handleDrag(0, -y)
+          this.handleDrag(0, y * norm)
           break
         }
         case Action.ZoomIn: {
           const x = this.canvas.width / 2
           const y = this.canvas.height / 2
-          this.handleZoom(x, y, -z)
+          this.handleZoom(x, y, -z * norm)
           break
         }
         case Action.ZoomOut: {
           const x = this.canvas.width / 2
           const y = this.canvas.height / 2
-          this.handleZoom(x, y, z)
+          this.handleZoom(x, y, z * norm)
           break
         }
       }
