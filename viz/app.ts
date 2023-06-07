@@ -1,10 +1,11 @@
 import { initShadersGl } from './shaders'
-import { IState, INITIAL_CAMERA_Z, MIN_ZOOM, MAX_ZOOM } from './core'
+import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z } from './core'
 import { Events } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { Action } from './core'
 import { NAVBAR_HEIGHT } from '../utils/constants'
+import { bound } from '../utils/helpers'
 
 const APP_VERSION = '0.1.10'
 
@@ -20,14 +21,13 @@ export class CApp {
   private world: CWorld | null = null
 
   private activeActions: Action[] = []
-  private zoomLevel: number = 1
   private lastUpdateTime: number
 
   public constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.canvas.width = window.innerWidth
     this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
-    this.camera = new PCamera(0, 0, INITIAL_CAMERA_Z, this.canvas)
+    this.camera = new PCamera(0, 0, CAMERA_INITIAL_Z, this.canvas)
 
     console.log('p2p-viz version: ', APP_VERSION)
     let gl = canvas.getContext('webgl2')
@@ -41,7 +41,6 @@ export class CApp {
   }
 
   public async create(state: IState) {
-    this.initialize()
     this.initializeWebGl(this.gl)
     this.world = new CWorld(state, this.gl, this.canvas, this.camera)
     await this.world.initialize()
@@ -254,27 +253,20 @@ export class CApp {
   }
 
   public handleZoom = (x: number, y: number, delta: number) => {
-    this.zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, this.zoomLevel + delta / 100))
-    this.camera.z = Math.exp(this.zoomLevel)
-    // convert anchor point to world coordinates
-    let normalX =
-      x / this.canvas.getBoundingClientRect().width
-    let normalY =
-      1 - y / this.canvas.getBoundingClientRect().height
-    let worldX =
-      (normalX - 0.5) * this.camera.worldWidth * this.camera.aspectRatio +
-      this.camera.x
-    let worldY = (normalY - 0.5) * this.camera.worldWidth + this.camera.y
+    const zoom = delta / 500
+    const z = bound(Math.exp(Math.log(this.camera.z) + zoom), CAMERA_MIN_Z, CAMERA_MAX_Z)
 
-    // compute new world width/height based on camera z
-    this.camera.update()
+    const bounds = this.canvas.getBoundingClientRect()
+    const normalX =
+      x / bounds.width
+    const normalY =
+      1 - y / bounds.height
+    const aspectRatio = bounds.width / bounds.height
 
-    // determine new camera position based on new offset
-    this.camera.x =
-      worldX +
-      (0.5 - normalX) * this.camera.worldWidth * this.camera.aspectRatio
-    this.camera.y = worldY + (0.5 - normalY) * this.camera.worldWidth
-    this.camera.update()
+    this.camera.x +=
+      (normalX - 0.5) * aspectRatio * (this.camera.z - z)
+    this.camera.y += (normalY - 0.5) * (this.camera.z - z)
+    this.camera.z = z
   }
 
   public handleClick = (x: number, y: number) => {
@@ -289,13 +281,14 @@ export class CApp {
     this.camera?.update()
   }
 
-  private updateActions(delta: number) {
+  private updateActions() {
+    const duration = Date.now() - this.lastUpdateTime
     const MAX_DRAG = 5
     const MAX_ZOOM = 30
     // TODO decelerate
-    const x = Math.min(delta / 10, MAX_DRAG)
-    const y = Math.min(delta / 10, MAX_DRAG)
-    const z = Math.min(delta, MAX_ZOOM)
+    const x = Math.min(duration / 10, MAX_DRAG)
+    const y = Math.min(duration / 10, MAX_DRAG)
+    const z = Math.min(duration, MAX_ZOOM)
     for (let ac of this.activeActions) {
       switch (ac) {
         case Action.ArrowLeft: {
@@ -331,14 +324,10 @@ export class CApp {
   }
 
   private update() {
-    let time = Date.now()
-    let delta = time - this.lastUpdateTime
-    this.lastUpdateTime = time
-    this.updateActions(delta)
+    this.updateActions()
     this.camera.update()
     this.world?.update()
 
-  private initialize() {
-    this.zoomLevel = Math.log(INITIAL_CAMERA_Z)
+    this.lastUpdateTime = Date.now()
   }
 }

@@ -160,7 +160,7 @@ export class Events {
       const currDiffY = this.currentTouches[0].clientY - this.currentTouches[1].clientY
       const currDiff = Math.sqrt(currDiffX * currDiffX + currDiffY * currDiffY)
       if (this.prevTouchDiff > 0) {
-        const delta = (this.prevTouchDiff - currDiff) * 10
+        const delta = (this.prevTouchDiff - currDiff) * 5
         const x = (this.currentTouches[0].clientX + this.currentTouches[1].clientX) / 2
         const y = (this.currentTouches[0].clientY + this.currentTouches[1].clientY) / 2
         this.listeners.onZoom?.(x, y, delta)
