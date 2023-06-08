@@ -44,10 +44,10 @@ export enum ENetworkType {
 }
 
 export enum Action {
-  ArrowLeft = 'left',
-  ArrowRight = 'right',
-  ArrowUp = 'up',
-  ArrowDown = 'down',
+  MoveLeft = 'left',
+  MoveRight = 'right',
+  MoveUp = 'up',
+  MoveDown = 'down',
   ZoomIn = 'in',
   ZoomOut = 'out',
   ToggleConnection = 'conn',

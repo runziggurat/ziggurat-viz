@@ -1,9 +1,17 @@
 import { LONG_PRESS_TIME } from './core'
 
+export const enum Keys {
+  None = 0,
+  Shift = 1 << 0,
+  Ctrl = 1 << 1,
+  Alt = 1 << 2,
+  Meta = 1 << 3,
+}
+
 interface Opts {
   onClick?: (x: number, y: number, radius: number) => void
-  onKeyPress?: (key: string) => void
-  onKeyRelease?: (key: string) => void
+  onKeyPress?: (key: string, mod: Keys) => void
+  onKeyRelease?: (key: string, mod: Keys) => void
   onSlide?: (x: number, y: number, dx: number, dy: number) => void
   onZoom?: (x: number, y: number, delta: number) => void
   onResize?: () => void
@@ -214,15 +222,34 @@ export class Events {
     this.listeners.onZoom?.(x, y, delta)
   }
 
+  private getModifiers = (evt: KeyboardEvent) => {
+    let mod: Keys = Keys.None
+    if (evt.ctrlKey) {
+      mod |= Keys.Ctrl
+    }
+    if (evt.shiftKey) {
+      mod |= Keys.Shift
+    }
+    if (evt.altKey) {
+      mod |= Keys.Alt
+    }
+    if (evt.metaKey) {
+      mod |= Keys.Meta // correct Win/Command key on KeyboardEvent (not MouseEvent) only on all browsers
+    }
+    return mod
+  }
+
   onKeydown = (evt: KeyboardEvent) => {
     if (this.shouldIgnoreKB(evt)) {
       return
     }
 
-    this.listeners.onKeyPress?.(evt.code)
+    const mod = this.getModifiers(evt)
+    this.listeners.onKeyPress?.(evt.code, mod)
   }
 
   onKeyup = (evt: KeyboardEvent) => {
-    this.listeners.onKeyRelease?.(evt.code)
+    const mod = this.getModifiers(evt)
+    this.listeners.onKeyRelease?.(evt.code, mod)
   }
 }

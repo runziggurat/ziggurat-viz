@@ -1,6 +1,6 @@
 import { initShadersGl } from './shaders'
 import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z } from './core'
-import { Events } from './events'
+import { Events, Keys } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { Action } from './core'
@@ -128,10 +128,10 @@ export class CApp {
 
   private isContinuousAction(action: Action) {
     switch (action) {
-      case Action.ArrowUp:
-      case Action.ArrowDown:
-      case Action.ArrowLeft:
-      case Action.ArrowRight:
+      case Action.MoveUp:
+      case Action.MoveDown:
+      case Action.MoveLeft:
+      case Action.MoveRight:
       case Action.ZoomIn:
       case Action.ZoomOut:
         return true
@@ -198,19 +198,23 @@ export class CApp {
     )
   }
 
-  public handleKeyPress = (key: string) => {
+  public handleKeyPress = (key: string, mod: Keys) => {
+    if (mod !== Keys.None) {
+      // ignore keypresses with modifiers
+      return
+    }
     switch (key) {
       case 'ArrowUp':
-        this.onActionStart(Action.ArrowUp)
+        this.onActionStart(Action.MoveUp)
         break
       case 'ArrowDown':
-        this.onActionStart(Action.ArrowDown)
+        this.onActionStart(Action.MoveDown)
         break
       case 'ArrowLeft':
-        this.onActionStart(Action.ArrowLeft)
+        this.onActionStart(Action.MoveLeft)
         break
       case 'ArrowRight':
-        this.onActionStart(Action.ArrowRight)
+        this.onActionStart(Action.MoveRight)
         break
       case 'KeyC':
         this.onActionStart(Action.ToggleColorMode)
@@ -244,16 +248,16 @@ export class CApp {
   public handleKeyRelease = (key: string) => {
     switch (key) {
       case 'ArrowUp':
-        this.onActionEnd(Action.ArrowUp)
+        this.onActionEnd(Action.MoveUp)
         break
       case 'ArrowDown':
-        this.onActionEnd(Action.ArrowDown)
+        this.onActionEnd(Action.MoveDown)
         break
       case 'ArrowLeft':
-        this.onActionEnd(Action.ArrowLeft)
+        this.onActionEnd(Action.MoveLeft)
         break
       case 'ArrowRight':
-        this.onActionEnd(Action.ArrowRight)
+        this.onActionEnd(Action.MoveRight)
         break
       case 'KeyI':
         this.onActionEnd(Action.ZoomIn)
@@ -307,19 +311,19 @@ export class CApp {
     for (let { action, start } of this.activeActions) {
       const norm = 1 - normalize(Math.log(Date.now() - start), 5, 12)
       switch (action) {
-        case Action.ArrowLeft: {
+        case Action.MoveLeft: {
           this.handleDrag(x * norm, 0)
           break
         }
-        case Action.ArrowRight: {
+        case Action.MoveRight: {
           this.handleDrag(-x * norm, 0)
           break
         }
-        case Action.ArrowDown: {
+        case Action.MoveDown: {
           this.handleDrag(0, -y * norm)
           break
         }
-        case Action.ArrowUp: {
+        case Action.MoveUp: {
           this.handleDrag(0, y * norm)
           break
         }
