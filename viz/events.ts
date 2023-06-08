@@ -1,5 +1,7 @@
+import { LONG_PRESS_TIME } from './core'
+
 interface Opts {
-  onClick?: (x: number, y: number) => void
+  onClick?: (x: number, y: number, radius: number) => void
   onKeyPress?: (key: string) => void
   onKeyRelease?: (key: string) => void
   onSlide?: (x: number, y: number, dx: number, dy: number) => void
@@ -41,7 +43,6 @@ export class Events {
     window.addEventListener('touchmove', this.onTouchMove, { passive: false })
     window.addEventListener('mouseup', this.onMouseUp)
     window.addEventListener('touchend', this.onTouchEnd)
-    window.addEventListener('click', this.onClick)
     window.addEventListener('resize', this.onResize)
     window.addEventListener('wheel', this.onWheel, { passive: false })
     window.addEventListener('keydown', this.onKeydown)
@@ -57,7 +58,6 @@ export class Events {
     window.removeEventListener('touchmove', this.onTouchMove)
     window.removeEventListener('mouseup', this.onMouseUp)
     window.removeEventListener('touchend', this.onTouchEnd)
-    window.removeEventListener('click', this.onClick)
     window.removeEventListener('resize', this.onResize)
     window.removeEventListener('wheel', this.onWheel)
     window.removeEventListener('keydown', this.onKeydown)
@@ -89,7 +89,7 @@ export class Events {
     return false
   }
 
-  private shouldIgnorePointer = (evt: MouseEvent | TouchEvent) => {
+  private isOutsideTarget = (evt: MouseEvent | TouchEvent) => {
     const target = evt.target instanceof HTMLElement ? evt.target : undefined
     if (target && this.element && target !== this.element) {
       return true
@@ -97,18 +97,16 @@ export class Events {
     return false
   }
 
-  private isDragging = false
+  private isLongPress = () => {
+    if (this.currentClickStart > 0 && Date.now() - this.currentClickStart > LONG_PRESS_TIME) {
+      return true
+    }
+    return false
+  }
+
+  private currentClickStart = 0
   private currentTouches: Touch[] = []
   private prevTouchDiff = 0
-
-  private onClick = (evt: MouseEvent) => {
-    if (this.shouldIgnorePointer(evt)) {
-      return
-    }
-
-    const { x, y } = this.getPosition(evt)
-    this.listeners.onClick?.(x, y)
-  }
 
   private onTouchStart = (evt: TouchEvent) => {
     Array.from(evt.changedTouches).forEach(touch => {
@@ -123,10 +121,10 @@ export class Events {
       // not left click
       return
     }
-    if (this.shouldIgnorePointer(evt)) {
+    if (this.isOutsideTarget(evt)) {
       return
     }
-    this.isDragging = true
+    this.currentClickStart = Date.now()
   }
 
   private onMouseUp = (evt: MouseEvent) => {
@@ -134,16 +132,26 @@ export class Events {
       // not left click
       return
     }
-    this.isDragging = false
+    if (!this.isLongPress() && !this.isOutsideTarget(evt)) {
+      const { x, y } = this.getPosition(evt)
+      this.listeners.onClick?.(x, y, 1)
+    }
+    this.currentClickStart = 0
   }
 
   private onTouchEnd = (evt: TouchEvent) => {
+    if (!this.isOutsideTarget(evt)) {
+      const touch = evt.changedTouches[0]
+      const { x, y } = this.getPosition(touch)
+      const radius = Math.min(touch.radiusX, touch.radiusY)
+      this.listeners.onClick?.(x, y, radius)
+    }
     this.currentTouches = []
     this.prevTouchDiff = 0
   }
 
   private onMouseMove = (evt: MouseEvent) => {
-    if (!this.isDragging) {
+    if (!this.currentClickStart) {
       return
     }
 
@@ -168,7 +176,7 @@ export class Events {
       this.prevTouchDiff = currDiff
     } else {
       // slide
-      if (this.shouldIgnorePointer(evt)) {
+      if (this.isOutsideTarget(evt)) {
         return
       }
       const touch = evt.changedTouches[0]

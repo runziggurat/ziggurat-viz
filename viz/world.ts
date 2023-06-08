@@ -393,10 +393,6 @@ export class CWorld {
     if (currNode) {
       this.setNodeInfo(currNode)
     } else {
-      // TODO Revisit.
-      // // if we're in a press, rather than a tap (shorter than 400 ms),
-      // // and originally clicked on empty space: we are done, so do nothing
-      // if (this.inDrag) return
       const overlayRight = document.getElementById('overlayRight')
       if (overlayRight) {
         overlayRight.style.visibility = 'hidden'

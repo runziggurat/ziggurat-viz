@@ -3,6 +3,7 @@ export const WORLD_HEIGHT: number = 1800
 export const CAMERA_INITIAL_Z: number = 1800
 export const CAMERA_MAX_Z: number = 3456
 export const CAMERA_MIN_Z: number = 23.5
+export const LONG_PRESS_TIME: number = 320
 
 export enum EShader {
   Icosa = 0,

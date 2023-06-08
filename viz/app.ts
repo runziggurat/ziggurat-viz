@@ -81,7 +81,7 @@ export class CApp {
       let delta = now - this.lastTime
       this.lastTime = now
       let fps = (1000 * 15) / delta
-      if (this.world) this.world.fpsNode.nodeValue = fps.toFixed(6)
+      if (this.world) this.world.fpsNode.nodeValue = fps.toFixed(2)
     }
   }
 
