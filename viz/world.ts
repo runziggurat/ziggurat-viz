@@ -152,13 +152,14 @@ export class CWorld {
     }
     n = 0
     if (this.selectedSuperNode && this.selectedSuperNode.isOpenedSuper) {
-      for (let node of this.selectedSuperNode.subNodes) {
-        this.mainSingleGroup.transformData?.set(
-          node.getCurrentColor(this.colorMode),
-          n
-        )
-        n += NODE_TRANSFORM_SIZE
-      }
+      // TODO fix Uncaught RangeError: offset is out of bounds at Float32Array.set(<anonymous>)
+      // for (let node of this.selectedSuperNode.subNodes) {
+      //   this.mainSingleGroup.transformData?.set(
+      //     node.getCurrentColor(this.colorMode),
+      //     n
+      //   )
+      //   n += NODE_TRANSFORM_SIZE
+      // }
     }
   }
 
@@ -247,53 +248,41 @@ export class CWorld {
     this.updatePickerData()
   }
 
-  private updateSuperNode(node: CNode | null) {
-    // first, restore supernode to default state if opened
-    if (!node) {
-      if (this.selectedSuperNode && this.selectedSuperNode !== node) {
-        if (this.selectedSuperNode.isOpenedSuper) {
-          this.selectedSuperNode.isOpenedSuper = false
-          this.selectedSuperNode.position[2] -= BEHIND_CAMERA_DISTANCE
-        }
-        this.selectedSuperNode = null
-      }
-      return
-    }
-
-    if (node.nodeType != ENodeType.Super) {
-      return
-    }
-
-    if (this.selectedSuperNode) {
-      if (this.selectedSuperNode !== node) {
-        if (this.selectedSuperNode.isOpenedSuper) {
-          this.selectedSuperNode.isOpenedSuper = false
-          this.selectedSuperNode.position[2] -= BEHIND_CAMERA_DISTANCE
-        }
-        this.selectedSuperNode = null
-      }
-      if (node == this.selectedSuperNode) {
-        if (!node.isOpenedSuper) {
-          // open up the super node
-          node.isOpenedSuper = true
-          this.selectedSuperNode.position[2] += BEHIND_CAMERA_DISTANCE
-          this.updateNodeColors()
-          let n = 0
-          for (let subnode of node.subNodes) {
-            let td = this.mainSubGroup.transformData
-            td?.set(subnode.getCurrentColor(this.colorMode), n)
-            td?.set(subnode.metadata, n + 4)
-            td?.set(subnode.idColor, n + 8)
-            td?.set(subnode.matWorld, n + 12)
-            n += NODE_TRANSFORM_SIZE
-          }
-        }
-      } else {
-        this.selectedSuperNode = node
+  private maybeOpenSuperNode(node: CNode | null) {
+    if (
+      this.selectedSuperNode &&
+      this.selectedSuperNode !== node &&
+      node?.superNode !== this.selectedSuperNode
+    ) {
+      // close the previously opened super node
+      if (this.selectedSuperNode.isOpenedSuper) {
         this.selectedSuperNode.isOpenedSuper = false
+        this.selectedSuperNode.position[2] -= BEHIND_CAMERA_DISTANCE
       }
-    } else {
+      this.selectedSuperNode = null
+    }
+
+    if (!node || node.nodeType !== ENodeType.Super) {
+      return
+    }
+
+    if (!this.selectedSuperNode || node.isOpenedSuper) {
       this.selectedSuperNode = node
+      return
+    }
+
+    // open up the super node
+    node.isOpenedSuper = true
+    this.selectedSuperNode.position[2] += BEHIND_CAMERA_DISTANCE
+    this.updateNodeColors()
+    let n = 0
+    for (let subnode of node.subNodes) {
+      let td = this.mainSubGroup.transformData
+      td?.set(subnode.getCurrentColor(this.colorMode), n)
+      td?.set(subnode.metadata, n + 4)
+      td?.set(subnode.idColor, n + 8)
+      td?.set(subnode.matWorld, n + 12)
+      n += NODE_TRANSFORM_SIZE
     }
   }
 
@@ -407,6 +396,8 @@ export class CWorld {
     ] as const
 
     let currNode = this.getNode(this.renderPicker(...screenCoords))
+    this.maybeOpenSuperNode(currNode)
+
     if (currNode === this.selectedNode) return
     if (this.selectedNode) {
       this.deselectNode(this.selectedNode)
@@ -418,7 +409,6 @@ export class CWorld {
       this.drawConnections = false
     }
 
-    this.updateSuperNode(currNode)
     if (this.isTiny) this.setGlobalsConnectionData()
   }
 
