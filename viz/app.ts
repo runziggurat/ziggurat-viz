@@ -1,11 +1,12 @@
 import { initShadersGl } from './shaders'
-import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z } from './core'
+import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z, FPS_ID, TIME_ID, GRADIENT_INFO_ID, KEYMAPS_INFO_ID, STATS_INFO_ID } from './core'
 import { Events, Keys } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { Action } from './core'
 import { NAVBAR_HEIGHT } from '../utils/constants'
 import { bound, normalize } from '../utils/helpers'
+import { element } from '../utils/dom'
 
 const APP_VERSION = '0.1.10'
 
@@ -75,13 +76,16 @@ export class CApp {
   }
 
   private updateFps() {
+    if (!this.world?.displayStats) {
+      return
+    }
     this.iter++
     if (this.iter % 15 == 0) {
       let now = Date.now()
       let delta = now - this.lastTime
       this.lastTime = now
       let fps = (1000 * 15) / delta
-      if (this.world) this.world.fpsNode.nodeValue = fps.toFixed(2)
+      element(FPS_ID).setText(fps.toFixed(2))
     }
   }
 
@@ -110,12 +114,12 @@ export class CApp {
     this.maybeSetColor()
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
     if (this.world) {
-      this.world.timeNode.nodeValue = (
-        Date.now() / 1000 -
-        this.startTime
-      ).toFixed(2)
       this.update()
       this.world.renderGl()
+    }
+    if (this.world?.displayStats) {
+      const time = (Date.now() / 1000 - this.startTime).toFixed(2)
+      element(TIME_ID).setText(time)
     }
   }
 
@@ -148,33 +152,23 @@ export class CApp {
       return
     }
     switch (action) {
-      case Action.ToggleConnection: {
-        this.world.connectionMode = !this.world.connectionMode
+      case Action.ToggleAllConnections: {
+        this.world.displayAllConnections = !this.world.displayAllConnections
         break
       }
-      case Action.ToggleCommand: {
-        this.world.displayCommand = !this.world.displayCommand
-        let el = document.getElementById('instructions')
-        if (el) {
-          el.style.visibility = this.world.displayCommand ? 'visible' : 'hidden'
-        }
+      case Action.ToggleKeymaps: {
+        this.world.displayKeymaps = !this.world.displayKeymaps
+        element(KEYMAPS_INFO_ID).setStyle('visibility', this.world.displayKeymaps ? 'visible' : 'hidden')
         break
       }
-      case Action.ToggleFps: {
-        this.world.displayFps = !this.world.displayFps
-        let el2 = document.getElementById('overlayLeft')
-        if (el2) {
-          el2.style.visibility = this.world.displayFps ? 'visible' : 'hidden'
-        }
+      case Action.ToggleStats: {
+        this.world.displayStats = !this.world.displayStats
+        element(STATS_INFO_ID).setStyle('visibility', this.world.displayStats ? 'visible' : 'hidden')
         break
       }
       case Action.ToggleGradient: {
         this.world.displayGradient = !this.world.displayGradient
-        let el = document.getElementById('gradient')
-        if (el)
-          el.style.visibility = this.world.displayGradient
-            ? 'visible'
-            : 'hidden'
+        element(GRADIENT_INFO_ID).setStyle('visibility', this.world.displayGradient ? 'visible' : 'hidden')
         break
       }
       case Action.ToggleHistogram: {
@@ -226,13 +220,13 @@ export class CApp {
         this.onActionStart(Action.ToggleHistogram)
         break
       case 'KeyN':
-        this.onActionStart(Action.ToggleConnection)
+        this.onActionStart(Action.ToggleAllConnections)
         break
       case 'KeyX':
-        this.onActionStart(Action.ToggleCommand)
+        this.onActionStart(Action.ToggleKeymaps)
         break
       case 'KeyF':
-        this.onActionStart(Action.ToggleFps)
+        this.onActionStart(Action.ToggleStats)
         break
       case 'KeyI':
         this.onActionStart(Action.ZoomIn)

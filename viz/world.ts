@@ -5,9 +5,22 @@ import {
   EColorMode,
   ENodeType,
   IGeolocation,
+  NODE_INFO_ID,
+  GRADIENT_INFO_ID,
+  COLOR_MODE_ID,
+  IP_ID,
+  NETWORK_TYPE_ID,
+  BETWEENNESS_ID,
+  CLOSENESS_ID,
+  CONNECTIONS_ID,
+  LATITUDE_ID,
+  LONGITUDE_ID,
+  CITY_ID,
+  COUNTRY_ID,
+  NUM_SUBNODES_ID,
 } from './core'
 import { CNode } from './node'
-import { vec2, vec3, vec4 } from 'gl-matrix'
+import { vec3, vec4 } from 'gl-matrix'
 import { icosaGeometry } from './geomicosa'
 import { gradientGeometry } from './geomgradient'
 import { histogramGeometry } from './geomhistogram'
@@ -20,6 +33,7 @@ import { initWorldMap } from './worldmap'
 import { glShaders } from './shaders'
 import { createRandomTexture, loadTexture } from './util'
 import { getHistogramTexture } from './histogram'
+import { element } from '../utils/dom'
 
 const NODE_TRANSFORM_SIZE: number = 28
 const CONNECTION_TRANSFORM_SIZE: number = 12
@@ -82,7 +96,7 @@ export class CWorld {
   public pickerNoiseTextureLoc: WebGLUniformLocation | null = null
   private startTime: number = Date.now()
   private params: vec4 = vec4.create()
-  private selectedId: number = -1
+  private selectedNode: CNode | null = null
   private white: vec4 = vec4.fromValues(1, 1, 1, 1)
   private maxConnections: number = 0
   private numConnections: number = 0
@@ -90,9 +104,9 @@ export class CWorld {
   private maxSubnodes: number = 0
   private drawConnections: boolean = false
   private numConnectionsToDraw: number = 0
-  public connectionMode: boolean = false
-  public displayCommand: boolean = true
-  public displayFps: boolean = true
+  public displayAllConnections: boolean = false
+  public displayKeymaps: boolean = true
+  public displayStats: boolean = true
   public displayGradient: boolean = true
   public displayHistogram: boolean = false
   private minBetweenness: number = 100
@@ -102,25 +116,7 @@ export class CWorld {
   public colorMode: EColorMode = EColorMode.Degree
   private canvas: HTMLCanvasElement
   private camera: PCamera
-  private betweennessDescription: string = ''
-  private closenessDescription: string = ''
-  private degreeDescription: string = ''
 
-  public timeNode: Text = document.createTextNode('')
-  public fpsNode: Text = document.createTextNode('')
-  public ipNode: Text = document.createTextNode('')
-  public networkTypeNode: Text = document.createTextNode('')
-  public betweennessNode: Text = document.createTextNode('')
-  public closenessNode: Text = document.createTextNode('')
-  public connectionsNode: Text = document.createTextNode('')
-  public latitudeNode: Text = document.createTextNode('')
-  public longitudeNode: Text = document.createTextNode('')
-  public cityNode: Text = document.createTextNode('')
-  public countryNode: Text = document.createTextNode('')
-  public subnodeIndexNode: Text = document.createTextNode('')
-  public numSubnodesNode: Text = document.createTextNode('')
-  public colorModeNode: Text = document.createTextNode('')
-  public gradientNode: Text = document.createTextNode('')
   public initialized: boolean = false
   public isTiny: boolean = false
 
@@ -128,26 +124,7 @@ export class CWorld {
     this.updateColorDisplay()
     this.updateNodeColors()
 
-    // Add those text nodes where they need to go
-    document.querySelector('#time')?.appendChild(this.timeNode)
-    document.querySelector('#fps')?.appendChild(this.fpsNode)
-    document.querySelector('#ip')?.appendChild(this.ipNode)
-    document.querySelector('#networktype')?.appendChild(this.networkTypeNode)
-    document.querySelector('#betweenness')?.appendChild(this.betweennessNode)
-    document.querySelector('#closeness')?.appendChild(this.closenessNode)
-    document.querySelector('#connections')?.appendChild(this.connectionsNode)
-    document.querySelector('#latitude')?.appendChild(this.latitudeNode)
-    document.querySelector('#longitude')?.appendChild(this.longitudeNode)
-    document.querySelector('#subnode')?.appendChild(this.subnodeIndexNode)
-    document.querySelector('#numsubnodes')?.appendChild(this.numSubnodesNode)
-    document.querySelector('#city')?.appendChild(this.cityNode)
-    document.querySelector('#country')?.appendChild(this.countryNode)
-    document.querySelector('#colormode')?.appendChild(this.colorModeNode)
-    document.querySelector('#gradient')?.appendChild(this.gradientNode)
-    const overlayRight = document.getElementById('overlayRight')
-    if (overlayRight) {
-      overlayRight.style.visibility = 'hidden'
-    }
+    element(NODE_INFO_ID).setStyle('visibility', 'hidden')
   }
 
   public constructor(
@@ -185,29 +162,50 @@ export class CWorld {
     }
   }
 
+  private formatGradientText(
+    name: string,
+    min: number | string,
+    max: number | string
+  ) {
+    return 'MIN: ' + min + ` ------- ${name.toUpperCase()} ------ MAX: ` + max
+  }
+
   public updateColorDisplay() {
-    const gradient = document.getElementById('gradient')
-    if (!gradient) {
-      return
-    }
+    let gradientText = ''
+    let colorModeText = ''
     switch (this.colorMode) {
       case EColorMode.Between:
-        this.colorModeNode.nodeValue = 'betweenness'
+        colorModeText = 'betweenness'
+        gradientText = this.formatGradientText(
+          'betweenness',
+          this.minBetweenness.toFixed(4),
+          this.maxBetweenness.toFixed(4)
+        )
         this.currentHistogramTexture = this.histogramBTexture
-        gradient.textContent = this.betweennessDescription
         break
       case EColorMode.Close:
-        this.colorModeNode.nodeValue = 'closeness'
+        colorModeText = 'closeness'
+        gradientText = this.formatGradientText(
+          'closeness',
+          this.minCloseness.toFixed(4),
+          this.maxCloseness.toFixed(4)
+        )
         this.currentHistogramTexture = this.histogramCTexture
-        gradient.textContent = this.closenessDescription
         break
       case EColorMode.Degree:
-        this.colorModeNode.nodeValue = 'degree'
+        colorModeText = 'degree'
+        gradientText = this.formatGradientText(
+          'degree',
+          this.minConnections,
+          this.maxConnections
+        )
         this.currentHistogramTexture = this.histogramDTexture
-        gradient.textContent = this.degreeDescription
         break
     }
-    gradient.style.visibility = this.displayGradient ? 'visible' : 'hidden'
+    element(GRADIENT_INFO_ID)
+      .setStyle('visibility', this.displayGradient ? 'visible' : 'hidden')
+      .setText(gradientText)
+    element(COLOR_MODE_ID).setText(colorModeText)
   }
 
   public cycleColorMode() {
@@ -219,11 +217,11 @@ export class CWorld {
     this.updateNodeColors()
   }
 
-  public getNode(id: number): CNode {
+  public getNode(id: number): CNode | null {
     if (id < this.istate.nodes.length) {
-      return this.nodes[id]
+      return this.nodes[id] || null
     } else {
-      return this.superNodes[id - this.istate.nodes.length]
+      return this.superNodes[id - this.istate.nodes.length] || null
     }
   }
 
@@ -249,11 +247,10 @@ export class CWorld {
     this.updatePickerData()
   }
 
-  private updateSuperStatus(id: number) {
+  private updateSuperNode(node: CNode | null) {
     // first, restore supernode to default state if opened
-    let node = this.getNode(id)
     if (!node) {
-      if (this.selectedSuperNode && this.selectedSuperNode.id != id) {
+      if (this.selectedSuperNode && this.selectedSuperNode !== node) {
         if (this.selectedSuperNode.isOpenedSuper) {
           this.selectedSuperNode.isOpenedSuper = false
           this.selectedSuperNode.position[2] -= BEHIND_CAMERA_DISTANCE
@@ -268,7 +265,7 @@ export class CWorld {
     }
 
     if (this.selectedSuperNode) {
-      if (this.selectedSuperNode.id != id) {
+      if (this.selectedSuperNode !== node) {
         if (this.selectedSuperNode.isOpenedSuper) {
           this.selectedSuperNode.isOpenedSuper = false
           this.selectedSuperNode.position[2] -= BEHIND_CAMERA_DISTANCE
@@ -301,36 +298,57 @@ export class CWorld {
   }
 
   private setNodeInfo(node: CNode) {
-    const overlayRight = document.getElementById('overlayRight')
-    this.ipNode.nodeValue =
+    let ip =
       node.nodeType != ENodeType.Super
         ? 'IP: ' + node.inode.addr
         : `Super Node: ${node.subNodes.length} nodes`
-    this.networkTypeNode.nodeValue = node.inode.network_type
-    this.betweennessNode.nodeValue =
+    element(IP_ID).setText(ip)
+
+    element(NETWORK_TYPE_ID).setText(node.inode.network_type)
+
+    let betweenness =
       node.nodeType != ENodeType.Super
         ? node.inode.betweenness.toFixed(6)
         : '--'
-    this.closenessNode.nodeValue =
+    element(BETWEENNESS_ID).setText(betweenness)
+
+    let closeness =
       node.nodeType != ENodeType.Super ? node.inode.closeness.toFixed(6) : '--'
-    this.connectionsNode.nodeValue =
+    element(CLOSENESS_ID).setText(closeness)
+
+    let connections =
       node.nodeType != ENodeType.Super ? node.numConnections.toString() : '--'
-    this.latitudeNode.nodeValue =
-      node.inode.geolocation.coordinates.latitude.toFixed(4)
-    this.longitudeNode.nodeValue =
-      node.inode.geolocation.coordinates.longitude.toFixed(4)
-    this.cityNode.nodeValue = node.inode.geolocation.city
-    this.countryNode.nodeValue = node.inode.geolocation.country
-    this.subnodeIndexNode.nodeValue =
+    element(CONNECTIONS_ID).setText(connections)
+
+    let latitude = node.inode.geolocation.coordinates.latitude.toFixed(4)
+    element(LATITUDE_ID).setText(latitude)
+
+    let longitude = node.inode.geolocation.coordinates.longitude.toFixed(4)
+    element(LONGITUDE_ID).setText(longitude)
+
+    let city = node.inode.geolocation.city
+    element(CITY_ID).setText(city)
+
+    let country = node.inode.geolocation.country
+    element(COUNTRY_ID).setText(country)
+
+    let subnode =
       node.inode.num_subnodes <= 1 ? '--' : node.inode.subnode_index.toString()
-    this.numSubnodesNode.nodeValue =
+    element(subnode).setText(subnode)
+
+    let numSubnodes =
       node.inode.num_subnodes <= 1 ? '--' : node.inode.num_subnodes.toString()
-    if (overlayRight) {
-      overlayRight.style.visibility = 'visible'
-    }
+    element(NUM_SUBNODES_ID).setText(numSubnodes)
+
+    element(NODE_INFO_ID).setStyle('visibility', 'visible')
   }
 
   private deselectNode(node: CNode) {
+    if (this.selectedNode == node) {
+      element(NODE_INFO_ID).setStyle('visibility', 'hidden')
+      this.selectedNode = null
+    }
+
     if (node.nodeType == ENodeType.Single) {
       this.mainSingleGroup.transformData?.set(
         this.singleNodes[node.index].getCurrentColor(this.colorMode),
@@ -356,6 +374,9 @@ export class CWorld {
   }
 
   private selectNode(node: CNode) {
+    this.selectedNode = node
+    this.setNodeInfo(node)
+
     if (node.nodeType == ENodeType.Single) {
       this.mainSingleGroup.transformData?.set(
         this.white,
@@ -372,6 +393,7 @@ export class CWorld {
         node.index * NODE_TRANSFORM_SIZE
       )
     }
+
     if (!this.isTiny) {
       this.numConnectionsToDraw = this.setConnectionData(node)
       this.drawConnections = this.numConnectionsToDraw > 0
@@ -379,40 +401,24 @@ export class CWorld {
   }
 
   public handleClick(x: number, y: number) {
-    let screenCoords: vec2 = vec2.fromValues(
+    let screenCoords = [
       x / this.canvas.width,
-      1 - y / (this.canvas.height)
-    )
+      1 - y / this.canvas.height,
+    ] as const
 
-    this.picker.preRender(screenCoords[0], screenCoords[1])
-    this.renderPicker()
-    let id = this.picker.postRender()
-    let currNode = this.getNode(id)
-    if (!currNode) id = -1
-
-    if (currNode) {
-      this.setNodeInfo(currNode)
-    } else {
-      const overlayRight = document.getElementById('overlayRight')
-      if (overlayRight) {
-        overlayRight.style.visibility = 'hidden'
-      }
-    }
-    this.updateSuperStatus(id)
-
-    if (id == this.selectedId) return
-
-    let prevNode = this.getNode(this.selectedId)
-    if (prevNode) {
-      this.deselectNode(prevNode)
+    let currNode = this.getNode(this.renderPicker(...screenCoords))
+    if (currNode === this.selectedNode) return
+    if (this.selectedNode) {
+      this.deselectNode(this.selectedNode)
     }
 
     if (currNode) {
       this.selectNode(currNode)
-    } else {
-      if (!this.isTiny) this.drawConnections = false
+    } else if (!this.isTiny) {
+      this.drawConnections = false
     }
-    this.selectedId = id
+
+    this.updateSuperNode(currNode)
     if (this.isTiny) this.setGlobalsConnectionData()
   }
 
@@ -538,7 +544,7 @@ export class CWorld {
         // draw connection only in one direction: if A < B
         if (i < index) {
           let selectedConnection =
-            index == this.selectedId || i == this.selectedId
+            index == this.selectedNode?.id || i == this.selectedNode?.id
           let connection: CNode = this.nodes[index]
           if (connection.inode.ignore) continue
           this.connectionData.set(
@@ -1070,24 +1076,6 @@ export class CWorld {
     }
   }
 
-  private setDescriptions() {
-    this.betweennessDescription =
-      'MIN: ' +
-      this.minBetweenness.toFixed(6) +
-      ' ---- BETWEENNESS ---- MAX: ' +
-      this.maxBetweenness.toFixed(6)
-    this.closenessDescription =
-      'MIN: ' +
-      this.minCloseness.toFixed(4) +
-      ' ----- CLOSENESS ----- MAX: ' +
-      this.maxCloseness.toFixed(4)
-    this.degreeDescription =
-      'MIN: ' +
-      this.minConnections +
-      ' ------- DEGREE ------ MAX: ' +
-      this.maxConnections
-  }
-
   private createGeoString(geolocation: IGeolocation): string {
     const DEGREE_RESOLUTION: number = 1.0 / 1.0
 
@@ -1150,7 +1138,6 @@ export class CWorld {
   }
 
   public async initialize() {
-    let gl = this.gl
     let id = 0
     this.assignSubNodes(this.istate.nodes)
     this.isTiny = this.istate.nodes.length < TINY_GRAPH_NODES
@@ -1261,7 +1248,6 @@ export class CWorld {
         MIN_SUPERNODE_SCALE
     }
 
-    this.setDescriptions()
     this.updateColorDisplay()
     this.setAuxColors()
     await this.initTexturesGl()
@@ -1358,7 +1344,7 @@ export class CWorld {
     let elapsed = this.startTime - Date.now()
     this.params[0] = elapsed / 1000.0
     this.renderWorldMap()
-    if ((this.drawConnections || this.isTiny) && this.connectionMode) {
+    if ((this.drawConnections || this.isTiny) && this.displayAllConnections) {
       this.renderConnections()
     }
     this.renderNodes()
@@ -1370,7 +1356,8 @@ export class CWorld {
     }
   }
 
-  public renderPicker() {
+  public renderPicker(x: number, y: number) {
+    this.picker.preRender(x, y)
     let gl = this.gl
     gl.useProgram(glShaders[EShader.Picker])
     gl.uniformMatrix4fv(this.pickerVPLoc, false, this.camera.matViewProjection)
@@ -1393,5 +1380,7 @@ export class CWorld {
 
     gl.bindVertexArray(this.pickerSuperGroup.vao)
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, this.superNodes.length)
+
+    return this.picker.postRender()
   }
 }
