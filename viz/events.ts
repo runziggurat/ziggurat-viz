@@ -44,7 +44,7 @@ export class Events {
     this.element = element
   }
 
-  public create = () => {
+  public initialize = () => {
     window.addEventListener('mousedown', this.onMouseDown)
     window.addEventListener('touchstart', this.onTouchStart)
     window.addEventListener('mousemove', this.onMouseMove)
@@ -55,8 +55,6 @@ export class Events {
     window.addEventListener('wheel', this.onWheel, { passive: false })
     window.addEventListener('keydown', this.onKeydown)
     window.addEventListener('keyup', this.onKeyup)
-
-    return this
   }
 
   public destroy = () => {

@@ -18,14 +18,16 @@ import {
   CITY_ID,
   COUNTRY_ID,
   NUM_SUBNODES_ID,
+  KEYMAPS_INFO_ID,
+  STATS_INFO_ID,
 } from './core'
 import { CNode } from './node'
 import { vec3, vec4 } from 'gl-matrix'
-import { icosaGeometry } from './geomicosa'
-import { gradientGeometry } from './geomgradient'
-import { histogramGeometry } from './geomhistogram'
-import { cubeGeometry } from './geomcube'
-import { lineGeometry } from './geomline'
+import { icosaGeometry } from './geo-icosa'
+import { gradientGeometry } from './geo-gradient'
+import { histogramGeometry } from './geo-histogram'
+import { cubeGeometry } from './geo-cube'
+import { lineGeometry } from './geo-line'
 import { CPicker } from './picker'
 import { CGroup } from './group'
 import { PCamera } from './camera'
@@ -47,7 +49,7 @@ const COLOR_YELLOW: vec4 = vec4.fromValues(0.9, 0.9, 0.0, 1.0)
 const SUBNODE_DISTANCE: number = 2.9
 
 export class CWorld {
-  public istate: IState
+  public state: IState
   public nodes: CNode[] = new Array()
   public singleNodes: CNode[] = new Array()
   public superMap: Map<string, CNode> = new Map()
@@ -104,9 +106,9 @@ export class CWorld {
   private maxSubnodes: number = 0
   private numConnectionsToDraw: number = 0
   private _displayAllConnections: boolean = false
-  public displayKeymaps: boolean = true
-  public displayStats: boolean = true
-  public displayGradient: boolean = true
+  private _displayKeymaps: boolean = true
+  private _displayStats: boolean = true
+  private _displayGradient: boolean = true
   public displayHistogram: boolean = false
   private minBetweenness: number = 100
   private maxBetweenness: number = 0
@@ -129,26 +131,54 @@ export class CWorld {
     this._displayAllConnections = value
     this.updateConnectionsData()
   }
-
-  private initTextNodes() {
-    this.updateColorDisplay()
-    this.updateNodeColors()
-
-    element(NODE_INFO_ID).setStyle('visibility', 'hidden')
+  public get displayKeymaps(): boolean {
+    return this._displayKeymaps
+  }
+  public set displayKeymaps(value: boolean) {
+    this._displayKeymaps = value
+    element(KEYMAPS_INFO_ID).setStyle('visibility', value ? 'visible' : 'hidden')
+  }
+  public get displayGradient(): boolean {
+    return this._displayGradient
+  }
+  public set displayGradient(value: boolean) {
+    this._displayGradient = value
+    element(GRADIENT_INFO_ID).setStyle('visibility', value ? 'visible' : 'hidden')
+  }
+  public get displayStats(): boolean {
+    return this._displayStats
+  }
+  public set displayStats(value: boolean) {
+    this._displayStats = value
+    element(STATS_INFO_ID).setStyle('visibility', value ? 'visible' : 'hidden')
   }
 
+
   public constructor(
-    istate: IState,
+    state: IState,
     gl: WebGL2RenderingContext,
     canvas: HTMLCanvasElement,
     camera: PCamera
   ) {
-    this.istate = istate
+    this.state = state
     this.canvas = canvas
     this.camera = camera
     this.gl = gl
     this.picker = new CPicker(gl)
-    this.initTextNodes()
+  }
+
+  public async initialize() {
+    this.initNodes()
+    this.updateNodeColors()
+    this.updateColorDisplay()
+    this.setAuxColors()
+    await this.initTexturesGl()
+    this.initNodesGl()
+    this.initPickerGl()
+    this.initWorldMapGl()
+    this.initConnectionsGl()
+    this.initGradientGl()
+    this.initHistogramGl()
   }
 
   private updateNodeColors() {
@@ -181,7 +211,7 @@ export class CWorld {
     return 'MIN: ' + min + ` ------- ${name.toUpperCase()} ------ MAX: ` + max
   }
 
-  public updateColorDisplay() {
+  private updateColorDisplay() {
     let gradientText = ''
     let colorModeText = ''
     switch (this.colorMode) {
@@ -228,11 +258,11 @@ export class CWorld {
     this.updateNodeColors()
   }
 
-  public getNode(id: number): CNode | null {
-    if (id < this.istate.nodes.length) {
+  private getNode(id: number): CNode | null {
+    if (id < this.state.nodes.length) {
       return this.nodes[id] || null
     } else {
-      return this.superNodes[id - this.istate.nodes.length] || null
+      return this.superNodes[id - this.state.nodes.length] || null
     }
   }
 
@@ -240,15 +270,14 @@ export class CWorld {
     if (!this.mainSingleGroup) {
       return
     }
-    // let now = Date.now();
     for (let node of this.nodes) {
-      if (node.inode.ignore) continue
+      if (node.node.ignore) continue
       node.incRotationY((((2 * Math.PI) / 180) * node.numConnections) / 2400)
       node.updateMatrix()
     }
     for (let node of this.superNodes) {
       node.incRotationY(
-        ((2 * Math.PI) / 180) * (0.36 + node.inode.num_subnodes / 2400)
+        ((2 * Math.PI) / 180) * (0.36 + node.node.num_subnodes / 2400)
       )
       node.updateMatrix()
     }
@@ -299,44 +328,44 @@ export class CWorld {
   private setNodeInfo(node: CNode) {
     let ip =
       node.nodeType != ENodeType.Super
-        ? 'IP: ' + node.inode.addr
+        ? 'IP: ' + node.node.addr
         : `Super Node: ${node.subNodes.length} nodes`
     element(IP_ID).setText(ip)
 
-    element(NETWORK_TYPE_ID).setText(node.inode.network_type)
+    element(NETWORK_TYPE_ID).setText(node.node.network_type)
 
     let betweenness =
       node.nodeType != ENodeType.Super
-        ? node.inode.betweenness.toFixed(6)
+        ? node.node.betweenness.toFixed(6)
         : '--'
     element(BETWEENNESS_ID).setText(betweenness)
 
     let closeness =
-      node.nodeType != ENodeType.Super ? node.inode.closeness.toFixed(6) : '--'
+      node.nodeType != ENodeType.Super ? node.node.closeness.toFixed(6) : '--'
     element(CLOSENESS_ID).setText(closeness)
 
     let connections =
       node.nodeType != ENodeType.Super ? node.numConnections.toString() : '--'
     element(CONNECTIONS_ID).setText(connections)
 
-    let latitude = node.inode.geolocation.coordinates.latitude.toFixed(4)
+    let latitude = node.node.geolocation.coordinates.latitude.toFixed(4)
     element(LATITUDE_ID).setText(latitude)
 
-    let longitude = node.inode.geolocation.coordinates.longitude.toFixed(4)
+    let longitude = node.node.geolocation.coordinates.longitude.toFixed(4)
     element(LONGITUDE_ID).setText(longitude)
 
-    let city = node.inode.geolocation.city
+    let city = node.node.geolocation.city
     element(CITY_ID).setText(city)
 
-    let country = node.inode.geolocation.country
+    let country = node.node.geolocation.country
     element(COUNTRY_ID).setText(country)
 
     let subnode =
-      node.inode.num_subnodes <= 1 ? '--' : node.inode.subnode_index.toString()
+      node.node.num_subnodes <= 1 ? '--' : node.node.subnode_index.toString()
     element(subnode).setText(subnode)
 
     let numSubnodes =
-      node.inode.num_subnodes <= 1 ? '--' : node.inode.num_subnodes.toString()
+      node.node.num_subnodes <= 1 ? '--' : node.node.num_subnodes.toString()
     element(NUM_SUBNODES_ID).setText(numSubnodes)
 
     element(NODE_INFO_ID).setStyle('visibility', 'visible')
@@ -520,9 +549,9 @@ export class CWorld {
     }
     let gl = this.gl
     let n: number = 0
-    for (let index of node.inode.connections) {
+    for (let index of node.node.connections) {
       let connection: CNode = this.nodes[index]
-      if (connection.inode.ignore) continue
+      if (connection.node.ignore) continue
       this.connectionData.set(connection.getCurrentColor(this.colorMode), n)
       this.connectionData.set(node.position, n + 4)
       let delta: vec3 = vec3.create()
@@ -537,19 +566,18 @@ export class CWorld {
     return node.numConnections
   }
 
-
   private setGlobalConnectionsData() {
     let gl = this.gl
     let n = 0
     let i = 0
     for (let node of this.nodes) {
-      for (let index of node.inode.connections) {
+      for (let index of node.node.connections) {
         // draw connection only in one direction: if A < B
         if (i < index) {
           let selectedConnection =
             index == this.selectedNode?.id || i == this.selectedNode?.id
           let connection: CNode = this.nodes[index]
-          if (connection.inode.ignore) continue
+          if (connection.node.ignore) continue
           this.connectionData.set(
             selectedConnection ? COLOR_YELLOW : COLOR_BLACK,
             n
@@ -901,6 +929,7 @@ export class CWorld {
     gl.enableVertexAttribArray(1)
     gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8)
   }
+
   private initHistogramGl() {
     if (!glShaders[EShader.Gradient]) return
     let gl = this.gl
@@ -919,7 +948,7 @@ export class CWorld {
     gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8)
   }
 
-  initConnectionsGl() {
+  private initConnectionsGl() {
     if (!glShaders[EShader.Connection]) return
     let gl = this.gl
     let positionLoc = gl.getAttribLocation(
@@ -990,11 +1019,11 @@ export class CWorld {
     gl.vertexAttribPointer(positionLoc, 3, gl.FLOAT, false, 12, 0)
   }
 
-  public async initTexturesGl() {
+  private async initTexturesGl() {
     let gl = this.gl
     this.noiseTexture = createRandomTexture(gl, 1024, 1)
     let width = gl.getParameter(gl.MAX_TEXTURE_SIZE)
-    let precision = gl.getParameter(gl.DEPTH_BITS)
+    // let precision = gl.getParameter(gl.DEPTH_BITS)
     if (width >= 8192) {
       this.worldMapTexture = await loadTexture(gl, '/world-mono-8k.png')
     } else {
@@ -1003,17 +1032,17 @@ export class CWorld {
     this.gradientTexture = await loadTexture(gl, '/gradient.jpeg')
     this.histogramBTexture = getHistogramTexture(
       gl,
-      this.istate.histograms,
+      this.state.histograms,
       'betweenness'
     )
     this.histogramCTexture = getHistogramTexture(
       gl,
-      this.istate.histograms,
+      this.state.histograms,
       'closeness'
     )
     this.histogramDTexture = getHistogramTexture(
       gl,
-      this.istate.histograms,
+      this.state.histograms,
       'degree'
     )
     this.currentHistogramTexture = this.histogramDTexture
@@ -1064,12 +1093,12 @@ export class CWorld {
   private setAuxColors() {
     for (let node of this.nodes) {
       let b =
-        (node.inode.betweenness - this.minBetweenness) /
+        (node.node.betweenness - this.minBetweenness) /
         (this.maxBetweenness - this.minBetweenness)
       node.betweenColor = this.colorFromNormalizedValue(b)
 
       let c =
-        (node.inode.closeness - this.minCloseness) /
+        (node.node.closeness - this.minCloseness) /
         (this.maxCloseness - this.minCloseness)
       node.closeColor = this.colorFromNormalizedValue(c)
 
@@ -1134,22 +1163,23 @@ export class CWorld {
         nodeMap.set(inode.geostr, group)
       }
     }
-    for (let [key, value] of nodeMap) {
+    for (let [_, value] of nodeMap) {
       for (let inode of value) {
         inode.num_subnodes = value.length
       }
     }
   }
 
-  public async initialize() {
+  private initNodes() {
+    element(NODE_INFO_ID).setStyle('visibility', 'hidden')
     let id = 0
-    this.assignSubNodes(this.istate.nodes)
-    this.isTiny = this.istate.nodes.length < TINY_GRAPH_NODES
+    this.assignSubNodes(this.state.nodes)
+    this.isTiny = this.state.nodes.length < TINY_GRAPH_NODES
     let abstand: number = this.isTiny ? SUBNODE_DISTANCE : 2.0
-    for (let inode of this.istate.nodes) {
-      if (inode.ignore) {
-        let node = new CNode(
-          inode,
+    for (let node of this.state.nodes) {
+      if (node.ignore) {
+        let cNode = new CNode(
+          node,
           id,
           0,
           this.camera,
@@ -1158,18 +1188,18 @@ export class CWorld {
           abstand,
           this.isTiny
         )
-        this.nodes.push(node)
+        this.nodes.push(cNode)
         id++
         continue
       }
       // if we're working with a small graph, we do not create any supernodes or subnodes.
       // All nodes are therefore a single node.
-      if (inode.subnode_index == 0 || this.isTiny) {
-        if (inode.num_subnodes > 1 && !this.isTiny) {
+      if (node.subnode_index == 0 || this.isTiny) {
+        if (node.num_subnodes > 1 && !this.isTiny) {
           // new super node
           let superNode = new CNode(
-            inode,
-            this.istate.nodes.length + this.superNodes.length,
+            node,
+            this.state.nodes.length + this.superNodes.length,
             this.superNodes.length,
             this.camera,
             ENodeType.Super,
@@ -1180,10 +1210,10 @@ export class CWorld {
           // make super nodes magenta
           superNode.degreeColor = COLOR_MAGENTA
 
-          this.superMap.set(inode.geostr, superNode)
+          this.superMap.set(node.geostr, superNode)
           this.superNodes.push(superNode)
-          let node = new CNode(
-            inode,
+          let cNode = new CNode(
+            node,
             id,
             superNode.subNodes.length,
             this.camera,
@@ -1192,12 +1222,12 @@ export class CWorld {
             abstand,
             this.isTiny
           )
-          this.nodes.push(node)
-          superNode.subNodes.push(node)
+          this.nodes.push(cNode)
+          superNode.subNodes.push(cNode)
         } else {
           // new single node
-          let node = new CNode(
-            inode,
+          let cNode = new CNode(
+            node,
             id,
             this.singleNodes.length,
             this.camera,
@@ -1206,18 +1236,18 @@ export class CWorld {
             abstand,
             this.isTiny
           )
-          this.nodes.push(node)
-          this.singleNodes.push(node)
+          this.nodes.push(cNode)
+          this.singleNodes.push(cNode)
         }
       } else {
-        let superNode = this.superMap.get(inode.geostr)
+        let superNode = this.superMap.get(node.geostr)
         if (!superNode) {
           // TODO Does this need to be an error?
-          console.warn('Could not find supernode for geostr ', inode.geostr)
-          console.warn('Could not find supernode for inode ', inode)
+          console.warn('Could not find supernode for geostr ', node.geostr)
+          console.warn('Could not find supernode for inode ', node)
         } else {
-          let node = new CNode(
-            inode,
+          let cNode = new CNode(
+            node,
             id,
             superNode.subNodes.length,
             this.camera,
@@ -1226,8 +1256,8 @@ export class CWorld {
             abstand,
             this.isTiny
           )
-          this.nodes.push(node)
-          superNode.subNodes.push(node)
+          this.nodes.push(cNode)
+          superNode.subNodes.push(cNode)
           if (superNode.subNodes.length > this.maxSubnodes) {
             this.maxSubnodes = superNode.subNodes.length
           }
@@ -1236,7 +1266,7 @@ export class CWorld {
       id++
     }
 
-    for (let inode of this.istate.nodes) {
+    for (let inode of this.state.nodes) {
       this.updateStats(inode)
     }
     // we only draw half the connection (only A->B, not B->A)
@@ -1251,16 +1281,6 @@ export class CWorld {
         (MAX_SUPERNODE_SCALE - MIN_SUPERNODE_SCALE) +
         MIN_SUPERNODE_SCALE
     }
-
-    this.updateColorDisplay()
-    this.setAuxColors()
-    await this.initTexturesGl()
-    this.initNodesGl()
-    this.initPickerGl()
-    this.initWorldMapGl()
-    this.initConnectionsGl()
-    this.initGradientGl()
-    this.initHistogramGl()
   }
 
   private renderWorldMap() {
@@ -1301,7 +1321,7 @@ export class CWorld {
     gl.drawArrays(gl.TRIANGLES, 0, 6)
   }
 
-  renderConnections() {
+  private renderConnections() {
     if (!this.numConnectionsToDraw) {
       return
     }
@@ -1316,7 +1336,7 @@ export class CWorld {
     gl.drawArraysInstanced(gl.LINES, 0, 2, this.numConnectionsToDraw)
   }
 
-  renderNodes() {
+  private renderNodes() {
     let gl = this.gl
     gl.depthMask(true)
     gl.useProgram(glShaders[EShader.Icosa])
@@ -1356,7 +1376,7 @@ export class CWorld {
     }
   }
 
-  public renderPicker(x: number, y: number) {
+  private renderPicker(x: number, y: number) {
     this.picker.preRender(x, y)
     let gl = this.gl
     gl.useProgram(glShaders[EShader.Picker])

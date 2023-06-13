@@ -1,17 +1,16 @@
 import { initShadersGl } from './shaders'
-import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z, FPS_ID, TIME_ID, GRADIENT_INFO_ID, KEYMAPS_INFO_ID, STATS_INFO_ID } from './core'
+import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z, FPS_ID, TIME_ID } from './core'
 import { Events, Keys } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { Action } from './core'
-import { NAVBAR_HEIGHT } from '../utils/constants'
 import { bound, normalize } from '../utils/helpers'
 import { element } from '../utils/dom'
 
 const APP_VERSION = '0.1.10'
 
 export class CApp {
-  private events: Events | null = null
+  private events: Events
   private initialized: boolean = false
   private startTime: number
   private lastTime: number = 0
@@ -19,33 +18,22 @@ export class CApp {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
   private camera: PCamera
-  private world: CWorld | null = null
+  private world: CWorld
 
   private activeActions: { action: Action; start: number }[] = []
   private lastUpdateTime: number
 
-  public constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas
-    this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
-    this.camera = new PCamera(0, 0, CAMERA_INITIAL_Z, this.canvas)
-
+  public constructor(canvas: HTMLCanvasElement, state: IState) {
     console.log('p2p-viz version: ', APP_VERSION)
     let gl = canvas.getContext('webgl2')
     if (!gl) {
       throw new Error('WebGL2 not supported')
     }
+
+    this.canvas = canvas
     this.gl = gl
-
-    this.startTime = Date.now() / 1000
-    this.lastUpdateTime = Date.now()
-  }
-
-  public async create(state: IState) {
-    this.initializeWebGl(this.gl)
+    this.camera = new PCamera(0, 0, CAMERA_INITIAL_Z, this.canvas)
     this.world = new CWorld(state, this.gl, this.canvas, this.camera)
-    await this.world.initialize()
-    this.initialized = true
     this.events = new Events({
       onClick: this.handleClick,
       onResize: this.handleResize,
@@ -54,16 +42,26 @@ export class CApp {
       onZoom: this.handleZoom,
       onSlide: (_x, _y, dx, dy) => this.handleDrag(dx, dy),
       element: this.canvas,
-    }).create()
+    })
 
-    return this
+    this.startTime = Date.now() / 1000
+    this.lastUpdateTime = Date.now()
+  }
+
+  public async initialize() {
+    this.initializeWebGl()
+    await this.world.initialize()
+    this.events.initialize()
+
+    this.initialized = true
   }
 
   public destroy() {
-    this.events?.destroy()
+    this.events.destroy()
   }
 
-  private initializeWebGl(gl: WebGL2RenderingContext) {
+  private initializeWebGl() {
+    let gl = this.gl
     gl.clearColor(1, 1, 1, 1.0)
     gl.clearDepth(1.0)
     gl.clearStencil(0.0)
@@ -76,7 +74,7 @@ export class CApp {
   }
 
   private updateFps() {
-    if (!this.world?.displayStats) {
+    if (!this.world.displayStats) {
       return
     }
     this.iter++
@@ -113,11 +111,9 @@ export class CApp {
     this.updateFps()
     this.maybeSetColor()
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
-    if (this.world) {
-      this.update()
-      this.world.renderGl()
-    }
-    if (this.world?.displayStats) {
+    this.update()
+    this.world.renderGl()
+    if (this.world.displayStats) {
       const time = (Date.now() / 1000 - this.startTime).toFixed(2)
       element(TIME_ID).setText(time)
     }
@@ -145,9 +141,6 @@ export class CApp {
   }
 
   private onActionStart(action: Action) {
-    if (!this.world) {
-      return
-    }
     if (this.activeActions.find(a => a.action === action)) {
       return
     }
@@ -158,17 +151,14 @@ export class CApp {
       }
       case Action.ToggleKeymaps: {
         this.world.displayKeymaps = !this.world.displayKeymaps
-        element(KEYMAPS_INFO_ID).setStyle('visibility', this.world.displayKeymaps ? 'visible' : 'hidden')
         break
       }
       case Action.ToggleStats: {
         this.world.displayStats = !this.world.displayStats
-        element(STATS_INFO_ID).setStyle('visibility', this.world.displayStats ? 'visible' : 'hidden')
         break
       }
       case Action.ToggleGradient: {
         this.world.displayGradient = !this.world.displayGradient
-        element(GRADIENT_INFO_ID).setStyle('visibility', this.world.displayGradient ? 'visible' : 'hidden')
         break
       }
       case Action.ToggleHistogram: {
@@ -263,7 +253,7 @@ export class CApp {
   }
 
   public handleDrag = (dx: number, dy: number) => {
-    this.world?.handleDrag(dx, dy)
+    this.world.handleDrag(dx, dy)
   }
 
   public handleZoom = (x: number, y: number, delta: number) => {
@@ -285,15 +275,15 @@ export class CApp {
   }
 
   public handleClick = (x: number, y: number) => {
-    this.world?.handleClick(x, y)
+    this.world.handleClick(x, y)
   }
 
   public handleResize = () => {
     const bounds = this.canvas.getBoundingClientRect()
     this.canvas.width = this.canvas.getBoundingClientRect().width
     this.canvas.height = this.canvas.getBoundingClientRect().height
-    this.gl?.viewport(0, 0, bounds.width, bounds.height)
-    this.camera?.update()
+    this.gl.viewport(0, 0, bounds.width, bounds.height)
+    this.camera.update()
   }
 
   private updateActions() {
@@ -340,7 +330,7 @@ export class CApp {
   private update() {
     this.updateActions()
     this.camera.update()
-    this.world?.update()
+    this.world.update()
 
     this.lastUpdateTime = Date.now()
   }
