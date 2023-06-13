@@ -54,7 +54,7 @@ const useStyles = createStyles(theme => {
       color: text(theme),
       fontFamily: theme.fontFamilyMonospace,
       fontSize: theme.fontSizes.xs,
-      position: 'absolute',
+      position: "relative",
       bottom: 0,
       display: 'flex',
       width: '100%',
@@ -111,12 +111,15 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
     }
     import('../../viz/app')
       .then(({ CApp }) => {
-        if (!canvasRef.current) {
+        const canvas = canvasRef.current
+        if (!canvas) {
           throw new Error('canvas not found')
         }
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight - NAVBAR_HEIGHT
         if (!appRef.current && data) {
-          appRef.current = new CApp(canvasRef.current)
-          appRef.current.create(data.viz_state).then(() => {
+          appRef.current = new CApp(canvas, data.viz_state)
+          appRef.current.initialize().then(() => {
             setStatus({
               code: StatusCode.Success,
             })
@@ -229,15 +232,15 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
         <div className={classes.overlayBottomLeft} id={KEYMAPS_INFO_ID}>
           <Stack spacing={0}>
             <Title order={6}>Keyboard Commands</Title>
-            <div>arrow keys: move left, right, up, down</div>
+            <div>arrow keys: move left, right, up and down</div>
             <div>i: zoom in</div>
             <div>o: zoom out</div>
             <div>c: cycle color mode</div>
             <div>f: toggle FPS display</div>
             <div>g: toggle gradient display</div>
             <div>h: toggle histogram display</div>
-            <div>n: toggle connections display</div>
-            <div>x: toggle command overlay</div>
+            <div>n: toggle all-connections display</div>
+            <div>x: toggle keymaps display</div>
           </Stack>
         </div>
         <div className={classes.overlayBottomCenter} id={GRADIENT_INFO_ID} />

@@ -102,9 +102,8 @@ export class CWorld {
   private numConnections: number = 0
   private minConnections: number = 10000
   private maxSubnodes: number = 0
-  private drawConnections: boolean = false
   private numConnectionsToDraw: number = 0
-  public displayAllConnections: boolean = false
+  private _displayAllConnections: boolean = false
   public displayKeymaps: boolean = true
   public displayStats: boolean = true
   public displayGradient: boolean = true
@@ -119,6 +118,17 @@ export class CWorld {
 
   public initialized: boolean = false
   public isTiny: boolean = false
+
+  public get displayAllConnections(): boolean {
+    return this._displayAllConnections
+  }
+  public set displayAllConnections(value: boolean) {
+    if (!this.isTiny && value) {
+      return
+    }
+    this._displayAllConnections = value
+    this.updateConnectionsData()
+  }
 
   private initTextNodes() {
     this.updateColorDisplay()
@@ -382,11 +392,6 @@ export class CWorld {
         node.index * NODE_TRANSFORM_SIZE
       )
     }
-
-    if (!this.isTiny) {
-      this.numConnectionsToDraw = this.setConnectionData(node)
-      this.drawConnections = this.numConnectionsToDraw > 0
-    }
   }
 
   public handleClick(x: number, y: number) {
@@ -398,18 +403,15 @@ export class CWorld {
     let currNode = this.getNode(this.renderPicker(...screenCoords))
     this.maybeOpenSuperNode(currNode)
 
-    if (currNode === this.selectedNode) return
-    if (this.selectedNode) {
-      this.deselectNode(this.selectedNode)
+    if (currNode !== this.selectedNode) {
+      if (this.selectedNode) {
+        this.deselectNode(this.selectedNode)
+      }
+      if (currNode) {
+        this.selectNode(currNode)
+      }
     }
-
-    if (currNode) {
-      this.selectNode(currNode)
-    } else if (!this.isTiny) {
-      this.drawConnections = false
-    }
-
-    if (this.isTiny) this.setGlobalsConnectionData()
+    this.updateConnectionsData()
   }
 
   public handleDrag(dx: number, dy: number) {
@@ -493,17 +495,26 @@ export class CWorld {
     )
   }
 
-  private initConnectionData(numConnections: number) {
+  private initConnectionData(num: number) {
     let gl = this.gl
-    this.connectionData = new Float32Array(
-      numConnections * CONNECTION_TRANSFORM_SIZE
-    )
+    this.connectionData = new Float32Array(num * CONNECTION_TRANSFORM_SIZE)
     this.connectionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, this.connectionData, gl.STATIC_DRAW)
   }
 
-  private setConnectionData(node: CNode): number {
+  private updateConnectionsData() {
+    let num = 0
+    if (this.displayAllConnections) {
+      num = this.setGlobalConnectionsData()
+    }
+    else if (this.selectedNode) {
+      num = this.setNodeConnectionsData(this.selectedNode)
+    }
+    this.numConnectionsToDraw = num
+  }
+
+  private setNodeConnectionsData(node: CNode) {
     if (node.nodeType == ENodeType.Super) {
       return 0
     }
@@ -522,10 +533,12 @@ export class CWorld {
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, this.connectionData, gl.STATIC_DRAW)
+
     return node.numConnections
   }
 
-  private setGlobalsConnectionData() {
+
+  private setGlobalConnectionsData() {
     let gl = this.gl
     let n = 0
     let i = 0
@@ -554,6 +567,8 @@ export class CWorld {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.connectionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, this.connectionData, gl.STATIC_DRAW)
+
+    return this.numConnections
   }
 
   private updateSingleNodeData() {
@@ -973,7 +988,6 @@ export class CWorld {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.lineGeometry)
     gl.enableVertexAttribArray(positionLoc)
     gl.vertexAttribPointer(positionLoc, 3, gl.FLOAT, false, 12, 0)
-    if (this.isTiny) this.setGlobalsConnectionData()
   }
 
   public async initTexturesGl() {
@@ -1080,11 +1094,11 @@ export class CWorld {
 
     geolocation.coordinates.latitude =
       Math.floor(geolocation.coordinates.latitude * DEGREE_RESOLUTION) /
-        DEGREE_RESOLUTION +
+      DEGREE_RESOLUTION +
       DEGREE_RESOLUTION / 2
     geolocation.coordinates.longitude =
       Math.floor(geolocation.coordinates.longitude * DEGREE_RESOLUTION) /
-        DEGREE_RESOLUTION +
+      DEGREE_RESOLUTION +
       DEGREE_RESOLUTION / 2
     return result
   }
@@ -1234,7 +1248,7 @@ export class CWorld {
       let size = Math.sqrt(superNode.subNodes.length)
       superNode.scale =
         ((size - minSuperNodeSize) / maxSuperNodeSize) *
-          (MAX_SUPERNODE_SCALE - MIN_SUPERNODE_SCALE) +
+        (MAX_SUPERNODE_SCALE - MIN_SUPERNODE_SCALE) +
         MIN_SUPERNODE_SCALE
     }
 
@@ -1288,6 +1302,9 @@ export class CWorld {
   }
 
   renderConnections() {
+    if (!this.numConnectionsToDraw) {
+      return
+    }
     let gl = this.gl
     gl.useProgram(glShaders[EShader.Connection])
     gl.uniformMatrix4fv(
@@ -1296,12 +1313,7 @@ export class CWorld {
       this.camera.matViewProjection
     )
     gl.bindVertexArray(this.connectionVao)
-    gl.drawArraysInstanced(
-      gl.LINES,
-      0,
-      2,
-      this.isTiny ? this.numConnections : this.numConnectionsToDraw
-    )
+    gl.drawArraysInstanced(gl.LINES, 0, 2, this.numConnectionsToDraw)
   }
 
   renderNodes() {
@@ -1334,9 +1346,7 @@ export class CWorld {
     let elapsed = this.startTime - Date.now()
     this.params[0] = elapsed / 1000.0
     this.renderWorldMap()
-    if ((this.drawConnections || this.isTiny) && this.displayAllConnections) {
-      this.renderConnections()
-    }
+    this.renderConnections()
     this.renderNodes()
     if (this.displayGradient) {
       this.renderGradient()
