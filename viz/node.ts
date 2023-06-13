@@ -79,7 +79,7 @@ const SUBNODE_POSITIONS: vec2[] = [
 ]
 
 export class CNode {
-  public inode: INode
+  public node: INode
   public betweenColor: vec4
   public closeColor: vec4
   public degreeColor: vec4
@@ -134,7 +134,7 @@ export class CNode {
     if (this.nodeType == ENodeType.Super) {
       return this.degreeColor
     }
-    if (this.inode.network_type == ENetworkType.Unknown) {
+    if (this.node.network_type == ENetworkType.Unknown) {
       return COLOR_BLACK
     }
     if (colorMode == EColorMode.Between) {
@@ -154,15 +154,15 @@ export class CNode {
 
   public initializePosition(isTiny: boolean) {
     const zScale = 0.4
-    let x: number = (this.inode.geolocation.coordinates.longitude + 180) / 360
-    let y: number = (this.inode.geolocation.coordinates.latitude + 90) / 180
+    let x: number = (this.node.geolocation.coordinates.longitude + 180) / 360
+    let y: number = (this.node.geolocation.coordinates.latitude + 90) / 180
     let z: number = 1.0 * zScale
-    if (this.inode.num_subnodes > 1) {
+    if (this.node.num_subnodes > 1) {
       isTiny
-        ? this.setSubnodeOffsetTiny(this.inode.subnode_index)
+        ? this.setSubnodeOffsetTiny(this.node.subnode_index)
         : this.setSubnodeOffset(
-          this.inode.subnode_index,
-          this.inode.num_subnodes
+          this.node.subnode_index,
+          this.node.num_subnodes
         )
     }
 
@@ -189,12 +189,12 @@ export class CNode {
     abstand: number,
     isTiny: boolean
   ) {
-    this.inode = inode
+    this.node = inode
     this.id = id
     this.index = index
     this.camera = camera
     this.nodeType = nodeType
-    this.numConnections = this.inode.connections.length
+    this.numConnections = this.node.connections.length
     let isLocalHost = inode.addr.indexOf('127.0.0.1') >= 0
     this.superNode = superNode
     this.subNodes = new Array()
@@ -205,8 +205,8 @@ export class CNode {
     this.idColor = idToColor(id)
     this.scale = isLocalHost ? 4 : nodeType == ENodeType.Sub ? 0.7 : 1
     if (isLocalHost) {
-      this.inode.geolocation.city = 'n/a'
-      this.inode.geolocation.country = 'localhost'
+      this.node.geolocation.city = 'n/a'
+      this.node.geolocation.country = 'localhost'
     }
 
     this.position = vec3.create()

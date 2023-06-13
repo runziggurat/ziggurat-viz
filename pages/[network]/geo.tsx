@@ -20,6 +20,26 @@ import { parseNetwork } from '../../utils/network'
 
 import { fetchVizData, networkStaticPaths } from '../../utils/next'
 import { Status, StatusCode, VizData } from '../../utils/types'
+import {
+  BETWEENNESS_ID,
+  CITY_ID,
+  CLOSENESS_ID,
+  COLOR_MODE_ID,
+  CONNECTIONS_ID,
+  COUNTRY_ID,
+  FPS_ID,
+  GRADIENT_INFO_ID,
+  IP_ID,
+  KEYMAPS_INFO_ID,
+  LATITUDE_ID,
+  LONGITUDE_ID,
+  NETWORK_TYPE_ID,
+  NODE_INFO_ID,
+  NUM_SUBNODES_ID,
+  STATS_INFO_ID,
+  SUBNODE_INDEX_ID,
+  TIME_ID,
+} from '../../viz/core'
 
 const useStyles = createStyles(theme => {
   const overlay: CSSObject = {
@@ -34,7 +54,7 @@ const useStyles = createStyles(theme => {
       color: text(theme),
       fontFamily: theme.fontFamilyMonospace,
       fontSize: theme.fontSizes.xs,
-      position: 'absolute',
+      position: "relative",
       bottom: 0,
       display: 'flex',
       width: '100%',
@@ -91,12 +111,15 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
     }
     import('../../viz/app')
       .then(({ CApp }) => {
-        if (!canvasRef.current) {
+        const canvas = canvasRef.current
+        if (!canvas) {
           throw new Error('canvas not found')
         }
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight - NAVBAR_HEIGHT
         if (!appRef.current && data) {
-          appRef.current = new CApp(canvasRef.current)
-          appRef.current.create(data.viz_state).then(() => {
+          appRef.current = new CApp(canvas, data.viz_state)
+          appRef.current.initialize().then(() => {
             setStatus({
               code: StatusCode.Success,
             })
@@ -159,68 +182,68 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
         }}
         className={classes.main}
       >
-        <canvas className={classes.canvas} ref={canvasRef}></canvas>
-        <div className={classes.overlayTopLeft} id="overlayLeft">
+        <canvas className={classes.canvas} ref={canvasRef} />
+        <div className={classes.overlayTopLeft} id={STATS_INFO_ID}>
           <div>
-            time: <span id="time"></span>
+            time: <span id={TIME_ID}></span>
           </div>
           <div>
-            FPS: <span id="fps"></span>
+            FPS: <span id={FPS_ID}></span>
           </div>
           <div>
-            color: <span id="colormode"></span>
-          </div>
-        </div>
-        <div className={classes.overlayTopRight} id="overlayRight">
-          <div>
-            <span id="ip" />
-          </div>
-          <div>
-            network type: <span id="networktype" />
-          </div>
-          <div>
-            betweenness: <span id="betweenness" />
-          </div>
-          <div>
-            closeness: <span id="closeness" />
-          </div>
-          <div>
-            connections: <span id="connections" />
-          </div>
-          <div>
-            latitude: <span id="latitude" />
-          </div>
-          <div>
-            longitude: <span id="longitude" />
-          </div>
-          <div>
-            subnode index: <span id="subnode" />
-          </div>
-          <div>
-            number of subnodes: <span id="numsubnodes" />
-          </div>
-          <div>
-            city: <span id="city"></span>
-          </div>
-          <div>
-            country: <span id="country"></span>
+            color: <span id={COLOR_MODE_ID}></span>
           </div>
         </div>
-        <div className={classes.overlayBottomLeft} id="instructions">
+        <div className={classes.overlayTopRight} id={NODE_INFO_ID}>
+          <div>
+            <span id={IP_ID} />
+          </div>
+          <div>
+            network type: <span id={NETWORK_TYPE_ID} />
+          </div>
+          <div>
+            betweenness: <span id={BETWEENNESS_ID} />
+          </div>
+          <div>
+            closeness: <span id={CLOSENESS_ID} />
+          </div>
+          <div>
+            connections: <span id={CONNECTIONS_ID} />
+          </div>
+          <div>
+            latitude: <span id={LATITUDE_ID} />
+          </div>
+          <div>
+            longitude: <span id={LONGITUDE_ID} />
+          </div>
+          <div>
+            subnode index: <span id={SUBNODE_INDEX_ID} />
+          </div>
+          <div>
+            number of subnodes: <span id={NUM_SUBNODES_ID} />
+          </div>
+          <div>
+            city: <span id={CITY_ID}></span>
+          </div>
+          <div>
+            country: <span id={COUNTRY_ID}></span>
+          </div>
+        </div>
+        <div className={classes.overlayBottomLeft} id={KEYMAPS_INFO_ID}>
           <Stack spacing={0}>
             <Title order={6}>Keyboard Commands</Title>
-            <div>arrow keys: move left, right, up, down</div>
+            <div>arrow keys: move left, right, up and down</div>
             <div>i: zoom in</div>
             <div>o: zoom out</div>
             <div>c: cycle color mode</div>
             <div>f: toggle FPS display</div>
             <div>g: toggle gradient display</div>
             <div>h: toggle histogram display</div>
-            <div>n: toggle connections display</div>
-            <div>x: toggle command overlay</div>
+            <div>n: toggle all-connections display</div>
+            <div>x: toggle keymaps display</div>
           </Stack>
         </div>
-        <div className={classes.overlayBottomCenter} id="gradient" />
+        <div className={classes.overlayBottomCenter} id={GRADIENT_INFO_ID} />
       </Center>
     </Navbar>
   )

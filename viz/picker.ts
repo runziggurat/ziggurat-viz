@@ -5,12 +5,13 @@ const PICKER_TEXTURE_SIZE: number = 2048
 export class CPicker {
   private gl: WebGL2RenderingContext
   private fb: WebGLFramebuffer | null
-  public renderTarget: WebGLTexture | null
+  private renderTarget: WebGLTexture | null
   private pixelBuffer: Uint8Array
-  textureWidth: number
-  textureHeight: number
-  x: number
-  y: number
+  private textureWidth: number
+  private textureHeight: number
+  private x: number = 0
+  private y: number = 0
+  
   public constructor(gl: WebGL2RenderingContext) {
     this.gl = gl
     this.renderTarget = null
@@ -18,9 +19,9 @@ export class CPicker {
     this.textureWidth = PICKER_TEXTURE_SIZE
     this.textureHeight = PICKER_TEXTURE_SIZE
     this.fb = null
-    this.initialize()
     this.x = 0
     this.y = 0
+    this.initialize()
   }
 
   private initialize() {

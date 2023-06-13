@@ -1,16 +1,16 @@
 import { initShadersGl } from './shaders'
-import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z } from './core'
-import { Events } from './events'
+import { IState, CAMERA_INITIAL_Z, CAMERA_MIN_Z, CAMERA_MAX_Z, FPS_ID, TIME_ID } from './core'
+import { Events, Keys } from './events'
 import { CWorld } from './world'
 import { PCamera } from './camera'
 import { Action } from './core'
-import { NAVBAR_HEIGHT } from '../utils/constants'
 import { bound, normalize } from '../utils/helpers'
+import { element } from '../utils/dom'
 
 const APP_VERSION = '0.1.10'
 
 export class CApp {
-  private events: Events | null = null
+  private events: Events
   private initialized: boolean = false
   private startTime: number
   private lastTime: number = 0
@@ -18,33 +18,22 @@ export class CApp {
   private canvas: HTMLCanvasElement
   private gl: WebGL2RenderingContext
   private camera: PCamera
-  private world: CWorld | null = null
+  private world: CWorld
 
   private activeActions: { action: Action; start: number }[] = []
   private lastUpdateTime: number
 
-  public constructor(canvas: HTMLCanvasElement) {
-    this.canvas = canvas
-    this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight - NAVBAR_HEIGHT
-    this.camera = new PCamera(0, 0, CAMERA_INITIAL_Z, this.canvas)
-
+  public constructor(canvas: HTMLCanvasElement, state: IState) {
     console.log('p2p-viz version: ', APP_VERSION)
     let gl = canvas.getContext('webgl2')
     if (!gl) {
       throw new Error('WebGL2 not supported')
     }
+
+    this.canvas = canvas
     this.gl = gl
-
-    this.startTime = Date.now() / 1000
-    this.lastUpdateTime = Date.now()
-  }
-
-  public async create(state: IState) {
-    this.initializeWebGl(this.gl)
+    this.camera = new PCamera(0, 0, CAMERA_INITIAL_Z, this.canvas)
     this.world = new CWorld(state, this.gl, this.canvas, this.camera)
-    await this.world.initialize()
-    this.initialized = true
     this.events = new Events({
       onClick: this.handleClick,
       onResize: this.handleResize,
@@ -53,16 +42,26 @@ export class CApp {
       onZoom: this.handleZoom,
       onSlide: (_x, _y, dx, dy) => this.handleDrag(dx, dy),
       element: this.canvas,
-    }).create()
+    })
 
-    return this
+    this.startTime = Date.now() / 1000
+    this.lastUpdateTime = Date.now()
+  }
+
+  public async initialize() {
+    this.initializeWebGl()
+    await this.world.initialize()
+    this.events.initialize()
+
+    this.initialized = true
   }
 
   public destroy() {
-    this.events?.destroy()
+    this.events.destroy()
   }
 
-  private initializeWebGl(gl: WebGL2RenderingContext) {
+  private initializeWebGl() {
+    let gl = this.gl
     gl.clearColor(1, 1, 1, 1.0)
     gl.clearDepth(1.0)
     gl.clearStencil(0.0)
@@ -75,13 +74,16 @@ export class CApp {
   }
 
   private updateFps() {
+    if (!this.world.displayStats) {
+      return
+    }
     this.iter++
     if (this.iter % 15 == 0) {
       let now = Date.now()
       let delta = now - this.lastTime
       this.lastTime = now
       let fps = (1000 * 15) / delta
-      if (this.world) this.world.fpsNode.nodeValue = fps.toFixed(6)
+      element(FPS_ID).setText(fps.toFixed(2))
     }
   }
 
@@ -109,13 +111,11 @@ export class CApp {
     this.updateFps()
     this.maybeSetColor()
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
-    if (this.world) {
-      this.world.timeNode.nodeValue = (
-        Date.now() / 1000 -
-        this.startTime
-      ).toFixed(2)
-      this.update()
-      this.world.renderGl()
+    this.update()
+    this.world.renderGl()
+    if (this.world.displayStats) {
+      const time = (Date.now() / 1000 - this.startTime).toFixed(2)
+      element(TIME_ID).setText(time)
     }
   }
 
@@ -128,10 +128,10 @@ export class CApp {
 
   private isContinuousAction(action: Action) {
     switch (action) {
-      case Action.ArrowUp:
-      case Action.ArrowDown:
-      case Action.ArrowLeft:
-      case Action.ArrowRight:
+      case Action.MoveUp:
+      case Action.MoveDown:
+      case Action.MoveLeft:
+      case Action.MoveRight:
       case Action.ZoomIn:
       case Action.ZoomOut:
         return true
@@ -141,40 +141,24 @@ export class CApp {
   }
 
   private onActionStart(action: Action) {
-    if (!this.world) {
-      return
-    }
     if (this.activeActions.find(a => a.action === action)) {
       return
     }
     switch (action) {
-      case Action.ToggleConnection: {
-        this.world.connectionMode = !this.world.connectionMode
+      case Action.ToggleAllConnections: {
+        this.world.displayAllConnections = !this.world.displayAllConnections
         break
       }
-      case Action.ToggleCommand: {
-        this.world.displayCommand = !this.world.displayCommand
-        let el = document.getElementById('instructions')
-        if (el) {
-          el.style.visibility = this.world.displayCommand ? 'visible' : 'hidden'
-        }
+      case Action.ToggleKeymaps: {
+        this.world.displayKeymaps = !this.world.displayKeymaps
         break
       }
-      case Action.ToggleFps: {
-        this.world.displayFps = !this.world.displayFps
-        let el2 = document.getElementById('overlayLeft')
-        if (el2) {
-          el2.style.visibility = this.world.displayFps ? 'visible' : 'hidden'
-        }
+      case Action.ToggleStats: {
+        this.world.displayStats = !this.world.displayStats
         break
       }
       case Action.ToggleGradient: {
         this.world.displayGradient = !this.world.displayGradient
-        let el = document.getElementById('gradient')
-        if (el)
-          el.style.visibility = this.world.displayGradient
-            ? 'visible'
-            : 'hidden'
         break
       }
       case Action.ToggleHistogram: {
@@ -198,19 +182,23 @@ export class CApp {
     )
   }
 
-  public handleKeyPress = (key: string) => {
+  public handleKeyPress = (key: string, mod: Keys) => {
+    if (mod !== Keys.None) {
+      // ignore keypresses with modifiers
+      return
+    }
     switch (key) {
       case 'ArrowUp':
-        this.onActionStart(Action.ArrowUp)
+        this.onActionStart(Action.MoveUp)
         break
       case 'ArrowDown':
-        this.onActionStart(Action.ArrowDown)
+        this.onActionStart(Action.MoveDown)
         break
       case 'ArrowLeft':
-        this.onActionStart(Action.ArrowLeft)
+        this.onActionStart(Action.MoveLeft)
         break
       case 'ArrowRight':
-        this.onActionStart(Action.ArrowRight)
+        this.onActionStart(Action.MoveRight)
         break
       case 'KeyC':
         this.onActionStart(Action.ToggleColorMode)
@@ -222,13 +210,13 @@ export class CApp {
         this.onActionStart(Action.ToggleHistogram)
         break
       case 'KeyN':
-        this.onActionStart(Action.ToggleConnection)
+        this.onActionStart(Action.ToggleAllConnections)
         break
       case 'KeyX':
-        this.onActionStart(Action.ToggleCommand)
+        this.onActionStart(Action.ToggleKeymaps)
         break
       case 'KeyF':
-        this.onActionStart(Action.ToggleFps)
+        this.onActionStart(Action.ToggleStats)
         break
       case 'KeyI':
         this.onActionStart(Action.ZoomIn)
@@ -244,16 +232,16 @@ export class CApp {
   public handleKeyRelease = (key: string) => {
     switch (key) {
       case 'ArrowUp':
-        this.onActionEnd(Action.ArrowUp)
+        this.onActionEnd(Action.MoveUp)
         break
       case 'ArrowDown':
-        this.onActionEnd(Action.ArrowDown)
+        this.onActionEnd(Action.MoveDown)
         break
       case 'ArrowLeft':
-        this.onActionEnd(Action.ArrowLeft)
+        this.onActionEnd(Action.MoveLeft)
         break
       case 'ArrowRight':
-        this.onActionEnd(Action.ArrowRight)
+        this.onActionEnd(Action.MoveRight)
         break
       case 'KeyI':
         this.onActionEnd(Action.ZoomIn)
@@ -265,7 +253,7 @@ export class CApp {
   }
 
   public handleDrag = (dx: number, dy: number) => {
-    this.world?.handleDrag(dx, dy)
+    this.world.handleDrag(dx, dy)
   }
 
   public handleZoom = (x: number, y: number, delta: number) => {
@@ -287,15 +275,15 @@ export class CApp {
   }
 
   public handleClick = (x: number, y: number) => {
-    this.world?.handleClick(x, y)
+    this.world.handleClick(x, y)
   }
 
   public handleResize = () => {
     const bounds = this.canvas.getBoundingClientRect()
     this.canvas.width = this.canvas.getBoundingClientRect().width
     this.canvas.height = this.canvas.getBoundingClientRect().height
-    this.gl?.viewport(0, 0, bounds.width, bounds.height)
-    this.camera?.update()
+    this.gl.viewport(0, 0, bounds.width, bounds.height)
+    this.camera.update()
   }
 
   private updateActions() {
@@ -307,19 +295,19 @@ export class CApp {
     for (let { action, start } of this.activeActions) {
       const norm = 1 - normalize(Math.log(Date.now() - start), 5, 12)
       switch (action) {
-        case Action.ArrowLeft: {
+        case Action.MoveLeft: {
           this.handleDrag(x * norm, 0)
           break
         }
-        case Action.ArrowRight: {
+        case Action.MoveRight: {
           this.handleDrag(-x * norm, 0)
           break
         }
-        case Action.ArrowDown: {
+        case Action.MoveDown: {
           this.handleDrag(0, -y * norm)
           break
         }
-        case Action.ArrowUp: {
+        case Action.MoveUp: {
           this.handleDrag(0, y * norm)
           break
         }
@@ -342,7 +330,7 @@ export class CApp {
   private update() {
     this.updateActions()
     this.camera.update()
-    this.world?.update()
+    this.world.update()
 
     this.lastUpdateTime = Date.now()
   }
