@@ -1,4 +1,5 @@
 import { useOs } from '@mantine/hooks';
+import { showAlert } from './alert';
 
 type Maybe<T> = T | undefined | null
 
@@ -38,4 +39,20 @@ export const useIsMobile = () => {
     const os = useOs()
     if (os === 'android' || os === 'ios') return true
     return false
+}
+
+export const getFileJson = async (file: File) => {
+    if (!file.size) {
+        showAlert('Error', { body: 'File is empty, please try again.' })
+        return
+    }
+    const text = await file.text()
+    let data = parseJSON(text)
+    if (!text) {
+        showAlert("Error", {
+            body: "Invalid json file, please try again."
+        })
+        return
+    }
+    return data
 }

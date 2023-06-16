@@ -9,8 +9,13 @@ import {
 } from '@mantine/core'
 import { IconChevronDown, IconPlus } from '@tabler/icons'
 import { useRouter } from 'next/router'
-import { FC, forwardRef, useState } from 'react'
-import { networks, parseNetwork, ZiggNetwork } from '../utils/network'
+import { FC, forwardRef, useEffect } from 'react'
+import {
+  networks,
+  parseNetwork,
+  parsePage,
+  ZiggNetwork,
+} from '../utils/network'
 import { bg, hover, text } from '../utils/theme'
 
 const NetworkButton = forwardRef<
@@ -56,7 +61,7 @@ NetworkButton.displayName = 'NetworkButton'
 
 export const NetworkSelector: FC = () => {
   const router = useRouter()
-  const [selectedNetwork] = useState(parseNetwork(router.query))
+  const selectedNetwork = parseNetwork(router.query)
 
   const item = (network: ZiggNetwork) => (
     <Group noWrap py="md">
@@ -70,7 +75,7 @@ export const NetworkSelector: FC = () => {
       </Stack>
     </Group>
   )
-  const tab = router.pathname.split('/')[2] || 'home'
+  const tab = parsePage(router.pathname)
   return (
     <Menu
       width={225}

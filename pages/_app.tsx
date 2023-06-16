@@ -13,8 +13,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { globalStyles } from '../styles/global'
 import { COLOR_SCHEME_COOKIE, DEFAULT_COLOR_SCHEME } from '../utils/constants'
 import { ModalsProvider } from '@mantine/modals'
+import { useRouter } from 'next/router'
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
+  const router = useRouter()
   const { Component, pageProps } = props
   const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme)
 
@@ -25,6 +27,15 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
     )
     window.dispatchEvent(new Event('color-scheme-change'))
   }, [colorScheme])
+
+  useEffect(() => {
+    const routeQueries = ['network']
+    const queries = Object.fromEntries(
+      Object.entries(router.query).filter(([key]) => routeQueries.includes(key))
+    )
+    router.replace({ pathname: router.pathname, query: queries })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const toggleColorScheme = useCallback(
     (value?: ColorScheme) => {

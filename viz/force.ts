@@ -149,11 +149,11 @@ export function renderForceGraph(state: IState) {
     .nodeColor(node => (node as any)['closeColor'])
     .nodeLabel(
       node =>
-        `${(node as any)['name']}: ${(node as any)['ip']} ${
-          (node as any)['city']
+        `${(node as any)['name']}: ${(node as any)['ip']} ${(node as any)['city']
         }`
     )
     .graphData(Data)
+  // TODO Only resolve when engine is ready.
 
   updateSize()
   setColors()
@@ -197,10 +197,10 @@ export function destroyForceGraph() {
   window.removeEventListener('keydown', onKeydownEvent)
 
   Graph?.pauseAnimation()
+  Graph?.resetProps()
   Graph?.graphData({
     nodes: [],
     links: [],
   })
-  // TODO On safari there is still some leaks. Investigate.
   Graph = null
 }
