@@ -1,5 +1,4 @@
 import type { NextRouter } from 'next/router'
-import type { ReactNode } from 'react'
 
 export const CRAWLER_PATH = "results/crawler"
 export const networks = [
@@ -35,8 +34,10 @@ export const networks = [
         description: "",
     }
 ] as const;
+export const pages = ['home', 'force', 'geo'] as const;
 
 export type ZiggNetwork = typeof networks[number];
+export type ZiggPage = typeof pages[number];
 
 export const parseNetwork = (urlQuery?: NextRouter['query']): ZiggNetwork | undefined => {
     let network = urlQuery?.network
@@ -45,4 +46,9 @@ export const parseNetwork = (urlQuery?: NextRouter['query']): ZiggNetwork | unde
     if (Array.isArray(network)) network = network[0]
 
     return networks.find(n => n.value === network)
+}
+
+export const parsePage = (pathname: string): ZiggPage => {
+    const str = pathname.split('/')[2]
+    return pages.find(p => p === str) || pages[0]
 }

@@ -30,7 +30,7 @@ import { Link } from './link'
 import { NetworkSelector } from './network-selector'
 import { ThemeSwitch } from './theme-switch'
 import { bg, hover, secondary, text } from '../utils/theme'
-import { parseNetwork } from '../utils/network'
+import { pages, parseNetwork, parsePage } from '../utils/network'
 import { useRouter } from 'next/router'
 
 const useStyles = createStyles(theme => ({
@@ -159,13 +159,10 @@ const defaultLinks: Link[] = [
 const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
   const { classes } = useStyles()
   const router = useRouter()
-  const network = parseNetwork(router.query)?.value
-  if (!network) {
-    return null
-  }
-  const updated = meta?.updated_at
-    ? new Date(meta.updated_at).toDateString()
-    : 'N/A'
+  const updated =
+    meta?.updated_at && !router.query.file
+      ? new Date(meta.updated_at).toDateString()
+      : 'N/A'
   const UpdatedAt = () => {
     return (
       <Group
@@ -186,6 +183,8 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
   }
 
   const Links = () => {
+    const NETWORK = parseNetwork(router.query)?.value
+    const [HOME, FORCE, GEO] = pages
     return (
       <Group spacing="xs" align="center">
         <Tabs
@@ -195,25 +194,25 @@ const Navigation: FC<NavbarProps> = ({ metaData: meta }) => {
             tab: classes.tab,
             tabsList: classes.tabsList,
           }}
-          value={router.pathname.split('/')[2] || 'home'}
+          value={parsePage(router.pathname)}
           onTabChange={page => {
-            router.push(`/${network}/${page}`)
+            router.push(`/${NETWORK}/${page}`)
           }}
         >
           <Tabs.List>
-            <NextLink legacyBehavior href={`/${network}/home`}>
-              <Tabs.Tab value="home">
-                <Text className={classes.tabLabel}>home</Text>
+            <NextLink legacyBehavior href={`/${NETWORK}/${HOME}`}>
+              <Tabs.Tab value={HOME}>
+                <Text className={classes.tabLabel}>{HOME}</Text>
               </Tabs.Tab>
             </NextLink>
-            <NextLink legacyBehavior href={`/${network}/force`}>
-              <Tabs.Tab value="force" title="May the force be with you!">
-                <Text className={classes.tabLabel}>force</Text>
+            <NextLink legacyBehavior href={`/${NETWORK}/${FORCE}`}>
+              <Tabs.Tab value={FORCE} title="May the force be with you!">
+                <Text className={classes.tabLabel}>{FORCE}</Text>
               </Tabs.Tab>
             </NextLink>
-            <NextLink legacyBehavior href={`/${network}/geo`}>
-              <Tabs.Tab value="geo">
-                <Text className={classes.tabLabel}>geo</Text>
+            <NextLink legacyBehavior href={`/${NETWORK}/${GEO}`}>
+              <Tabs.Tab value={GEO}>
+                <Text className={classes.tabLabel}>{GEO}</Text>
               </Tabs.Tab>
             </NextLink>
           </Tabs.List>

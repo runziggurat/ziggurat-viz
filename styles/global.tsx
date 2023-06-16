@@ -23,7 +23,7 @@ export const errorPanel = (
     width: '100vw',
     position: 'fixed',
     bottom: 0,
-    zIndex: 1000,
+    zIndex: 250,
   },
   statusText: {
     color: `${text(theme)}`,

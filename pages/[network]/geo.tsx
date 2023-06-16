@@ -13,10 +13,10 @@ import { NAVBAR_HEIGHT } from '../../utils/constants'
 import { useEffect, useRef } from 'react'
 import { useSetState } from '@mantine/hooks'
 import { bg, overlay as bgOverlay, text } from '../../utils/theme'
-import { CApp } from '../../viz/app'
 import { useAnimationFrame } from '../../utils/animation-frame'
 import { errorPanel } from '../../styles/global'
 import { parseNetwork } from '../../utils/network'
+import { getFileJson } from '../../utils/helpers'
 
 import { fetchVizData, networkStaticPaths } from '../../utils/next'
 import { Status, StatusCode, VizData } from '../../utils/types'
@@ -40,6 +40,10 @@ import {
   SUBNODE_INDEX_ID,
   TIME_ID,
 } from '../../viz/core'
+import { useRouter } from 'next/router'
+
+import type { CApp } from '../../viz/app'
+import { FilePicker } from '../../components/file-picker'
 
 const useStyles = createStyles(theme => {
   const overlay: CSSObject = {
@@ -54,7 +58,7 @@ const useStyles = createStyles(theme => {
       color: text(theme),
       fontFamily: theme.fontFamilyMonospace,
       fontSize: theme.fontSizes.xs,
-      position: "relative",
+      position: 'relative',
       bottom: 0,
       display: 'flex',
       width: '100%',
@@ -94,52 +98,60 @@ const useStyles = createStyles(theme => {
   }
 })
 
+const loadingStatus: Status = {
+  message: 'loading geo location graph...',
+  code: StatusCode.Loading,
+}
+
 const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
   const { classes } = useStyles()
-  const [status, setStatus] = useSetState<Status>({
-    message: 'loading geo location graph...',
-    code: StatusCode.Loading,
-  })
+  const router = useRouter()
+  const [status, setStatus] = useSetState<Status>(loadingStatus)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const appRef = useRef<CApp>()
+
+  const initialize = async (state: VizData['viz_state']) => {
+    setStatus(loadingStatus)
+    try {
+      const { CApp: App } = await import('../../viz/app')
+      const canvas = canvasRef.current
+      if (!canvas) {
+        throw new Error('canvas not found')
+      }
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight - NAVBAR_HEIGHT
+      if (!appRef.current) {
+        appRef.current = new App(canvas, state)
+        await appRef.current.initialize()
+        setStatus({
+          code: StatusCode.Success,
+        })
+      }
+    } catch (err) {
+      const description =
+        err instanceof Error ? err.message : 'Please try again later!'
+      setStatus({
+        code: StatusCode.Error,
+        message: 'error loading geo location graph\n' + description,
+      })
+    }
+  }
+
+  const destroy = () => {
+    appRef.current?.destroy()
+    appRef.current = undefined
+  }
+
   useEffect(() => {
     if (!data) {
       setStatus({
         code: StatusCode.Warning,
         message: 'geo location graph is not available for the current network',
       })
+      return
     }
-    import('../../viz/app')
-      .then(({ CApp }) => {
-        const canvas = canvasRef.current
-        if (!canvas) {
-          throw new Error('canvas not found')
-        }
-        canvas.width = window.innerWidth
-        canvas.height = window.innerHeight - NAVBAR_HEIGHT
-        if (!appRef.current && data) {
-          appRef.current = new CApp(canvas, data.viz_state)
-          appRef.current.initialize().then(() => {
-            setStatus({
-              code: StatusCode.Success,
-            })
-          })
-        }
-      })
-      .catch(err => {
-        setStatus({
-          code: StatusCode.Error,
-          message:
-            'error loading geo location graph\n' +
-            (err?.message || 'Please try again later!'),
-        })
-      })
-    return () => {
-      if (appRef.current) {
-        appRef.current.destroy()
-        appRef.current = undefined
-      }
-    }
+    initialize(data.viz_state)
+    return destroy
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useAnimationFrame(() => {
@@ -147,8 +159,26 @@ const Geo: NextPage<{ data: VizData | null }> = ({ data }) => {
       appRef.current.render()
     }
   })
+  const handleFile = async (file: File) => {
+    router.push(
+      {
+        query: {
+          ...router.query,
+          file: file.name,
+        },
+      },
+      undefined,
+      {
+        shallow: true,
+      }
+    )
+    const state = await getFileJson(file)
+    destroy()
+    initialize(state)
+  }
   return (
     <Navbar metaData={data?.meta_data}>
+      <FilePicker handleFile={handleFile} />
       <Head>
         <title>Ziggurat Explorer</title>
         <meta name="description" content="P2P Visualizer: Geo Location" />
