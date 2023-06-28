@@ -19,9 +19,9 @@ This repository contains the source code for the visualizations of the Ziggurat 
 
 Currently, the following network visualizations are available. Please refer to the respective repositories for more information. 
 
-- [zcashd](https://github.com/runziggurat/zcash)
+- [Zcashd](https://github.com/runziggurat/zcash)
 - [Zebra](https://github.com/runziggurat/zcash)
-- [Xrpl](https://github.com/runziggurat/xrpl)
+- [XRPL](https://github.com/runziggurat/xrpl)
 
 ## Contributing
 
