@@ -25,7 +25,7 @@ Currently, the following network visualizations are available. Please refer to t
 
 ## Contributing
 
-Contributions are welcome. Open an issue for any query or suggestion and we will take it from there. For more information, please refer to the [contribution guidelines]([CONTRIBUTING.md](https://github.com/runziggurat/.github/blob/main/CONTRIBUTING.md)) of the Ziggurat project.
+Contributions are welcome. Open an issue for any query or suggestion and we will take it from there. For more information, please refer to the [contribution guidelines](https://github.com/runziggurat/.github/blob/main/CONTRIBUTING.md) of the Ziggurat project.
 
 ## Development
 
